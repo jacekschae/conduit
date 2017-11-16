@@ -1,35 +1,82 @@
 (ns conduit.views
-  (:require [re-frame.core :as re-frame]
-            [conduit.subs :as subs]
-            ))
+  (:require [re-frame.core :refer [subscribe dispatch]]
+            [conduit.subs :as subs]))
 
+(defn header
+  []
+  [:nav.navbar.navbar-light
+   [:div.container
+    [:a.navbar-brand {:href "index.html"} "conduit"]
+    [:ul.nav.navbar-nav.pull-xs-right
+     [:li.nav-item
+      [:a.nav-link.active {:href ""} "Home"]]
+     [:li.nav-item
+      [:a.nav-link {:href ""}
+       [:i.ion-compose "New Post"]]]
+     [:li.nav-item
+      [:a.nav-link {:href ""}
+       [:i.ion-gear-a "Settings"]]]
+     [:li.nav-item
+      [:a.nav-link {:href ""} "Sign up"]]]]])
 
-;; home
+(defn footer
+  []
+  (let [link [:a {:href "https://thinkster.io"}]]
+   [:div.container
+    [:a.logo-font {:href "/"} "conduit"]
+    [:span.attribution
+     "An interactive learning project from "
+     [:a {:href "https://thinkster.io"} "Thinkster"]
+     ". Code & design licensed under MIT."]]))
 
-(defn home-panel []
-  (let [name (re-frame/subscribe [::subs/name])]
-    [:div (str "Hello from " @name ". This is the Home Page.")
-     [:div [:a {:href "#/about"} "go to About Page"]]]))
+(defn home
+  []
+  [:div.home-page
+   [:div.banner
+    [:div.container
+     [:h1.logo-font "conduit"]
+     [:p "A place to share your knowledge."]]]])
+     ;; TODO - Finish component
 
+(defn auth
+  []
+  [:div.auth-page
+   [:div.container.page
+    [:div.row
+     [:div.col-md-6.offset-md-3.col-xs-12
+      [:h1.text-xs-center "Sign up"]
+      [:p.text-xs-center
+       [:a {:href ""} "Have an account?"]]
+      [:ul.error-message
+       [:li "That email is already taken"]]
+      [:form
+       [:fieldset.form-group
+        [:input.form-control.form-control-lg {:type "text" :placeholder "Your Name"}]]
+       [:fieldset.form-group
+        [:input.form-control.form-control-lg {:type "text" :placeholder "Email"}]]
+       [:fieldset.form-group
+        [:input.form-control.form-control-lg {:type "password" :placeholder "Password"}]]
+       [:button.btn.btn-lg.btn-primary.pull-xs-right "Sign up"]]]]]])
 
-;; about
+(defn signup
+  [])
 
-(defn about-panel []
-  [:div "This is the About Page."
-   [:div [:a {:href "#/"} "go to Home Page"]]])
-
-
-;; main
 
 (defn- panels [panel-name]
   (case panel-name
-    :home-panel [home-panel]
-    :about-panel [about-panel]
-    [:div]))
+    :home [home]
+    :auth [auth]
+    ;; :signup [signup]
+    ;; :settings [settings]
+    ;; :editor [editor]
+    ;; :article [article]
+    ;; :profile [profile]
+    [home]))
 
-(defn show-panel [panel-name]
-  [panels panel-name])
-
-(defn main-panel []
-  (let [active-panel (re-frame/subscribe [::subs/active-panel])]
-    [show-panel @active-panel]))
+(defn conduit-app
+  []
+  (let [active-panel (subscribe [::subs/active-panel])]
+   [:div
+    [header]
+    [panels @active-panel]
+    [footer]]))

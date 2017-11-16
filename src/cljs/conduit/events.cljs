@@ -1,13 +1,13 @@
 (ns conduit.events
-  (:require [re-frame.core :as re-frame]
+  (:require [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx path trim-v after debug]]
             [conduit.db :as db]))
 
-(re-frame/reg-event-db
- ::initialize-db
+(reg-event-db
+ :initialize-db
  (fn  [_ _]
    db/default-db))
 
-(re-frame/reg-event-db
- ::set-active-panel
+(reg-event-db
+ :set-active-panel
  (fn [db [_ active-panel]]
    (assoc db :active-panel active-panel)))
