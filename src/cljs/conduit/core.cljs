@@ -11,34 +11,38 @@
   (:import [goog History]
            [goog.history EventType]))
 
+
 ;; -- Debugging aids ----------------------------------------------------------
 ;;
 (devtools/install!)       ;; we love https://github.com/binaryage/cljs-devtools
 (enable-console-print!)   ;; so that println writes to `console.log`
+
 
 ;; -- Routes and History ------------------------------------------------------
 ;;
 (defn routes
   []
   (secretary/set-config! :prefix "#")
-  (defroute "/" [] (dispatch [:set-active-panel :home]))
-  (defroute "/login" [] (dispatch [:set-active-panel :login]))
-  (defroute "/register" [] (dispatch [:set-active-panel :register]))
+  (defroute "/" []
+            (do (dispatch [:set-active-page :home])
+                (dispatch [:get-articles {:limit 5}])))
+  (defroute "/login" [] (dispatch [:set-active-page :login]))
+  (defroute "/register" [] (dispatch [:set-active-page :register]))
+  (defroute "/settings" [] (dispatch [:set-active-page :settings]))
+  (defroute "/editor" [] (dispatch [:set-active-page :editor]))
   (defroute "/logout" [] (dispatch [:logout]))
-  (defroute "/settings" [] (dispatch [:set-active-panel :settings]))
-  (defroute "/editor" [] (dispatch [:set-active-panel :editor]))
   (defroute "/editor/:slug" [slug]
-            (do (dispatch [:set-active-panel :editor])
+            (do (dispatch [:set-active-page :editor])
                 (dispatch [:set-active-article slug])))
   (defroute "/article/:slug" [slug]
-            (do (dispatch [:set-active-panel :article])
+            (do (dispatch [:set-active-page :article])
                 (dispatch [:set-active-article slug])))
-  (defroute "/profile" [] (dispatch [:set-active-panel :profile]))
+  (defroute "/profile" [] (dispatch [:set-active-page :profile]))
   (defroute "/profile/:username" [username]
-            (do (dispatch [:set-active-panel :profile])
+            (do (dispatch [:set-active-page :profile])
                 (dispatch [:set-active-profile username])))
   (defroute "/profile/:username/favorites" [username]
-            (do (dispatch [:set-active-panel :profile])
+            (do (dispatch [:set-active-page :profile])
                 (dispatch [:set-active-profile username]))))
 
 (def history
@@ -47,9 +51,10 @@
                    (fn [event] (secretary/dispatch! (.-token event))))
     (.setEnabled true)))
 
+
 ;; -- Entry Point -------------------------------------------------------------
-;; Within ../../resources/public/index.html you'll see this code
-;;    window.onload = function() { conduit.core.main() }
+;; Within ../../resources/public/index.html you'll see this code:
+;; window.onload = function() { conduit.core.main() }
 ;; So this is the entry function that kicks off the app once the HTML is loaded.
 ;;
 (defn ^:export main
@@ -62,6 +67,10 @@
   ;; Using the sync version of dispatch means that value is in
   ;; place before we go onto the next step.
   (dispatch-sync [:initialise-db])
+
+  ;; Send request to get articles so that we can display them to the user when
+  ;; the page loads for the first time.
+  (dispatch [:get-articles {:limit 5}])
 
   ;; Render the UI into the HTML's <div id="app" /> element
   ;; The view function `conduit.views/conduit-app` is the

@@ -3,6 +3,8 @@
                  [org.clojure/clojurescript "1.9.908"]
                  [reagent "0.7.0"]
                  [re-frame "0.10.2"]
+                 [cljs-ajax "0.5.8"]
+                 [day8.re-frame/http-fx "0.1.4"]
                  [binaryage/devtools "0.9.4"]
                  [secretary "1.2.3"]]
 

@@ -40,40 +40,45 @@
 ;;
 (defn home
   []
-  [:div.home-page
-   [:div.banner
-    [:div.container
-     [:h1.logo-font "conduit"]
-     [:p "A place to share your knowledge."]]]
-   [:div.container.page
-    [:div.row
-     [:div.col-md-9
-      [:div.feed-toggle
-       [:div.nav.nav-pils.outline-active
-        [:li.nav-item
-         [:a.nav-link.active "Global Feed"]]]
-       ;; map over articles
-       [:div.article-preview
-        [:div.article-meta
-         [:a {:href "/#/profile"}
-          [:img {:src "http://i.imgur.com/Qr71crq.jpg"}]]
-         [:div.info
-          [:a.author {:href "/#/author"} "Eric Simmons"]
-          [:span.date "January 20th"]]
-         [:button.btn.btn-outline-primary.btn-sm.pull-xs-right
-          [:i.ion-heart "29"]]]
-        [:a.preview-link {:href "/#/article/article-id"}
-         [:h1 "How to build webapps that scael"]
-         [:p "This is the description for the post."]
-         [:span "Read more ..."]]]]]
-     [:div.col-md-3
-      [:div.sidebar
-       [:p "Popular Tags"]
-       [:div.tag-list
-        [:a.tag-pill.tag-default {:href "/#/tag/programming"} "programming"]
-        [:a.tag-pill.tag-default {:href "/#/tag/javascript"} "javascript"]
-        [:a.tag-pill.tag-default {:href "/#/tag/emberjs"} "emberjs"]
-        [:a.tag-pill.tag-default {:href "/#/tag/react"} "react"]]]]]]])
+  (let [articles @(subscribe [:articles])]
+   [:div.home-page
+    [:div.banner
+     [:div.container
+      [:h1.logo-font "conduit"]
+      [:p "A place to share your knowledge."]]]
+    [:div.container.page
+     [:div.row
+      [:div.col-md-9
+       [:div.feed-toggle
+        [:div.nav.nav-pils.outline-active
+         [:li.nav-item
+          [:a.nav-link.active "Global Feed"]]]
+        (if articles
+          (for [{:keys [description slug updatedAt title author favoritesCount]} (vals articles)]
+            ^{:key slug} [:div.article-preview
+                          [:div.article-meta
+                           [:a {:href (str "/#/@" (:username author))}
+                            [:img {:src (:image author)}]]
+                           [:div.info
+                            [:a.author {:href (str "/#/@" (:username author))} (:username author)]
+                            [:span.date updatedAt]]
+                           [:button.btn.btn-outline-primary.btn-sm.pull-xs-right
+                            [:i.ion-heart favoritesCount]]]
+                          [:a.preview-link {:href (str "/#/article/" slug)}
+                           [:h1 title]
+                           [:p description]
+                           [:span "Read more ..."]]])
+
+          [:p "Loading articles ..."])]]
+
+      [:div.col-md-3
+       [:div.sidebar
+        [:p "Popular Tags"]
+        [:div.tag-list
+         [:a.tag-pill.tag-default {:href "/#/tag/programming"} "programming"]
+         [:a.tag-pill.tag-default {:href "/#/tag/javascript"} "javascript"]
+         [:a.tag-pill.tag-default {:href "/#/tag/emberjs"} "emberjs"]
+         [:a.tag-pill.tag-default {:href "/#/tag/react"} "react"]]]]]]]))
 
 
 (defn login
@@ -248,8 +253,8 @@
          [:i.ion-edit]
          [:i.ion-trash-a]]]]]]]])
 
-(defn- panels [panel-name]
-  (case panel-name
+(defn- pages [page-name]
+  (case page-name
     :home [home]
     :login [login]
     :register [register]
@@ -261,8 +266,8 @@
 
 (defn conduit-app
   []
-  (let [active-panel @(subscribe [:active-panel])]
+  (let [active-page @(subscribe [:active-page])]
    [:div
     [header]
-    [panels active-panel]
+    [pages active-page]
     [footer]]))
