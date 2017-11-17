@@ -18,28 +18,28 @@
 
 ;; -- Routes and History ------------------------------------------------------
 ;;
-(defroute "/" [] (dispatch [:set-active-page :home]))
-(defroute "/home" [] (dispatch [:set-active-page :home]))
-(defroute "/auth" [] (dispatch [:set-active-page :auth]))
-(defroute "/login" [] (dispatch [:set-active-page :login]))
-(defroute "/logout" [] (dispatch [:logout]))
-(defroute "/signup" [] (dispatch [:set-active-page :signup]))
-(defroute "/register" [] (dispatch [:set-active-page :auth]))
-(defroute "/settings" [] (dispatch [:set-active-page :settings]))
-(defroute "/editor" [] (dispatch [:set-active-page :editor]))
-(defroute "/editor/:slug" [slug]
-          (do (dispatch [:set-active-page :editor])
-              (dispatch [:set-active-article slug])))
-(defroute "/article/:slug" [slug]
-          (do (dispatch [:set-active-page :article])
-              (dispatch [:set-active-article slug])))
-(defroute "/profile" [] (dispatch [:set-active-page :profile]))
-(defroute "/profile/:username" [username]
-          (do (dispatch [:set-active-page :profile])
-              (dispatch [:set-active-profile username])))
-(defroute "/profile/:username/favorites" [username]
-          (do (dispatch [:set-active-page :profile])
-              (dispatch [:set-active-profile username])))
+(defn routes
+  []
+  (secretary/set-config! :prefix "#")
+  (defroute "/" [] (dispatch [:set-active-panel :home]))
+  (defroute "/login" [] (dispatch [:set-active-panel :login]))
+  (defroute "/register" [] (dispatch [:set-active-panel :register]))
+  (defroute "/logout" [] (dispatch [:logout]))
+  (defroute "/settings" [] (dispatch [:set-active-panel :settings]))
+  (defroute "/editor" [] (dispatch [:set-active-panel :editor]))
+  (defroute "/editor/:slug" [slug]
+            (do (dispatch [:set-active-panel :editor])
+                (dispatch [:set-active-article slug])))
+  (defroute "/article/:slug" [slug]
+            (do (dispatch [:set-active-panel :article])
+                (dispatch [:set-active-article slug])))
+  (defroute "/profile" [] (dispatch [:set-active-panel :profile]))
+  (defroute "/profile/:username" [username]
+            (do (dispatch [:set-active-panel :profile])
+                (dispatch [:set-active-profile username])))
+  (defroute "/profile/:username/favorites" [username]
+            (do (dispatch [:set-active-panel :profile])
+                (dispatch [:set-active-profile username]))))
 
 (def history
   (doto (History.)
@@ -54,6 +54,9 @@
 ;;
 (defn ^:export main
   []
+  ;; Hookup the router and history that we configured above.
+  (routes)
+
   ;; Put an initial value into app-db.
   ;; The event handler for `:initialise-db` can be found in `events.cljs`
   ;; Using the sync version of dispatch means that value is in

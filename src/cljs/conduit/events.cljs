@@ -3,7 +3,7 @@
             [conduit.db :as db]))
 
 (reg-event-db
- :initialize-db
+ :initialise-db
  (fn  [_ _]
    db/default-db))
 
