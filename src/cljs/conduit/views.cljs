@@ -184,69 +184,69 @@
 
 (defn article
   []
-  [:div {:class "article-page"}
-   [:div {:class "banner"}
-    [:div {:class "container"}
+  [:div.article-page
+   [:div.banner
+    [:div.container
      [:h1 "How to build webapps that scale"]
-     [:div {:class "article-meta"}
-      [:a {:href""}
+     [:div.article-meta
+      [:a {:href ""}
        [:img {:src "http://i.imgur.com/Qr71crq.jpg"}]]
-      [:div {:class "info"}
-       [:a {:href "/#/author" :class "author"} "Eric Simons"]
-       [:span {:class "date"} "January 20th"]]
-      [:button {:class "btn btn-sm btn-outline-secondary"}
-       [:i {:class "ion-plus-round"}]"\n          Follow Eric Simons "
-       [:span {:class "counter"} "(10)"]]
-      [:button {:class "btn btn-sm btn-outline-primary"}
-       [:i {:class "ion-heart"}]"\n          Favorite Post "
-       [:span {:class "counter"} "(29)"]]]]]
-   [:div {:class "container page"}
-    [:div {:class "row article-content"}
-     [:div {:class "col-md-12"}
+      [:div.info
+       [:a.author {:href "/#/author"} "Eric Simons"]
+       [:span.date "January 20th"]]
+      [:button.btn.btn-sm.btn-outline-secondary {}
+       [:i.ion-plus-round]"\n          Follow Eric Simons "
+       [:span.counter "(10)"]]
+      [:button.btn.btn-sm.btn-outline-primary {}
+       [:i.ion-heart "\n          Favorite Post "]
+       [:span.counter "(29)"]]]]]
+   [:div.container.page
+    [:div.row.article-content
+     [:div.col-md-12
       [:p "Web development technologies have evolved at an incredible clip over the past few years."]
       [:h2 {:id "introducing-ionic"} "Introducing RealWorld."]
       [:p "It&#39;s a great solution for learning how other frameworks work."]]]
     [:hr]
-    [:div {:class "article-actions"}
-     [:div {:class "article-meta"}
+    [:div.article-actions
+     [:div.article-meta
       [:a {:href "profile.html"}
        [:img {:src "http://i.imgur.com/Qr71crq.jpg"}]]
-      [:div {:class "info"}
-       [:a {:href "" , :class "author"} "Eric Simons"]
-       [:span {:class "date"} "January 20th"]]
-      [:button {:class "btn btn-sm btn-outline-secondary"}
-       [:i {:class "ion-plus-round"}]"\n          Follow Eric Simons "
-       [:span {:class "counter"} "(10)"]]
-      [:button {:class "btn btn-sm btn-outline-primary"}
-       [:i {:class "ion-heart"}]"\n          Favorite Post "
-       [:span {:class "counter"} "(29)"]]]]
-    [:div {:class "row"}
-     [:div {:class "col-xs-12 col-md-8 offset-md-2"}
-      [:form {:class "card comment-form"}
-       [:div {:class "card-block"}
-        [:textarea {:class "form-control", :placeholder "Write a comment...", :rows "3"}]]
-       [:div {:class "card-footer"}
-        [:img {:src "http://i.imgur.com/Qr71crq.jpg", :class "comment-author-img"}]
-        [:button {:class "btn btn-sm btn-primary"} "Post Comment"]]]
-      [:div {:class "card"}
-       [:div {:class "card-block"}
-        [:p {:class "card-text"} "With supporting text below as a natural lead-in to additional content."]]
-       [:div {:class "card-footer"}
-        [:a {:href "" , :class "comment-author"}
-         [:img {:src "http://i.imgur.com/Qr71crq.jpg", :class "comment-author-img"}]]
-        [:a {:href "" , :class "comment-author"} "Jacob Schmidt"]
-        [:span {:class "date-posted"} "Dec 29th"]]]
-      [:div {:class "card"}
-       [:div {:class "card-block"}
-        [:p {:class "card-text"} "With supporting text below as a natural lead-in to additional content."]]
-       [:div {:class "card-footer"}
-        [:a {:href "" , :class "comment-author"}
-         [:img {:src "http://i.imgur.com/Qr71crq.jpg", :class "comment-author-img"}]]
-        [:a {:href "" , :class "comment-author"} "Jacob Schmidt"]
-        [:span {:class "date-posted"} "Dec 29th"]
-        [:span {:class "mod-options"}
-         [:i {:class "ion-edit"}]
-         [:i {:class "ion-trash-a"}]]]]]]]])
+      [:div.info
+       [:a.author {:href ""} "Eric Simons"]
+       [:span.date "January 20th"]]
+      [:button.btn.btn-sm.btn-outline-secondary
+       [:i.ion-plus-round]"\n          Follow Eric Simons "
+       [:span.counter "(10)"]]
+      [:button.btn.btn-sm.btn-outline-primary
+       [:i.ion-heart "\n          Favorite Post "]
+       [:span.counter "(29)"]]]]
+    [:div.row
+     [:div.col-xs-12.col-md-8.offset-md-2
+      [:form.card.comment-form
+       [:div.card-block
+        [:textarea.form-control {:placeholder "Write a comment...", :rows "3"}]]
+       [:div.card-footer
+        [:img.comment-author-img {:src "http://i.imgur.com/Qr71crq.jpg",}]
+        [:button.btn.btn-sm.btn-primary "Post Comment"]]]
+      [:div.card
+       [:div.card-block
+        [:p.card-text "With supporting text below as a natural lead-in to additional content."]]
+       [:div.card-footer
+        [:a.comment-author {:href ""}
+         [:img.comment-author-img {:src "http://i.imgur.com/Qr71crq.jpg",}]]
+        [:a.comment-author {:href ""} "Jacob Schmidt"]
+        [:span.date-posted "Dec 29th"]]]
+      [:div.card
+       [:div.card-block
+        [:p.card-text "With supporting text below as a natural lead-in to additional content."]]
+       [:div.card-footer
+        [:a.comment-author {:href ""}
+         [:img.comment-author-img {:src "http://i.imgur.com/Qr71crq.jpg",}]]
+        [:a.comment-author {:href ""} "Jacob Schmidt"]
+        [:span.date-posted "Dec 29th"]
+        [:span.mod-options
+         [:i.ion-edit]
+         [:i.ion-trash-a]]]]]]]])
 
 (defn- panels [panel-name]
   (case panel-name
