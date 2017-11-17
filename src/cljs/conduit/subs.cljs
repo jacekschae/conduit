@@ -1,12 +1,7 @@
 (ns conduit.subs
-  (:require [re-frame.core :as re-frame]))
+  (:require [re-frame.core :refer [reg-sub subscribe]]))
 
-(re-frame/reg-sub
- ::name
- (fn [db]
-   (:name db)))
-
-(re-frame/reg-sub
- ::active-panel
+(reg-sub
+ :active-panel
  (fn [db _]
    (:active-panel db)))
