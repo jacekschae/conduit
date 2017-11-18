@@ -7,11 +7,11 @@
    (:active-page db))) ;; extract a value from the application state
 
 (reg-sub
- :articles            ;; usage: (subscribe [:articles])
-  (fn [db _]
-    (:articles db)))
+ :articles  ;; usage: (subscribe [:articles])
+ (fn [db _]
+   (:articles db)))
 
 (reg-sub
- :tags            ;; usage: (subscribe [:tags])
-  (fn [db _]
-    (:tags db)))
+ :tags  ;; usage: (subscribe [:tags])
+ (fn [db _]
+   (:tags db)))

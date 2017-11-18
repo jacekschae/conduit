@@ -41,45 +41,44 @@
 (defn home
   []
   (let [articles @(subscribe [:articles])]
-   [:div.home-page
-    [:div.banner
-     [:div.container
-      [:h1.logo-font "conduit"]
-      [:p "A place to share your knowledge."]]]
-    [:div.container.page
-     [:div.row
-      [:div.col-md-9
-       [:div.feed-toggle
-        [:div.nav.nav-pils.outline-active
-         [:li.nav-item
-          [:a.nav-link.active "Global Feed"]]]
-        (if articles
-          (for [{:keys [description slug updatedAt title author favoritesCount]} (vals articles)]
-            ^{:key slug} [:div.article-preview
-                          [:div.article-meta
-                           [:a {:href (str "/#/@" (:username author))}
-                            [:img {:src (:image author)}]]
-                           [:div.info
-                            [:a.author {:href (str "/#/@" (:username author))} (:username author)]
-                            [:span.date updatedAt]]
-                           [:button.btn.btn-outline-primary.btn-sm.pull-xs-right
-                            [:i.ion-heart favoritesCount]]]
-                          [:a.preview-link {:href (str "/#/article/" slug)}
-                           [:h1 title]
-                           [:p description]
-                           [:span "Read more ..."]]])
+    [:div.home-page
+     [:div.banner
+      [:div.container
+       [:h1.logo-font "conduit"]
+       [:p "A place to share your knowledge."]]]
+     [:div.container.page
+      [:div.row
+       [:div.col-md-9
+        [:div.feed-toggle
+         [:div.nav.nav-pils.outline-active
+          [:li.nav-item
+           [:a.nav-link.active "Global Feed"]]]
+         (if articles
+           (for [{:keys [description slug updatedAt title author favoritesCount]} (vals articles)]
+             ^{:key slug} [:div.article-preview
+                           [:div.article-meta
+                            [:a {:href (str "/#/@" (:username author))}
+                             [:img {:src (:image author)}]]
+                            [:div.info
+                             [:a.author {:href (str "/#/@" (:username author))} (:username author)]
+                             [:span.date updatedAt]]
+                            [:button.btn.btn-outline-primary.btn-sm.pull-xs-right
+                             [:i.ion-heart favoritesCount]]]
+                           [:a.preview-link {:href (str "/#/article/" slug)}
+                            [:h1 title]
+                            [:p description]
+                            [:span "Read more ..."]]])
 
-          [:p "Loading articles ..."])]]
+           [:p "Loading articles ..."])]]
 
-      [:div.col-md-3
-       [:div.sidebar
-        [:p "Popular Tags"]
-        [:div.tag-list
-         [:a.tag-pill.tag-default {:href "/#/tag/programming"} "programming"]
-         [:a.tag-pill.tag-default {:href "/#/tag/javascript"} "javascript"]
-         [:a.tag-pill.tag-default {:href "/#/tag/emberjs"} "emberjs"]
-         [:a.tag-pill.tag-default {:href "/#/tag/react"} "react"]]]]]]]))
-
+       [:div.col-md-3
+        [:div.sidebar
+         [:p "Popular Tags"]
+         [:div.tag-list
+          [:a.tag-pill.tag-default {:href "/#/tag/programming"} "programming"]
+          [:a.tag-pill.tag-default {:href "/#/tag/javascript"} "javascript"]
+          [:a.tag-pill.tag-default {:href "/#/tag/emberjs"} "emberjs"]
+          [:a.tag-pill.tag-default {:href "/#/tag/react"} "react"]]]]]]]))
 
 (defn login
   []
@@ -200,7 +199,7 @@
        [:a.author {:href "/#/author"} "Eric Simons"]
        [:span.date "January 20th"]]
       [:button.btn.btn-sm.btn-outline-secondary {}
-       [:i.ion-plus-round]"\n          Follow Eric Simons "
+       [:i.ion-plus-round] "\n          Follow Eric Simons "
        [:span.counter "(10)"]]
       [:button.btn.btn-sm.btn-outline-primary {}
        [:i.ion-heart "\n          Favorite Post "]
@@ -220,7 +219,7 @@
        [:a.author {:href ""} "Eric Simons"]
        [:span.date "January 20th"]]
       [:button.btn.btn-sm.btn-outline-secondary
-       [:i.ion-plus-round]"\n          Follow Eric Simons "
+       [:i.ion-plus-round] "\n          Follow Eric Simons "
        [:span.counter "(10)"]]
       [:button.btn.btn-sm.btn-outline-primary
        [:i.ion-heart "\n          Favorite Post "]
@@ -231,14 +230,14 @@
        [:div.card-block
         [:textarea.form-control {:placeholder "Write a comment...", :rows "3"}]]
        [:div.card-footer
-        [:img.comment-author-img {:src "http://i.imgur.com/Qr71crq.jpg",}]
+        [:img.comment-author-img {:src "http://i.imgur.com/Qr71crq.jpg"}]
         [:button.btn.btn-sm.btn-primary "Post Comment"]]]
       [:div.card
        [:div.card-block
         [:p.card-text "With supporting text below as a natural lead-in to additional content."]]
        [:div.card-footer
         [:a.comment-author {:href ""}
-         [:img.comment-author-img {:src "http://i.imgur.com/Qr71crq.jpg",}]]
+         [:img.comment-author-img {:src "http://i.imgur.com/Qr71crq.jpg"}]]
         [:a.comment-author {:href ""} "Jacob Schmidt"]
         [:span.date-posted "Dec 29th"]]]
       [:div.card
@@ -246,7 +245,7 @@
         [:p.card-text "With supporting text below as a natural lead-in to additional content."]]
        [:div.card-footer
         [:a.comment-author {:href ""}
-         [:img.comment-author-img {:src "http://i.imgur.com/Qr71crq.jpg",}]]
+         [:img.comment-author-img {:src "http://i.imgur.com/Qr71crq.jpg"}]]
         [:a.comment-author {:href ""} "Jacob Schmidt"]
         [:span.date-posted "Dec 29th"]
         [:span.mod-options
@@ -267,7 +266,7 @@
 (defn conduit-app
   []
   (let [active-page @(subscribe [:active-page])]
-   [:div
-    [header]
-    [pages active-page]
-    [footer]]))
+    [:div
+     [header]
+     [pages active-page]
+     [footer]]))

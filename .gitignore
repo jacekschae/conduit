@@ -2,4 +2,5 @@
 /target
 /*-init.clj
 /resources/public/js/compiled
+.nrepl-port
 out

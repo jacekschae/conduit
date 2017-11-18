@@ -11,7 +11,6 @@
   (:import [goog History]
            [goog.history EventType]))
 
-
 ;; -- Debugging aids ----------------------------------------------------------
 ;;
 (devtools/install!)       ;; we love https://github.com/binaryage/cljs-devtools
@@ -51,7 +50,6 @@
                    (fn [event] (secretary/dispatch! (.-token event))))
     (.setEnabled true)))
 
-
 ;; -- Entry Point -------------------------------------------------------------
 ;; Within ../../resources/public/index.html you'll see this code:
 ;; window.onload = function() { conduit.core.main() }
@@ -76,4 +74,4 @@
   ;; The view function `conduit.views/conduit-app` is the
   ;; root view for the entire UI.
   (reagent/render [conduit.views/conduit-app]
-                  (.getElementById js/document "app")))
+    (.getElementById js/document "app")))

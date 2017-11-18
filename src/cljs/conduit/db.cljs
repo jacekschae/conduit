@@ -3,7 +3,6 @@
             [cljs.spec.alpha :as s]
             [re-frame.core :as re-frame]))
 
-
 ;; -- Default app-db Value  ---------------------------------------------------
 ;;
 ;; When the application first starts, this will be the value put in app-db
