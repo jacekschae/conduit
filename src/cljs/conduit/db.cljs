@@ -12,4 +12,4 @@
 ;;
 (def default-db               ;; what gets put into app-db by default.
   {:active-page :home         ;; set home page as active
-   :tags        :all})        ;; show all tags
+   :tags-filter :all})        ;; show all tags

@@ -40,7 +40,8 @@
 ;;
 (defn home
   []
-  (let [articles @(subscribe [:articles])]
+  (let [articles @(subscribe [:articles])
+        tags @(subscribe [:tags])]
     [:div.home-page
      [:div.banner
       [:div.container
@@ -74,11 +75,11 @@
        [:div.col-md-3
         [:div.sidebar
          [:p "Popular Tags"]
-         [:div.tag-list
-          [:a.tag-pill.tag-default {:href "/#/tag/programming"} "programming"]
-          [:a.tag-pill.tag-default {:href "/#/tag/javascript"} "javascript"]
-          [:a.tag-pill.tag-default {:href "/#/tag/emberjs"} "emberjs"]
-          [:a.tag-pill.tag-default {:href "/#/tag/react"} "react"]]]]]]]))
+         (if tags
+           [:div.tag-list
+            (for [tag tags]
+              ^{:key tag} [:a.tag-pill.tag-default {:href (str "/#/tag/" tag)} tag])]
+           [:p "Loading tags ..."])]]]]]))
 
 (defn login
   []

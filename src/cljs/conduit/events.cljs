@@ -34,10 +34,10 @@
    {:db         (assoc-in db [:pending-requests :get-articles] true)
     :http-xhrio {:method          :get
                  :uri             (uri "articles")
-                 :params          params
-                 :response-format (json-response-format {:keywords? true}) ;; swap all keys to keywords
-                 :on-success      [:get-articles-success]                  ;; trigger get-articles-success event
-                 :on-failure      [:api-request-failure :get-articles]}})) ;; trigger api-request-failure with :get-articles param
+                 :params          params                                    ;; include params in the request
+                 :response-format (json-response-format {:keywords? true})  ;; swap all keys to keywords
+                 :on-success      [:get-articles-success]                   ;; trigger get-articles-success event
+                 :on-failure      [:api-request-failure :get-articles]}}))  ;; trigger api-request-failure with :get-articles param
 
 (reg-event-db
  :get-articles-success
@@ -48,11 +48,10 @@
 
 (reg-event-fx  ;; usage (dispatch [:get-articles])
  :get-tags     ;; triggered when the home page is loaded
- (fn [{:keys [db]} [_ params]]  ;; params = {:limit 10}
+ (fn [{:keys [db]} _]  ;; second parameter is not important, therefore _
    {:db         (assoc-in db [:pending-requests :get-tags] true)
     :http-xhrio {:method          :get
                  :uri             (uri "tags")
-                 :params          params
                  :response-format (json-response-format {:keywords? true})  ;; swap all keys to keywords
                  :on-success      [:get-tags-success]                       ;; trigger get-tags-success event
                  :on-failure      [:api-request-failure :get-tags]}}))      ;; trigger api-request-failure with :get-tags param

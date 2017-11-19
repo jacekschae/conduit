@@ -66,9 +66,10 @@
   ;; place before we go onto the next step.
   (dispatch-sync [:initialise-db])
 
-  ;; Send request to get articles so that we can display them to the user when
-  ;; the page loads for the first time.
+  ;; Send request to get articles and tags so that we can display them to the
+  ;; user when the page loads for the first time.
   (dispatch [:get-articles {:limit 5}])
+  (dispatch [:get-tags])
 
   ;; Render the UI into the HTML's <div id="app" /> element
   ;; The view function `conduit.views/conduit-app` is the
