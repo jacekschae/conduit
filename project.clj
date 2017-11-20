@@ -11,52 +11,33 @@
 
             :jvm-opts ["--add-modules" "java.xml.bind"]
 
-            :plugins [[lein-cljsbuild "1.1.5"]]
+            :plugins [[lein-cljsbuild "1.1.5"]
+                      [lein-figwheel  "0.5.13"]]
 
-            :min-lein-version "2.5.3"
-
-            :source-paths ["src/clj"]
-
-            :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"]
-
-            :figwheel {:css-dirs ["resources/public/css"]}
-
-            :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
+            :hooks [leiningen.cljsbuild]
 
             :aliases {"dev" ["do" "clean"
                              ["pdo" ["figwheel" "dev"]]]
                       "build" ["do" "clean"
                                ["cljsbuild" "once" "min"]]}
 
-            :profiles
-            {:dev
-             {:dependencies [[binaryage/devtools "0.9.4"]
-                             [cljsjs/d3 "4.3.0-5"]
-                             [day8.re-frame/trace "0.1.7"]
+            :profiles {:dev  {:cljsbuild
+                              {:builds {:client {:compiler {:asset-path           "js"
+                                                            :optimizations        :none
+                                                            :source-map           true
+                                                            :source-map-timestamp true
+                                                            :main                 "conduit.core"}
+                                                 :figwheel {:on-jsload "conduit.core/main"}}}}}
 
-                             [figwheel-sidecar "0.5.13"]
-                             [com.cemerick/piggieback "0.2.2"]]
+                       :prod {:cljsbuild
+                              {:builds {:client {:compiler {:optimizations :advanced
+                                                            :elide-asserts true
+                                                            :pretty-print  false}}}}}}
+            :figwheel {:server-port 3449
+                       :repl        true}
 
-              :plugins      [[lein-figwheel "0.5.13"]
-                             [lein-pdo "0.1.1"]]}}
+            :clean-targets ^{:protect false} ["resources/public/js" "target"]
 
-            :cljsbuild
-            {:builds
-             [{:id           "dev"
-               :source-paths ["src/cljs"]
-               :figwheel     {:on-jsload "conduit.core/mount-root"}
-               :compiler     {:main                 conduit.core
-                              :output-to            "resources/public/js/compiled/app.js"
-                              :output-dir           "resources/public/js/compiled/out"
-                              :asset-path           "js/compiled/out"
-                              :source-map-timestamp true
-                              :preloads             [devtools.preload
-                                                     day8.re-frame.trace.preload]
-                              :closure-defines      {"re_frame.trace.trace_enabled_QMARK_" true}
-                              :external-config      {:devtools/config {:features-to-install :all}}}} {:id           "min"
-                                                                                                      :source-paths ["src/cljs"]
-                                                                                                      :compiler     {:main            conduit.core
-                                                                                                                     :output-to       "resources/public/js/compiled/app.js"
-                                                                                                                     :optimizations   :advanced
-                                                                                                                     :closure-defines {goog.DEBUG false}
-                                                                                                                     :pretty-print    false}}]})
+            :cljsbuild {:builds {:client {:source-paths ["src/conduit"]
+                                          :compiler     {:output-dir "resources/public/js"
+                                                         :output-to  "resources/public/js/client.js"}}}})

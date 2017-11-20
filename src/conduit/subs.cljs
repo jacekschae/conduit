@@ -12,6 +12,12 @@
    (:articles db)))
 
 (reg-sub
+ :active-article ;; usage (subscribe [:active-article "slug"])
+ (fn [db [_ slug]]
+   (.log js/console slug)
+   (get-in db [:articles slug])))
+
+(reg-sub
  :tags  ;; usage: (subscribe [:tags])
  (fn [db _]
    (:tags db)))

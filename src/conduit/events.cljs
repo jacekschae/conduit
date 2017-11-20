@@ -28,6 +28,11 @@
  (fn [db [_ active-page]]  ;; destructure 2nd parameter to obtain active-page
    (assoc db :active-page active-page)))  ;; compute and return the new state
 
+(reg-event-db  ;; usage: (dispatch [:set-active-page :home])
+ :set-active-article
+ (fn [db [_ active-article]]
+   (assoc db :active-article active-article)))
+
 (reg-event-fx   ;; usage (dispatch [:get-articles {:limit 10}])
  :get-articles  ;; triggered when the home page is loaded
  (fn [{:keys [db]} [_ params]]  ;; params = {:limit 10}

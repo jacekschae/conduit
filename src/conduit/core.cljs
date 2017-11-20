@@ -16,7 +16,6 @@
 (devtools/install!)       ;; we love https://github.com/binaryage/cljs-devtools
 (enable-console-print!)   ;; so that println writes to `console.log`
 
-
 ;; -- Routes and History ------------------------------------------------------
 ;;
 (defn routes
@@ -57,14 +56,15 @@
 ;;
 (defn ^:export main
   []
-  ;; Hookup the router and history that we configured above.
-  (routes)
 
   ;; Put an initial value into app-db.
   ;; The event handler for `:initialise-db` can be found in `events.cljs`
   ;; Using the sync version of dispatch means that value is in
   ;; place before we go onto the next step.
   (dispatch-sync [:initialise-db])
+
+  ;; Hookup the router and history that we configured above.
+  (routes)
 
   ;; Send request to get articles and tags so that we can display them to the
   ;; user when the page loads for the first time.
