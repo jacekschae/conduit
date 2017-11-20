@@ -16,10 +16,7 @@
 
             :hooks [leiningen.cljsbuild]
 
-            :aliases {"dev" ["do" "clean"
-                             ["pdo" ["figwheel" "dev"]]]
-                      "build" ["do" "clean"
-                               ["cljsbuild" "once" "min"]]}
+            :aliases {"dev" ["do" "clean" ["figwheel"]]} ;; TO-DO is that the right way to do it?
 
             :profiles {:dev  {:cljsbuild
                               {:builds {:client {:compiler {:asset-path           "js"

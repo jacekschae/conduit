@@ -191,42 +191,40 @@
   (let [article @(subscribe [:active-article])]
 
     [:div.article-page
-     (.log js/console article)
+     (.log js/console ":active-article" article)
      [:div.banner
       [:div.container
-       [:h1 "Title"]
+       [:h1 (:title article)]
        [:div.article-meta
-        [:a {:href ""}
-         [:img {:src "http://i.imgur.com/Qr71crq.jpg"}]]
+        [:a {:href (str "/#/@" (get-in article [:author :username]))}
+         [:img {:src (get-in article [:author :image])}]]
         [:div.info
-         [:a.author {:href "/#/author"} "Eric Simons"]
-         [:span.date "January 20th"]]
+         [:a.author {:href (str "/#/@" (get-in article [:author :username]))} (get-in article [:author :username])]
+         [:span.date (:updatedAt article)]]
         [:button.btn.btn-sm.btn-outline-secondary {}
-         [:i.ion-plus-round] "\n          Follow Eric Simons "
+         [:i.ion-plus-round] (str "Follow " (get-in article [:author :username]))
          [:span.counter "(10)"]]
         [:button.btn.btn-sm.btn-outline-primary {}
-         [:i.ion-heart "\n          Favorite Post "]
-         [:span.counter "(29)"]]]]]
+         [:i.ion-heart (str "Favorite Post ")]
+         [:span.counter "(" (:favoritesCount article) ")"]]]]]
      [:div.container.page
       [:div.row.article-content
        [:div.col-md-12
-        [:p "Web development technologies have evolved at an incredible clip over the past few years."]
-        [:h2 {:id "introducing-ionic"} "Introducing RealWorld."]
-        [:p "It&#39;s a great solution for learning how other frameworks work."]]]
+        [:p (:body article)]]]
       [:hr]
       [:div.article-actions
        [:div.article-meta
-        [:a {:href "profile.html"}
-         [:img {:src "http://i.imgur.com/Qr71crq.jpg"}]]
+        [:a {:href (str "/#/@" (get-in article [:author :username]))}
+         [:img {:src (get-in article [:author :image])}]]
         [:div.info
-         [:a.author {:href ""} "Eric Simons"]
-         [:span.date "January 20th"]]
-        [:button.btn.btn-sm.btn-outline-secondary
-         [:i.ion-plus-round] "\n          Follow Eric Simons "
+         [:a.author {:href (str "/#/@" (get-in article [:author :username]))} (get-in article [:author :username])]
+         [:span.date (:updatedAt article)]]
+        [:button.btn.btn-sm.btn-outline-secondary {}
+         [:i.ion-plus-round] (str "Follow " (get-in article [:author :username]))
          [:span.counter "(10)"]]
-        [:button.btn.btn-sm.btn-outline-primary
-         [:i.ion-heart "\n          Favorite Post "]
-         [:span.counter "(29)"]]]]
+        [:button.btn.btn-sm.btn-outline-primary {}
+         [:i.ion-heart (str "Favorite Post ")]
+         [:span.counter "(" (:favoritesCount article) ")"]]]]
       [:div.row
        [:div.col-xs-12.col-md-8.offset-md-2
         [:form.card.comment-form
