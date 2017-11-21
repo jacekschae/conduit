@@ -186,45 +186,38 @@
          [:div.tag-list]]
         [:button.btn.btn-lg.pull-xs-right.btn-primary {:type "button"} "Publish Article"]]]]]]])
 
+;; -- Article -----------------------------------------------------------------
+;;
+(defn article-meta
+  [article]
+  [:div.article-meta
+   [:a {:href (str "/#/@" (get-in article [:author :username]))}
+    [:img {:src (get-in article [:author :image])}]]
+   [:div.info
+    [:a.author {:href (str "/#/@" (get-in article [:author :username]))} (get-in article [:author :username])]
+    [:span.date (:updatedAt article)]]
+   [:button.btn.btn-sm.btn-outline-secondary {}
+    [:i.ion-plus-round] (str "Follow " (get-in article [:author :username]))
+    [:span.counter "(10)"]]
+   [:button.btn.btn-sm.btn-outline-primary {}
+    [:i.ion-heart (str "Favorite Post ")]
+    [:span.counter "(" (:favoritesCount article) ")"]]])
+
 (defn article
   []
-  (let [article @(subscribe [:active-article])]
-
+  (let [article @(subscribe [:article])]
     [:div.article-page
-     (.log js/console ":active-article" article)
      [:div.banner
       [:div.container
        [:h1 (:title article)]
-       [:div.article-meta
-        [:a {:href (str "/#/@" (get-in article [:author :username]))}
-         [:img {:src (get-in article [:author :image])}]]
-        [:div.info
-         [:a.author {:href (str "/#/@" (get-in article [:author :username]))} (get-in article [:author :username])]
-         [:span.date (:updatedAt article)]]
-        [:button.btn.btn-sm.btn-outline-secondary {}
-         [:i.ion-plus-round] (str "Follow " (get-in article [:author :username]))
-         [:span.counter "(10)"]]
-        [:button.btn.btn-sm.btn-outline-primary {}
-         [:i.ion-heart (str "Favorite Post ")]
-         [:span.counter "(" (:favoritesCount article) ")"]]]]]
+       [article-meta article]]]
      [:div.container.page
       [:div.row.article-content
        [:div.col-md-12
         [:p (:body article)]]]
       [:hr]
       [:div.article-actions
-       [:div.article-meta
-        [:a {:href (str "/#/@" (get-in article [:author :username]))}
-         [:img {:src (get-in article [:author :image])}]]
-        [:div.info
-         [:a.author {:href (str "/#/@" (get-in article [:author :username]))} (get-in article [:author :username])]
-         [:span.date (:updatedAt article)]]
-        [:button.btn.btn-sm.btn-outline-secondary {}
-         [:i.ion-plus-round] (str "Follow " (get-in article [:author :username]))
-         [:span.counter "(10)"]]
-        [:button.btn.btn-sm.btn-outline-primary {}
-         [:i.ion-heart (str "Favorite Post ")]
-         [:span.counter "(" (:favoritesCount article) ")"]]]]
+       [article-meta article]]
       [:div.row
        [:div.col-xs-12.col-md-8.offset-md-2
         [:form.card.comment-form

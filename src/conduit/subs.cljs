@@ -8,11 +8,11 @@
 
 (reg-sub
  :articles  ;; usage: (subscribe [:articles])
- (fn [db _]
+ (fn [db param]
    (:articles db)))
 
 (reg-sub
- :active-article ;; usage (subscribe [:active-article "slug"])
+ :article ;; usage (subscribe [:article])
  (fn [db [_ _]]
    (let [article (:active-article db)]
      (get-in db [:articles article]))))
