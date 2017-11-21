@@ -46,9 +46,14 @@
   (.preventDefault event)
   (dispatch [:get-articles-by-tag {:tag tag :limit 10}]))
 
+(defn get-articles [event tag] ;; @daniel - Same as above
+  (.preventDefault event)
+  (dispatch [:get-articles]))
+
 (defn home
   []
   (let [articles @(subscribe [:articles])
+        articles-by-tag @(subscribe [:articles-by-tag])
         tags @(subscribe [:tags])]
     [:div.home-page
      [:div.banner
@@ -59,9 +64,16 @@
       [:div.row
        [:div.col-md-9
         [:div.feed-toggle
-         [:ul.nav.nav-pills.outline-active
-          [:li.nav-item
-           [:a.nav-link.active "Global Feed"]]]
+         (if articles-by-tag
+           [:ul.nav.nav-pills.outline-active
+            [:li.nav-item
+             [:a.nav-link {:href "" :on-click get-articles} "Global Feed"]]
+            [:li.nav-item
+             [:a.nav-link.active
+              [:i.ion-pound] (str " " articles-by-tag)]]]
+           [:ul.nav.nav-pills.outline-active
+            [:li.nav-item
+             [:a.nav-link.active {:href "/#/"} "Global Feed"]]])
          (if articles
            (for [{:keys [description slug updatedAt title author favoritesCount]} (vals articles)] ;; @daniel is this the way to do it with (vals ...), somehow it feels strange
              ^{:key slug} [:div.article-preview

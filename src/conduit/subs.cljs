@@ -21,3 +21,8 @@
  :tags  ;; usage: (subscribe [:tags])
  (fn [db _]
    (:tags db)))
+
+(reg-sub
+ :articles-by-tag  ;; usage: (subscribe [:articles-by-tag])
+ (fn [db _]
+   (:articles-by-tag db)))

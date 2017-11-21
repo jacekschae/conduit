@@ -36,7 +36,9 @@
 (reg-event-fx   ;; usage (dispatch [:get-articles {:limit 10}])
  :get-articles  ;; triggered when the home page is loaded
  (fn [{:keys [db]} [_ params]]  ;; params = {:limit 10}
-   {:db         (assoc-in db [:pending-requests :get-articles] true)
+   {:db         (do ;; @daniel is this correct way to assoc two values at the same time?
+                  (assoc-in db [:pending-requests :get-articles] true)
+                  (assoc db :articles-by-tag false))
     :http-xhrio {:method          :get
                  :uri             (uri "articles")
                  :params          params                                    ;; include params in the request
@@ -71,7 +73,9 @@
 (reg-event-fx          ;; usage (dispatch [:get-articles-by-tag {:tag "tag" :limit 10}])
  :get-articles-by-tag  ;; triggered when a tag is clicked
  (fn [{:keys [db]} [_ params]]  ;; params = {:tag "tag-name" :limit 10}
-   {:db         (assoc-in db [:pending-requests :get-articles] true)
+   {:db         (do ;; @daniel, same as above (line 39), is this correct way to assoc two values at the same time?
+                  (assoc-in db [:pending-requests :get-articles] true)
+                  (assoc db :articles-by-tag (:tag params)))
     :http-xhrio {:method          :get
                  :uri             (uri "articles")
                  :params          params                                    ;; include params in the request
