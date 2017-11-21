@@ -23,7 +23,7 @@
   (secretary/set-config! :prefix "#")
   (defroute "/" []
             (do (dispatch [:set-active-page :home])
-                (dispatch [:get-articles {:limit 5}])))
+                (dispatch [:get-articles {:limit 10}])))
   (defroute "/login" [] (dispatch [:set-active-page :login]))
   (defroute "/register" [] (dispatch [:set-active-page :register]))
   (defroute "/settings" [] (dispatch [:set-active-page :settings]))

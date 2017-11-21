@@ -75,20 +75,24 @@
             [:li.nav-item
              [:a.nav-link.active {:href "/#/"} "Global Feed"]]])
          (if articles
-           (for [{:keys [description slug updatedAt title author favoritesCount]} (vals articles)] ;; @daniel is this the way to do it with (vals ...), somehow it feels strange
+           (for [{:keys [description slug createdAt title author favoritesCount tagList]} (vals articles)] ;; @daniel is this the way to do it with (vals ...), somehow it feels strange
              ^{:key slug} [:div.article-preview
                            [:div.article-meta
                             [:a {:href (str "/#/@" (:username author))}
                              [:img {:src (:image author)}]]
                             [:div.info
                              [:a.author {:href (str "/#/@" (:username author))} (:username author)]
-                             [:span.date updatedAt]]
+                             [:span.date (.toDateString (js/Date. createdAt))]]
                             [:button.btn.btn-outline-primary.btn-sm.pull-xs-right
                              [:i.ion-heart favoritesCount]]]
                            [:a.preview-link {:href (str "/#/article/" slug)}
                             [:h1 title]
                             [:p description]
-                            [:span "Read more ..."]]])
+                            [:span "Read more ..."]
+                            [:ul.tag-list
+                             (for [tag tagList]
+                               ^{:key tag} [:li.tag-default.tag-pill.tag-outline tag])]]])
+
            [:p "Loading articles ..."])]]
 
        [:div.col-md-3
