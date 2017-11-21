@@ -67,3 +67,14 @@
    (-> db
        (assoc-in [:pending-requests :get-tags] false)
        (assoc :tags tags))))
+
+(reg-event-fx          ;; usage (dispatch [:get-articles-by-tag {:tag "tag" :limit 10}])
+ :get-articles-by-tag  ;; triggered when a tag is clicked
+ (fn [{:keys [db]} [_ params]]  ;; params = {:tag "tag-name" :limit 10}
+   {:db         (assoc-in db [:pending-requests :get-articles] true)
+    :http-xhrio {:method          :get
+                 :uri             (uri "articles")
+                 :params          params                                    ;; include params in the request
+                 :response-format (json-response-format {:keywords? true})  ;; swap all keys to keywords
+                 :on-success      [:get-articles-success]                   ;; trigger get-articles-by-tag-success event
+                 :on-failure      [:api-request-failure :get-articles]}}))  ;; trigger api-request-failure with :get-articles-by-tag param
