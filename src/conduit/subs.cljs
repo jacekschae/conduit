@@ -13,7 +13,7 @@
 
 (reg-sub
  :article ;; usage (subscribe [:article])
- (fn [db [_ _]]
+ (fn [db _]
    (let [article (:active-article db)]
      (into {} (filter #(= article (:slug %)) (:articles db)))))) ;; @daniel, is there a way we can
                                                                  ;; avoid into {} ... ?
@@ -29,6 +29,6 @@
    (:articles-by-tag db)))
 
 (reg-sub
- :comments  ;; usage: (subscribe [:comments])
+ :profile  ;; usage: (subscribe [:comments])
  (fn [db _]
-   (:comments db)))
+   (:profile db)))

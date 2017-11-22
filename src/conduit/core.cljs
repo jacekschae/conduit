@@ -31,18 +31,19 @@
   (defroute "/logout" [] (dispatch [:logout]))
   (defroute "/editor/:slug" [slug]
             (do (dispatch [:set-active-page :editor])
-                (dispatch [:set-active-article slug]))) ;; @daniel do we need to save slug?
-  (defroute "/article/:slug" [slug]                     ;; In JS we would read it from URL and pass it to subscription
+                (dispatch [:set-active-article slug]))) ;; @daniel I save the slug to get active-article
+  (defroute "/article/:slug" [slug]                     ;; In JS we would read it from URL without saving soewhere
             (do (dispatch [:set-active-page :article])
                 (dispatch [:set-active-article slug])
                 (dispatch [:get-article-comments {:slug slug}])))
-  (defroute "/profile" [] (dispatch [:set-active-page :profile]))
-  (defroute "/profile/:username" [username]
+  (defroute "/:username/favorites" [username]
             (do (dispatch [:set-active-page :profile])
-                (dispatch [:set-active-profile username])))
-  (defroute "/profile/:username/favorites" [username]
+                (dispatch [:get-user-profile {:profile (subs username 1)}]) ;; URL contains @ therefore subs
+                (dispatch [:get-articles {:favorited (subs username 1)}]))) ;; URL contains @ therefore subs
+  (defroute "/:username" [username]
             (do (dispatch [:set-active-page :profile])
-                (dispatch [:set-active-profile username]))))
+                (dispatch [:get-user-profile {:profile (subs username 1)}]) ;; URL contains @ therefore subs
+                (dispatch [:get-articles {:author (subs username 1)}])))) ;; URL contains @ therefore subs
 
 (def history
   (doto (History.)

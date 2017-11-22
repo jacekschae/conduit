@@ -17,10 +17,10 @@
 
 ;; -- Event Handlers ----------------------------------------------------------
 
-(reg-event-db    ;; sets up initial application state
- :initialise-db  ;; usage: (dispatch [:initialise-db])
+(reg-event-db    ;; usage: (dispatch [:initialise-db])
+ :initialise-db  ;; sets up initial application state
  (fn  [_ _]      ;; the two parameters are not important here, so use _
-   default-db))  ;; What it returns becomes the new application state
+   default-db))  ;; what it returns becomes the new application state
 
 
 (reg-event-db              ;; usage: (dispatch [:set-active-page :home])
@@ -47,7 +47,7 @@
                  :on-failure      [:api-request-failure :get-articles]}}))  ;; trigger api-request-failure with :get-articles param
 
 (reg-event-db
- :get-articles-success
+ :get-articles-success ;; @daniel is that the naming convention? :request-name-SUCCESS?
  (fn [db [_ {articles :articles}]]
    (assoc db :articles articles)))
 
@@ -68,19 +68,6 @@
        (assoc-in [:pending-requests :get-tags] false)
        (assoc :tags tags))))
 
-(reg-event-fx          ;; usage (dispatch [:get-articles-by-tag {:tag "tag" :limit 10}])
- :get-articles-by-tag  ;; triggered when a tag is clicked
- (fn [{:keys [db]} [_ params]]  ;; params = {:tag "tag-name" :limit 10}
-   {:db         (do ;; @daniel, same as above (line 39), is this correct way to assoc two values at the same time?
-                  (assoc-in db [:pending-requests :get-articles] true)
-                  (assoc db :articles-by-tag (:tag params)))
-    :http-xhrio {:method          :get
-                 :uri             (uri "articles")
-                 :params          params                                    ;; include params in the request
-                 :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
-                 :on-success      [:get-articles-success]                   ;; trigger get-articles-by-tag-success event
-                 :on-failure      [:api-request-failure :get-articles]}}))  ;; trigger api-request-failure with :get-articles-by-tag param
-
 (reg-event-fx           ;; usage (dispatch [:get-article-comments {:slug "article-slug"}])
  :get-article-comments  ;; triggered when the article page is loaded
  (fn [{:keys [db]} [_ params]]  ;; params = {:slug "article-slug"}
@@ -88,8 +75,8 @@
     :http-xhrio {:method          :get
                  :uri             (uri "articles" (:slug params) "comments")  ;; evaluates to "/articles/:slug/comments"
                  :response-format (json-response-format {:keywords? true})    ;; json and all keys to keywords
-                 :on-success      [:get-article-comments-success]             ;; trigger get-articles-success event
-                 :on-failure      [:api-request-failure :get-articles]}}))    ;; trigger api-request-failure with :get-articles param
+                 :on-success      [:get-article-comments-success]             ;; trigger get-articles-success
+                 :on-failure      [:api-request-failure :get-article-comments]}}))  ;; trigger api-request-failure with :get-articles param
 
 (reg-event-db
  :get-article-comments-success
@@ -97,3 +84,27 @@
    (-> db
        (assoc-in [:pending-requests :get-article-comments] false)
        (assoc :comments comments))))
+
+(reg-event-fx       ;; usage (dispatch [:get-user-profile {:profile "profile"}])
+ :get-user-profile  ;; triggered when the profile page is loaded
+ (fn [{:keys [db]} [_ params]]  ;; params = {:profile "profile"}
+   {:db         (assoc-in db [:pending-requests :get-user-profile] true)
+    :http-xhrio {:method          :get
+                 :uri             (uri "profiles" (:profile params))        ;; evaluates to "/profiles/:profile"
+                 :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
+                 :on-success      [:get-user-profile-success]               ;; trigger get-user-profile-success
+                 :on-failure      [:api-request-failure :get-user-profile]}}))  ;; trigger api-request-failure with :get-articles param
+
+(reg-event-db
+ :get-user-profile-success
+ (fn [db [_ {profile :profile}]]
+   (-> db
+       (assoc-in [:pending-requests :get-user-profile] false)
+       (assoc :profile profile))))
+
+(reg-event-db
+ :api-request-failure
+ (fn [db [_ {profile :profile}]]
+   (-> db
+       (assoc-in [:pending-requests :get-user-profile] false)
+       (assoc :profile profile))))

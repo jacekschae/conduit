@@ -61,6 +61,7 @@
   [:div.article-meta
    [:a {:href (str "/#/@" (:username author))}
     [:img {:src (:image author)}]]
+   " "
    [:div.info
     [:a.author {:href (str "/#/@" (:username author))} (:username author)]
     [:span.date (format-date created-at)]]
@@ -78,7 +79,7 @@
 ;;
 (defn get-articles-by-tag [event tag] ;; @daniel - I think this should move out of view and be in the events
   (.preventDefault event)
-  (dispatch [:get-articles-by-tag {:tag tag :limit 10}]))
+  (dispatch [:get-articles {:tag tag :limit 10}]))
 
 (defn get-articles [event tag] ;; @daniel - Same as above
   (.preventDefault event)
@@ -109,7 +110,7 @@
             [:li.nav-item
              [:a.nav-link.active {:href "/#/"} "Global Feed"]]])
          (if articles
-           (for [{:keys [description slug createdAt title author favoritesCount tagList]} articles] ;; @daniel is this the way to do it with (vals ...), somehow it feels strange
+           (for [{:keys [description slug createdAt title author favoritesCount tagList]} articles]
              ^{:key slug} [:div.article-preview
                            [:div.article-meta
                             [:a {:href (str "/#/@" (:username author))}
@@ -124,7 +125,7 @@
                             [:h1 title]
                             [:p description]
                             [:span "Read more ..."]
-                            [tags-list tagList]]]) ;; defined in Helpers section
+                            [tags-list tagList]]]) ;; defined in Helpers section]
            [:p "Loading articles ..."])]]
 
        [:div.col-md-3
@@ -154,49 +155,63 @@
 
 (defn register
   []
-  [:div.auth-page
-   [:div.container.page
-    [:div.row
-     [:div.col-md-6.offset-md-3.col-xs-12
-      [:h1.text-xs-center "Sign up"]
-      [:form
-       [:fieldset.form-group
-        [:input.form-control.form-control-lg {:type "text" :placeholder "Your Name"}]]
-       [:fieldset.form-group
-        [:input.form-control.form-control-lg {:type "text" :placeholder "Email"}]]
-       [:fieldset.form-group
-        [:input.form-control.form-control-lg {:type "password" :placeholder "Password"}]]
-       [:button.btn.btn-lg.btn-primary.pull-xs-right "Sign up"]]]]]])
+  (let [profile @(subscribe [:profile])]
+    [:div.auth-page
+     [:div.container.page
+      [:div.row
+       [:div.col-md-6.offset-md-3.col-xs-12
+        [:h1.text-xs-center "Sign up"]
+        [:form
+         [:fieldset.form-group
+          [:input.form-control.form-control-lg {:type "text" :placeholder "Your Name"}]]
+         [:fieldset.form-group
+          [:input.form-control.form-control-lg {:type "text" :placeholder "Email"}]]
+         [:fieldset.form-group
+          [:input.form-control.form-control-lg {:type "password" :placeholder "Password"}]]
+         [:button.btn.btn-lg.btn-primary.pull-xs-right "Sign up"]]]]]]))
 
 (defn profile
   []
-  [:div.profile-page
-   [:div.user-info
-    [:div.container
-     [:div.row
-      [:div.col-xs-12.col-md-10.offset-md-1
-       [:img.user-img {:src "http://i.imgur.com/Qr71crq.jpg"}]
-       [:h4 "Eric Simmons"]
-       [:p "Cofounder @GoThinkster, lived in Aol's HQ for a few months, kinda looks like Peeta from the Hunger Games"]
-       [:button.btn.btn-sm.btn-outline-secondary.action-btn
-        [:i.ion-plus-round "Follow Eric Simmons"]]]]]]
-   [:div.container
-    [:div.row
-     [:div.col-xs-12.col-md-10.offset-md-1
-      ;; map over articles
-      [:div.article-preview
-       [:div.article-meta
-        [:a {:href "/#/profile"}
-         [:img {:src "http://i.imgur.com/Qr71crq.jpg"}]]
-        [:div.info
-         [:a.author {:href "/#/author"} "Eric Simmons"]
-         [:span.date "January 20th"]]
-        [:button.btn.btn-outline-primary.btn-sm.pull-xs-right
-         [:i.ion-heart "29"]]]
-       [:a.preview-link {:href "/#/article/article-id"}
-        [:h1 "How to build webapps that scael"]
-        [:p "This is the description for the post."]
-        [:span "Read more ..."]]]]]]])
+  (let [profile @(subscribe [:profile])
+        articles @(subscribe [:articles])]
+    [:div.profile-page
+     [:div.user-info
+      [:div.container
+       [:div.row
+        [:div.col-xs-12.col-md-10.offset-md-1
+         [:img.user-img {:src (:image profile)}]
+         [:h4 (:username profile)]
+         [:p (:bio profile)]
+         [:button.btn.btn-sm.action-btn.ng-binding.btn-outline-secondary
+          [:i.ion-plus-round " "]
+          [:span (str "Follow " (:username profile))]]]]]]
+     [:container
+      [:row
+       [:div.col-xs-12.col-md-10.offset-md-1
+        [:div.articles-toggle
+         [:ul.nav.nav-pills.outline-active
+          [:li.nav-item
+           [:a.nav-link {:href (str "/#/@" (:username profile))} "My Articles"]]
+          [:li.nav-item
+           [:a.nav-link {:href (str "/#/@" (:username profile) "/favorites")} "Favorited Articles"]]]]
+        (if articles
+          (for [{:keys [description slug createdAt title author favoritesCount tagList]} articles]
+            ^{:key slug} [:div.article-preview
+                          [:div.article-meta
+                           [:a {:href (str "/#/@" (:username author))}
+                            [:img {:src (:image author)}]]
+                           [:div.info
+                            [:a.author {:href (str "/#/@" (:username author))} (:username author)]
+                            [:span.date (format-date createdAt)]]
+                           [:button.btn.btn-outline-primary.btn-sm.pull-xs-right
+                            [:i.ion-heart " "]
+                            [:span favoritesCount]]]
+                          [:a.preview-link {:href (str "/#/article/" slug)}
+                           [:h1 title]
+                           [:p description]
+                           [:span "Read more ..."]
+                           [tags-list tagList]]]) ;; defined in Helpers section]
+          [:p "Loading articles ..."])]]]]))
 
 (defn settings
   []
@@ -244,7 +259,7 @@
 (defn article
   []
   (let [article @(subscribe [:article])
-        user false ;; create subscription for user
+        user false ;; create subscription for auth-user
         comments @(subscribe [:comments])]
     [:div.article-page
      [:div.banner
@@ -290,7 +305,7 @@
                         [:div.card-footer
                          [:a.comment-author {:href ""}
                           [:img.comment-author-img {:src (:image author)}]]
-                         [:a.comment-author {:href (str "/#/@" (:username author))} (:username author)]
+                         [:a.comment-author {:href (str "/#/profile/@" (:username author))} (:username author)]
                          [:span.date-posted (format-date createdAt)]
                          [:span.mod-options
                           [:i.ion-edit]
