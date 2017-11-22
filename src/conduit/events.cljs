@@ -42,7 +42,7 @@
     :http-xhrio {:method          :get
                  :uri             (uri "articles")
                  :params          params                                    ;; include params in the request
-                 :response-format (json-response-format {:keywords? true})  ;; swap all keys to keywords
+                 :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
                  :on-success      [:get-articles-success]                   ;; trigger get-articles-success event
                  :on-failure      [:api-request-failure :get-articles]}}))  ;; trigger api-request-failure with :get-articles param
 
@@ -57,7 +57,7 @@
    {:db         (assoc-in db [:pending-requests :get-tags] true)
     :http-xhrio {:method          :get
                  :uri             (uri "tags")
-                 :response-format (json-response-format {:keywords? true})  ;; swap all keys to keywords
+                 :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
                  :on-success      [:get-tags-success]                       ;; trigger get-tags-success event
                  :on-failure      [:api-request-failure :get-tags]}}))      ;; trigger api-request-failure with :get-tags param
 
@@ -77,6 +77,23 @@
     :http-xhrio {:method          :get
                  :uri             (uri "articles")
                  :params          params                                    ;; include params in the request
-                 :response-format (json-response-format {:keywords? true})  ;; swap all keys to keywords
+                 :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
                  :on-success      [:get-articles-success]                   ;; trigger get-articles-by-tag-success event
                  :on-failure      [:api-request-failure :get-articles]}}))  ;; trigger api-request-failure with :get-articles-by-tag param
+
+(reg-event-fx           ;; usage (dispatch [:get-article-comments {:slug "article-slug"}])
+ :get-article-comments  ;; triggered when the article page is loaded
+ (fn [{:keys [db]} [_ params]]  ;; params = {:slug "article-slug"}
+   {:db         (assoc-in db [:pending-requests :get-article-comments] true)
+    :http-xhrio {:method          :get
+                 :uri             (uri "articles" (:slug params) "comments")  ;; evaluates to "/articles/:slug/comments"
+                 :response-format (json-response-format {:keywords? true})    ;; json and all keys to keywords
+                 :on-success      [:get-article-comments-success]             ;; trigger get-articles-success event
+                 :on-failure      [:api-request-failure :get-articles]}}))    ;; trigger api-request-failure with :get-articles param
+
+(reg-event-db
+ :get-article-comments-success
+ (fn [db [_ {comments :comments}]]
+   (-> db
+       (assoc-in [:pending-requests :get-article-comments] false)
+       (assoc :comments comments))))

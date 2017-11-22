@@ -40,7 +40,7 @@
      [:a {:href "https://thinkster.io"} "Thinkster"]
      ". Code & design licensed under MIT."]]])
 
-;; -- Components -------------------------------------------------------------
+;; -- Helpers -----------------------------------------------------------------
 ;;
 (defn format-date
   [date]
@@ -59,17 +59,19 @@
     favorites-count :favoritesCount
     favorited       :favorited}]
   [:div.article-meta
-   (.log js/console created-at)
    [:a {:href (str "/#/@" (:username author))}
     [:img {:src (:image author)}]]
    [:div.info
     [:a.author {:href (str "/#/@" (:username author))} (:username author)]
     [:span.date (format-date created-at)]]
    [:button.btn.btn-sm.btn-outline-secondary {}
-    [:i.ion-plus-round] (str "Follow " (:username author))
+    [:i.ion-plus-round " "]
+    [:span (str "Follow " (:username author))]
     [:span.counter "(10)"]]
-   [:button.btn.btn-sm.btn-outline-primary {}
-    [:i.ion-heart (str "Favorite Post ")]
+   " "
+   [:button.btn.btn-sm.btn-outline-primary
+    [:i.ion-heart " "]
+    [:span (str "Favorite Post ")]
     [:span.counter "(" favorites-count ")"]]])
 
 ;; -- Home -------------------------------------------------------------------
@@ -116,13 +118,13 @@
                              [:a.author {:href (str "/#/@" (:username author))} (:username author)]
                              [:span.date (format-date createdAt)]]
                             [:button.btn.btn-outline-primary.btn-sm.pull-xs-right
-                             [:i.ion-heart favoritesCount]]]
+                             [:i.ion-heart " "]
+                             [:span favoritesCount]]]
                            [:a.preview-link {:href (str "/#/article/" slug)}
                             [:h1 title]
                             [:p description]
                             [:span "Read more ..."]
-                            [tags-list tagList]]]) ;; defined in Components section
-
+                            [tags-list tagList]]]) ;; defined in Helpers section
            [:p "Loading articles ..."])]]
 
        [:div.col-md-3
@@ -243,23 +245,23 @@
   []
   (let [article @(subscribe [:article])
         user false ;; create subscription for user
-        comment true] ;; create subscription for
+        comments @(subscribe [:comments])]
     [:div.article-page
      [:div.banner
       [:div.container
        [:h1 (:title article)]
-       [article-meta article]]] ;; defined in Components section
+       [article-meta article]]] ;; defined in Helpers section
      [:div.container.page
       [:div.row.article-content
        [:div.col-md-12
         [:p (:body article)]]]
-      [tags-list (:tagList article)] ;; defined in Components section
+      [tags-list (:tagList article)] ;; defined in Helpers section
       [:hr]
       [:div.article-actions
-       [article-meta article]] ;; defined in Components section
+       [article-meta article]] ;; defined in Helpers section
       [:div.row
-       (if user
-         [:div.col-xs-12.col-md-8.offset-md-2
+       [:div.col-xs-12.col-md-8.offset-md-2
+        (if user
           [:form.card.comment-form
            [:div.card-block
             [:textarea.form-control {:placeholder "Write a comment...", :rows "3"}]]
@@ -278,19 +280,21 @@
            [:a {:href "#/register"} "Sign in"]
            " or "
            [:a {:href "#/login"} "Sign in"]
-           " to add comments on this article."]
-          (if comment
-            [:div.card
-             [:div.card-block
-              [:p.card-text "With supporting text below as a natural lead-in to additional content."]]
-             [:div.card-footer
-              [:a.comment-author {:href ""}
-               [:img.comment-author-img {:src "http://i.imgur.com/Qr71crq.jpg"}]]
-              [:a.comment-author {:href ""} "Jacob Schmidt"]
-              [:span.date-posted "Dec 29th"]
-              [:span.mod-options
-               [:i.ion-edit]
-               [:i.ion-trash-a]]]])])]]]))
+           " to add comments on this article."])
+        (if (empty? comments)
+          [:div]
+          (for [{:keys [id createdAt body author]} comments]
+            ^{:key id} [:div.card
+                        [:div.card-block
+                         [:p.card-text body]]
+                        [:div.card-footer
+                         [:a.comment-author {:href ""}
+                          [:img.comment-author-img {:src (:image author)}]]
+                         [:a.comment-author {:href (str "/#/@" (:username author))} (:username author)]
+                         [:span.date-posted (format-date createdAt)]
+                         [:span.mod-options
+                          [:i.ion-edit]
+                          [:i.ion-trash-a]]]]))]]]]))
 
 (defn- pages [page-name]
   (case page-name

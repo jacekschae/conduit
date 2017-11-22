@@ -27,3 +27,8 @@
  :articles-by-tag  ;; usage: (subscribe [:articles-by-tag])
  (fn [db _]
    (:articles-by-tag db)))
+
+(reg-sub
+ :comments  ;; usage: (subscribe [:comments])
+ (fn [db _]
+   (:comments db)))

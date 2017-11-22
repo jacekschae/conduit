@@ -31,10 +31,11 @@
   (defroute "/logout" [] (dispatch [:logout]))
   (defroute "/editor/:slug" [slug]
             (do (dispatch [:set-active-page :editor])
-                (dispatch [:set-active-article slug]))) ;; @daniel I need some way to save selected article or do I?
+                (dispatch [:set-active-article slug]))) ;; @daniel do we need to save slug?
   (defroute "/article/:slug" [slug]                     ;; In JS we would read it from URL and pass it to subscription
             (do (dispatch [:set-active-page :article])
-                (dispatch [:set-active-article slug])))
+                (dispatch [:set-active-article slug])
+                (dispatch [:get-article-comments {:slug slug}])))
   (defroute "/profile" [] (dispatch [:set-active-page :profile]))
   (defroute "/profile/:username" [username]
             (do (dispatch [:set-active-page :profile])
