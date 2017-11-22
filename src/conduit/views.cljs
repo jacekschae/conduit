@@ -42,6 +42,10 @@
 
 ;; -- Components -------------------------------------------------------------
 ;;
+(defn format-date
+  [date]
+  (.toDateString (js/Date. date)))
+
 (defn tags-list
   [tags-list]
   [:ul.tag-list
@@ -50,16 +54,17 @@
 
 (defn article-meta
   [{author          :author
-    created-at      :date
+    created-at      :createdAt
     likes           :likes
     favorites-count :favoritesCount
     favorited       :favorited}]
   [:div.article-meta
+   (.log js/console created-at)
    [:a {:href (str "/#/@" (:username author))}
     [:img {:src (:image author)}]]
    [:div.info
     [:a.author {:href (str "/#/@" (:username author))} (:username author)]
-    [:span.date created-at]]
+    [:span.date (format-date created-at)]]
    [:button.btn.btn-sm.btn-outline-secondary {}
     [:i.ion-plus-round] (str "Follow " (:username author))
     [:span.counter "(10)"]]
@@ -109,7 +114,7 @@
                              [:img {:src (:image author)}]]
                             [:div.info
                              [:a.author {:href (str "/#/@" (:username author))} (:username author)]
-                             [:span.date (.toDateString (js/Date. createdAt))]]
+                             [:span.date (format-date createdAt)]]
                             [:button.btn.btn-outline-primary.btn-sm.pull-xs-right
                              [:i.ion-heart favoritesCount]]]
                            [:a.preview-link {:href (str "/#/article/" slug)}
