@@ -49,9 +49,7 @@
 (reg-event-db
  :get-articles-success
  (fn [db [_ {articles :articles}]]
-   (-> db
-       (assoc-in [:pending-requests :get-articles] false)
-       (update :articles #(merge % (into {} (map (juxt :slug identity) articles)))))))
+   (assoc db :articles articles)))
 
 (reg-event-fx  ;; usage (dispatch [:get-articles])
  :get-tags     ;; triggered when the home page is loaded

@@ -8,14 +8,15 @@
 
 (reg-sub
  :articles  ;; usage: (subscribe [:articles])
- (fn [db param]
+ (fn [db _]
    (:articles db)))
 
 (reg-sub
  :article ;; usage (subscribe [:article])
  (fn [db [_ _]]
    (let [article (:active-article db)]
-     (get-in db [:articles article]))))
+     (into {} (filter #(= article (:slug %)) (:articles db)))))) ;; @daniel, is there a way we can
+                                                                 ;; avoid into {} ... ?
 
 (reg-sub
  :tags  ;; usage: (subscribe [:tags])

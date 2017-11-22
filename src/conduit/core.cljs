@@ -31,8 +31,8 @@
   (defroute "/logout" [] (dispatch [:logout]))
   (defroute "/editor/:slug" [slug]
             (do (dispatch [:set-active-page :editor])
-                (dispatch [:set-active-article slug])))
-  (defroute "/article/:slug" [slug]
+                (dispatch [:set-active-article slug]))) ;; @daniel I need some way to save selected article or do I?
+  (defroute "/article/:slug" [slug]                     ;; In JS we would read it from URL and pass it to subscription
             (do (dispatch [:set-active-page :article])
                 (dispatch [:set-active-article slug])))
   (defroute "/profile" [] (dispatch [:set-active-page :profile]))
@@ -68,8 +68,8 @@
 
   ;; Send request to get articles and tags so that we can display them to the
   ;; user when the page loads for the first time.
-  (dispatch [:get-articles {:limit 5}])
-  (dispatch [:get-tags])
+  (dispatch [:get-articles {:limit 10}]) ;; @daniel I would like to avoid that somehow on the startup, just don't know how
+  (dispatch [:get-tags]) ;; this too ...
 
   ;; Render the UI into the HTML's <div id="app" /> element
   ;; The view function `conduit.views/conduit-app` is the

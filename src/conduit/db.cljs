@@ -11,5 +11,5 @@
 ;;   2.  `events.cljs` for the registration of :initialise-db handler
 ;;
 (def default-db               ;; what gets put into app-db by default.
-  {:active-page :home         ;; set home page as active
+  {:active-page nil         ;; set home page as active
    :tags-filter :all})        ;; show all tags
