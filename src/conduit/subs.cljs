@@ -26,9 +26,34 @@
 (reg-sub
  :articles-by-tag  ;; usage: (subscribe [:articles-by-tag])
  (fn [db _]
-   (:articles-by-tag db)))
+   (get-in db [:filter :articles-by-tag])))
 
 (reg-sub
- :profile  ;; usage: (subscribe [:comments])
+ :articles-by-author  ;; usage: (subscribe [:articles-by-author])
+ (fn [db _]
+   (get-in db [:filter :articles-by-author])))
+
+(reg-sub
+ :articles-by-favorites  ;; usage: (subscribe [:articles-by-favorites])
+ (fn [db _]
+   (get-in db [:filter :articles-by-favorites])))
+
+(reg-sub
+ :articles-favorited  ;; usage: (subscribe [:articles-favorited])
+ (fn [db _]
+   (:articles-favorited db)))
+
+(reg-sub
+ :profile  ;; usage: (subscribe [:profile])
  (fn [db _]
    (:profile db)))
+
+(reg-sub
+ :loading  ;; usage: (subscribe [:loading])
+ (fn [db _]
+   (:loading db)))
+
+(reg-sub
+ :filter  ;; usage: (subscribe [:loading])
+ (fn [db _]
+   (:filter db)))

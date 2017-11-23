@@ -33,28 +33,32 @@
  (fn [db [_ active-article]]
    (assoc db :active-article active-article)))
 
-(reg-event-fx   ;; usage (dispatch [:get-articles {:limit 10}])
+(reg-event-fx   ;; usage (dispatch [:get-articles {:limit 10 :tag "tag-name"}])
  :get-articles  ;; triggered when the home page is loaded
  (fn [{:keys [db]} [_ params]]  ;; params = {:limit 10}
-   {:db         (do ;; @daniel is this correct way to assoc two values at the same time?
-                  (assoc-in db [:pending-requests :get-articles] true)
-                  (assoc db :articles-by-tag false))
-    :http-xhrio {:method          :get
+   {:http-xhrio {:method          :get
                  :uri             (uri "articles")
                  :params          params                                    ;; include params in the request
                  :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
                  :on-success      [:get-articles-success]                   ;; trigger get-articles-success event
-                 :on-failure      [:api-request-failure :get-articles]}}))  ;; trigger api-request-failure with :get-articles param
+                 :on-failure      [:api-request-failure :get-articles]}
+    :db          (-> db
+                     (assoc-in [:loading :articles] true)
+                     (assoc-in [:filter :articles-by-tag] (:tag params))
+                     (assoc-in [:filter :articles-by-author] (:author params))
+                     (assoc-in [:filter :articles-by-favorites] (:favorited params)))}))
 
 (reg-event-db
  :get-articles-success ;; @daniel is that the naming convention? :request-name-SUCCESS?
  (fn [db [_ {articles :articles}]]
-   (assoc db :articles articles)))
+   (-> db
+       (assoc-in [:loading :articles] false)
+       (assoc :articles articles))))
 
 (reg-event-fx  ;; usage (dispatch [:get-articles])
  :get-tags     ;; triggered when the home page is loaded
  (fn [{:keys [db]} _]  ;; second parameter is not important, therefore _
-   {:db         (assoc-in db [:pending-requests :get-tags] true)
+   {:db         (assoc-in db [:loading :tags] true)
     :http-xhrio {:method          :get
                  :uri             (uri "tags")
                  :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
@@ -65,13 +69,13 @@
  :get-tags-success
  (fn [db [_ {tags :tags}]]
    (-> db
-       (assoc-in [:pending-requests :get-tags] false)
+       (assoc-in [:loading :tags] false)
        (assoc :tags tags))))
 
 (reg-event-fx           ;; usage (dispatch [:get-article-comments {:slug "article-slug"}])
  :get-article-comments  ;; triggered when the article page is loaded
  (fn [{:keys [db]} [_ params]]  ;; params = {:slug "article-slug"}
-   {:db         (assoc-in db [:pending-requests :get-article-comments] true)
+   {:db         (assoc-in db [:loading :get-article-comments] true)
     :http-xhrio {:method          :get
                  :uri             (uri "articles" (:slug params) "comments")  ;; evaluates to "/articles/:slug/comments"
                  :response-format (json-response-format {:keywords? true})    ;; json and all keys to keywords
@@ -82,13 +86,13 @@
  :get-article-comments-success
  (fn [db [_ {comments :comments}]]
    (-> db
-       (assoc-in [:pending-requests :get-article-comments] false)
+       (assoc-in [:loading :get-article-comments] false)
        (assoc :comments comments))))
 
 (reg-event-fx       ;; usage (dispatch [:get-user-profile {:profile "profile"}])
  :get-user-profile  ;; triggered when the profile page is loaded
  (fn [{:keys [db]} [_ params]]  ;; params = {:profile "profile"}
-   {:db         (assoc-in db [:pending-requests :get-user-profile] true)
+   {:db         (assoc-in db [:loading :get-user-profile] true)
     :http-xhrio {:method          :get
                  :uri             (uri "profiles" (:profile params))        ;; evaluates to "/profiles/:profile"
                  :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
@@ -99,12 +103,15 @@
  :get-user-profile-success
  (fn [db [_ {profile :profile}]]
    (-> db
-       (assoc-in [:pending-requests :get-user-profile] false)
+       (assoc-in [:loading :get-user-profile] false)
        (assoc :profile profile))))
 
 (reg-event-db
  :api-request-failure
- (fn [db [_ {profile :profile}]]
-   (-> db
-       (assoc-in [:pending-requests :get-user-profile] false)
-       (assoc :profile profile))))
+ (fn [db [_ & q]]
+   (let [request (butlast q)
+         response (last q)]
+     (assoc-in db
+               (into [:loading] request)
+               [:failed (or (get-in response [:response :errors])
+                            {:error [(get response :status-text)]})]))))

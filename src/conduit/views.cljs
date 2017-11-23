@@ -75,20 +75,41 @@
     [:span (str "Favorite Post ")]
     [:span.counter "(" favorites-count ")"]]])
 
+(defn articles-preview
+  []
+  (let [articles @(subscribe [:articles])
+        loading @(subscribe [:loading])]
+    [:div
+     (if (:articles loading)
+       [:div.article-preview
+        [:p "Loading articles ..."]]
+       (for [{:keys [description slug createdAt title author favoritesCount tagList]} articles]
+         ^{:key slug} [:div.article-preview
+                       [:div.article-meta
+                        [:a {:href (str "/#/@" (:username author))}
+                         [:img {:src (:image author)}]]
+                        [:div.info
+                         [:a.author {:href (str "/#/@" (:username author))} (:username author)]
+                         [:span.date (format-date createdAt)]]
+                        [:button.btn.btn-outline-primary.btn-sm.pull-xs-right
+                         [:i.ion-heart " "]
+                         [:span favoritesCount]]]
+                       [:a.preview-link {:href (str "/#/article/" slug)}
+                        [:h1 title]
+                        [:p description]
+                        [:span "Read more ..."]
+                        [tags-list tagList]]]))])) ; defined in Helpers section
+
+
 ;; -- Home -------------------------------------------------------------------
 ;;
-(defn get-articles-by-tag [event tag] ;; @daniel - I think this should move out of view and be in the events
-  (.preventDefault event)
-  (dispatch [:get-articles {:tag tag :limit 10}]))
-
 (defn get-articles [event tag] ;; @daniel - Same as above
   (.preventDefault event)
-  (dispatch [:get-articles]))
+  (dispatch [:get-articles {:tag tag}]))
 
 (defn home
   []
-  (let [articles @(subscribe [:articles])
-        articles-by-tag @(subscribe [:articles-by-tag])
+  (let [articles-by-tag @(subscribe [:articles-by-tag])
         tags @(subscribe [:tags])]
     [:div.home-page
      [:div.banner
@@ -102,39 +123,21 @@
          (if articles-by-tag
            [:ul.nav.nav-pills.outline-active
             [:li.nav-item
-             [:a.nav-link {:href "" :on-click get-articles} "Global Feed"]]
+             [:a.nav-link {:href "" :on-click #(get-articles % nil)} "Global Feed"]] ;; nil to remove filter by tags
             [:li.nav-item
              [:a.nav-link.active
               [:i.ion-pound] (str " " articles-by-tag)]]]
            [:ul.nav.nav-pills.outline-active
             [:li.nav-item
              [:a.nav-link.active {:href "/#/"} "Global Feed"]]])
-         (if articles
-           (for [{:keys [description slug createdAt title author favoritesCount tagList]} articles]
-             ^{:key slug} [:div.article-preview
-                           [:div.article-meta
-                            [:a {:href (str "/#/@" (:username author))}
-                             [:img {:src (:image author)}]]
-                            [:div.info
-                             [:a.author {:href (str "/#/@" (:username author))} (:username author)]
-                             [:span.date (format-date createdAt)]]
-                            [:button.btn.btn-outline-primary.btn-sm.pull-xs-right
-                             [:i.ion-heart " "]
-                             [:span favoritesCount]]]
-                           [:a.preview-link {:href (str "/#/article/" slug)}
-                            [:h1 title]
-                            [:p description]
-                            [:span "Read more ..."]
-                            [tags-list tagList]]]) ;; defined in Helpers section]
-           [:p "Loading articles ..."])]]
-
+         [articles-preview]]]
        [:div.col-md-3
         [:div.sidebar
          [:p "Popular Tags"]
          (if tags
            [:div.tag-list
             (for [tag tags]
-              ^{:key tag} [:a.tag-pill.tag-default {:href "" :on-click #(get-articles-by-tag % tag)} tag])]
+              ^{:key tag} [:a.tag-pill.tag-default {:href "" :on-click #(get-articles % tag)} tag])]
            [:p "Loading tags ..."])]]]]]))
 
 (defn login
@@ -173,7 +176,8 @@
 (defn profile
   []
   (let [profile @(subscribe [:profile])
-        articles @(subscribe [:articles])]
+        articles-by-author @(subscribe [:articles-by-author])
+        articles-by-favorites @(subscribe [:articles-by-favorites])]
     [:div.profile-page
      [:div.user-info
       [:div.container
@@ -191,27 +195,10 @@
         [:div.articles-toggle
          [:ul.nav.nav-pills.outline-active
           [:li.nav-item
-           [:a.nav-link {:href (str "/#/@" (:username profile))} "My Articles"]]
+           [:a.nav-link {:href (str "/#/@" (:username profile)) :class (when articles-by-author " active")} "My Articles"]]
           [:li.nav-item
-           [:a.nav-link {:href (str "/#/@" (:username profile) "/favorites")} "Favorited Articles"]]]]
-        (if articles
-          (for [{:keys [description slug createdAt title author favoritesCount tagList]} articles]
-            ^{:key slug} [:div.article-preview
-                          [:div.article-meta
-                           [:a {:href (str "/#/@" (:username author))}
-                            [:img {:src (:image author)}]]
-                           [:div.info
-                            [:a.author {:href (str "/#/@" (:username author))} (:username author)]
-                            [:span.date (format-date createdAt)]]
-                           [:button.btn.btn-outline-primary.btn-sm.pull-xs-right
-                            [:i.ion-heart " "]
-                            [:span favoritesCount]]]
-                          [:a.preview-link {:href (str "/#/article/" slug)}
-                           [:h1 title]
-                           [:p description]
-                           [:span "Read more ..."]
-                           [tags-list tagList]]]) ;; defined in Helpers section]
-          [:p "Loading articles ..."])]]]]))
+           [:a.nav-link {:href (str "/#/@" (:username profile) "/favorites") :class (when articles-by-favorites "nav-link active")} "Favorited Articles"]]]]
+        [articles-preview]]]]]))
 
 (defn settings
   []
@@ -271,7 +258,6 @@
        [:div.col-md-12
         [:p (:body article)]]]
       [tags-list (:tagList article)] ;; defined in Helpers section
-      [:hr]
       [:div.article-actions
        [article-meta article]] ;; defined in Helpers section
       [:div.row

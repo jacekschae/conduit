@@ -7,7 +7,8 @@
                            [cljs-ajax "0.5.8"]
                            [day8.re-frame/http-fx "0.1.4"]
                            [binaryage/devtools "0.9.4"]
-                           [secretary "1.2.3"]]
+                           [secretary "1.2.3"]
+                           [re-frisk "0.5.2"]]
 
             :jvm-opts ["--add-modules" "java.xml.bind"]
 
@@ -23,6 +24,7 @@
                                                             :optimizations        :none
                                                             :source-map           true
                                                             :source-map-timestamp true
+                                                            :preloads             [re-frisk.preload]
                                                             :main                 "conduit.core"}
                                                  :figwheel {:on-jsload "conduit.core/main"}}}}}
 
