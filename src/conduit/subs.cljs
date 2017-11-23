@@ -23,6 +23,11 @@
    (:tags db)))
 
 (reg-sub
+ :comments  ;; usage: (subscribe [:comments])
+ (fn [db _]
+   (:comments db)))
+
+(reg-sub
  :profile  ;; usage: (subscribe [:profile])
  (fn [db _]
    (:profile db)))

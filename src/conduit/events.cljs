@@ -33,7 +33,7 @@
  (fn [db [_ active-article]]
    (assoc db :active-article active-article)))
 
-(reg-event-fx   ;; usage (dispatch [:get-articles {:limit 10 :tag "tag-name"}])
+(reg-event-fx   ;; usage (dispatch [:get-articles {:limit 10 :tag "tag-name" ...}])
  :get-articles  ;; triggered when the home page is loaded
  (fn [{:keys [db]} [_ params]]  ;; params = {:limit 10}
    {:http-xhrio {:method          :get
@@ -75,7 +75,7 @@
 (reg-event-fx           ;; usage (dispatch [:get-article-comments {:slug "article-slug"}])
  :get-article-comments  ;; triggered when the article page is loaded
  (fn [{:keys [db]} [_ params]]  ;; params = {:slug "article-slug"}
-   {:db         (assoc-in db [:loading :get-article-comments] true)
+   {:db         (assoc-in db [:loading :comments] true)
     :http-xhrio {:method          :get
                  :uri             (uri "articles" (:slug params) "comments")  ;; evaluates to "/articles/:slug/comments"
                  :response-format (json-response-format {:keywords? true})    ;; json and all keys to keywords
@@ -86,7 +86,7 @@
  :get-article-comments-success
  (fn [db [_ {comments :comments}]]
    (-> db
-       (assoc-in [:loading :get-article-comments] false)
+       (assoc-in [:loading :comments] false)
        (assoc :comments comments))))
 
 (reg-event-fx       ;; usage (dispatch [:get-user-profile {:profile "profile"}])
