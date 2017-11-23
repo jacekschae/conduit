@@ -77,12 +77,11 @@
 
 (defn articles-preview
   []
-  (let [articles @(subscribe [:articles])
-        loading @(subscribe [:loading])]
+  (let [articles @(subscribe [:articles])]
     [:div
-     (if (:articles loading)
+     (if (empty? articles)
        [:div.article-preview
-        [:p "Loading articles ..."]]
+        [:p "No articles are here... yet."]]
        (for [{:keys [description slug createdAt title author favoritesCount tagList]} articles]
          ^{:key slug} [:div.article-preview
                        [:div.article-meta
@@ -103,14 +102,15 @@
 
 ;; -- Home -------------------------------------------------------------------
 ;;
-(defn get-articles [event tag] ;; @daniel - Same as above
+(defn get-articles [event tag] ;; @daniel - don't know about this here. Maybe it should be in events?
   (.preventDefault event)
   (dispatch [:get-articles {:tag tag}]))
 
 (defn home
   []
   (let [filter @(subscribe [:filter])
-        tags @(subscribe [:tags])]
+        tags @(subscribe [:tags])
+        loading @(subscribe [:loading])]
     [:div.home-page
      [:div.banner
       [:div.container
@@ -123,22 +123,25 @@
          (if (:articles-by-tag filter)
            [:ul.nav.nav-pills.outline-active
             [:li.nav-item
-             [:a.nav-link {:href "" :on-click #(get-articles % nil)} "Global Feed"]] ;; nil to remove filter by tags
-            [:li.nav-item
+             [:a.nav-link {:href "" :on-click #(get-articles % nil)} "Global Feed"]] ;; first argument: % is browser event
+            [:li.nav-item                                                            ;; second: nil to remove filter by tags
              [:a.nav-link.active
               [:i.ion-pound] (str " " (:articles-by-tag filter))]]]
            [:ul.nav.nav-pills.outline-active
             [:li.nav-item
              [:a.nav-link.active {:href "/#/"} "Global Feed"]]])
-         [articles-preview]]]
+         (if (:articles loading)
+           [:div.article-preview
+            [:p "Loading articles ..."]]
+           [articles-preview])]]
        [:div.col-md-3
         [:div.sidebar
          [:p "Popular Tags"]
-         (if tags
+         (if (:tags loading)
+           [:p "Loading tags ..."]
            [:div.tag-list
             (for [tag tags]
-              ^{:key tag} [:a.tag-pill.tag-default {:href "" :on-click #(get-articles % tag)} tag])]
-           [:p "Loading tags ..."])]]]]]))
+              ^{:key tag} [:a.tag-pill.tag-default {:href "" :on-click #(get-articles % tag)} tag])])]]]]]))
 
 (defn login
   []

@@ -92,7 +92,7 @@
 (reg-event-fx       ;; usage (dispatch [:get-user-profile {:profile "profile"}])
  :get-user-profile  ;; triggered when the profile page is loaded
  (fn [{:keys [db]} [_ params]]  ;; params = {:profile "profile"}
-   {:db         (assoc-in db [:loading :get-user-profile] true)
+   {:db         (assoc-in db [:loading :profile] true)
     :http-xhrio {:method          :get
                  :uri             (uri "profiles" (:profile params))        ;; evaluates to "/profiles/:profile"
                  :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
@@ -103,7 +103,7 @@
  :get-user-profile-success
  (fn [db [_ {profile :profile}]]
    (-> db
-       (assoc-in [:loading :get-user-profile] false)
+       (assoc-in [:loading :profile] false)
        (assoc :profile profile))))
 
 (reg-event-db
