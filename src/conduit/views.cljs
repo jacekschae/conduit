@@ -103,7 +103,7 @@
 ;; -- Home -------------------------------------------------------------------
 ;;
 (defn get-articles [event tag] ;; @daniel - don't know about this here. Maybe it should be in events?
-  (.preventDefault event)
+  (.preventDefault event)      ;; can we pass event when we do dispatch?
   (dispatch [:get-articles {:tag tag}]))
 
 (defn home

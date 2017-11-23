@@ -16,7 +16,7 @@
  (fn [db _]
    (let [article (:active-article db)]
      (into {} (filter #(= article (:slug %)) (:articles db)))))) ;; @daniel, is there a way we can avoid into {} ... ?
-
+                                                                 ;; maybe we should use different data structure?
 (reg-sub
  :tags  ;; usage: (subscribe [:tags])
  (fn [db _]

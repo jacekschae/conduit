@@ -49,7 +49,7 @@
                      (assoc-in [:filter :articles-by-favorites] (:favorited params)))}))
 
 (reg-event-db
- :get-articles-success ;; @daniel is that the naming convention? :request-name-SUCCESS?
+ :get-articles-success
  (fn [db [_ {articles :articles}]]
    (-> db
        (assoc-in [:loading :articles] false)
