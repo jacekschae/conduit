@@ -109,7 +109,7 @@
 
 (defn home
   []
-  (let [articles-by-tag @(subscribe [:articles-by-tag])
+  (let [filter @(subscribe [:filter])
         tags @(subscribe [:tags])]
     [:div.home-page
      [:div.banner
@@ -120,13 +120,13 @@
       [:div.row
        [:div.col-md-9
         [:div.feed-toggle
-         (if articles-by-tag
+         (if (:articles-by-tag filter)
            [:ul.nav.nav-pills.outline-active
             [:li.nav-item
              [:a.nav-link {:href "" :on-click #(get-articles % nil)} "Global Feed"]] ;; nil to remove filter by tags
             [:li.nav-item
              [:a.nav-link.active
-              [:i.ion-pound] (str " " articles-by-tag)]]]
+              [:i.ion-pound] (str " " (:articles-by-tag filter))]]]
            [:ul.nav.nav-pills.outline-active
             [:li.nav-item
              [:a.nav-link.active {:href "/#/"} "Global Feed"]]])
@@ -176,8 +176,7 @@
 (defn profile
   []
   (let [profile @(subscribe [:profile])
-        articles-by-author @(subscribe [:articles-by-author])
-        articles-by-favorites @(subscribe [:articles-by-favorites])]
+        filter @(subscribe [:filter])]
     [:div.profile-page
      [:div.user-info
       [:div.container
@@ -195,9 +194,9 @@
         [:div.articles-toggle
          [:ul.nav.nav-pills.outline-active
           [:li.nav-item
-           [:a.nav-link {:href (str "/#/@" (:username profile)) :class (when articles-by-author " active")} "My Articles"]]
+           [:a.nav-link {:href (str "/#/@" (:username profile)) :class (when (:articles-by-author filter) " active")} "My Articles"]]
           [:li.nav-item
-           [:a.nav-link {:href (str "/#/@" (:username profile) "/favorites") :class (when articles-by-favorites "nav-link active")} "Favorited Articles"]]]]
+           [:a.nav-link {:href (str "/#/@" (:username profile) "/favorites") :class (when (:articles-by-favorites filter) "nav-link active")} "Favorited Articles"]]]]
         [articles-preview]]]]]))
 
 (defn settings
