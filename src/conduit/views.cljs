@@ -127,13 +127,13 @@
       [:div.row
        [:div.col-md-9
         [:div.feed-toggle
-         (if (:articles-by-tag filter)
+         (if (:tag filter)
            [:ul.nav.nav-pills.outline-active
             [:li.nav-item
              [:a.nav-link {:href "" :on-click #(get-articles % {:tag nil})} "Global Feed"]] ;; first argument: % is browser event
             [:li.nav-item                                                                   ;; second: nil to remove filter by tags
              [:a.nav-link.active
-              [:i.ion-pound] (str " " (:articles-by-tag filter))]]]
+              [:i.ion-pound] (str " " (:tag filter))]]]
            [:ul.nav.nav-pills.outline-active
             [:li.nav-item
              [:a.nav-link.active {:href "/#/"} "Global Feed"]]])
@@ -144,7 +144,7 @@
          [:nav
           [:ul.pagination
            (for [offset (range (/ articles-count 10))]
-             ^{:key offset} [:li.page-item {:on-click #(get-articles % {:offset (* offset 10)})}
+             ^{:key offset} [:li.page-item {:class (when (= (* offset 10) (:offset filter)) "active") :on-click #(get-articles % {:offset (* offset 10) :tag (:tag filter)})}
                              [:a.page-link (+ 1 offset)]])]]]]
 
        [:div.col-md-3
@@ -213,9 +213,9 @@
         [:div.articles-toggle
          [:ul.nav.nav-pills.outline-active
           [:li.nav-item
-           [:a.nav-link {:href (str "/#/@" (:username profile)) :class (when (:articles-by-author filter) " active")} "My Articles"]]
+           [:a.nav-link {:href (str "/#/@" (:username profile)) :class (when (:author filter) " active")} "My Articles"]]
           [:li.nav-item
-           [:a.nav-link {:href (str "/#/@" (:username profile) "/favorites") :class (when (:articles-by-favorites filter) "nav-link active")} "Favorited Articles"]]]]
+           [:a.nav-link {:href (str "/#/@" (:username profile) "/favorites") :class (when (:favorites filter) "nav-link active")} "Favorited Articles"]]]]
         (if (:articles loading)
           [:div.article-preview
            [:p "Loading articles ..."]]

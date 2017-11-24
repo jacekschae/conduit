@@ -44,9 +44,10 @@
                  :on-failure      [:api-request-failure :get-articles]}
     :db          (-> db
                      (assoc-in [:loading :articles] true)
-                     (assoc-in [:filter :articles-by-tag] (:tag params))
-                     (assoc-in [:filter :articles-by-author] (:author params))
-                     (assoc-in [:filter :articles-by-favorites] (:favorited params)))}))
+                     (assoc-in [:filter :offset] (:offset params))
+                     (assoc-in [:filter :tag] (:tag params))
+                     (assoc-in [:filter :author] (:author params))
+                     (assoc-in [:filter :favorites] (:favorited params)))}))
 
 (reg-event-db
  :get-articles-success
