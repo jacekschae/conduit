@@ -112,6 +112,7 @@
         tags @(subscribe [:tags])
         loading @(subscribe [:loading])]
     [:div.home-page
+     (js/console.log loading)
      [:div.banner
       [:div.container
        [:h1.logo-font "conduit"]
@@ -151,7 +152,7 @@
      [:div.col-md-6.offset-md-3.col-xs-12
       [:h1.text-xs-center "Sign in"]
       [:p.text-xs-center
-       [:a {:href ""} "Have an account?"]]
+       [:a {:href ""} "Need an account?"]]
       [:form
        [:fieldset.form-group
         [:input.form-control.form-control-lg {:type "text" :placeholder "Email"}]]
@@ -167,6 +168,8 @@
       [:div.row
        [:div.col-md-6.offset-md-3.col-xs-12
         [:h1.text-xs-center "Sign up"]
+        [:p.text-xs-center
+         [:a {:href ""} "Have an account?"]]
         [:form
          [:fieldset.form-group
           [:input.form-control.form-control-lg {:type "text" :placeholder "Your Name"}]]
@@ -179,7 +182,8 @@
 (defn profile
   []
   (let [profile @(subscribe [:profile])
-        filter @(subscribe [:filter])]
+        filter @(subscribe [:filter])
+        loading @(subscribe [:loading])]
     [:div.profile-page
      [:div.user-info
       [:div.container
@@ -200,7 +204,10 @@
            [:a.nav-link {:href (str "/#/@" (:username profile)) :class (when (:articles-by-author filter) " active")} "My Articles"]]
           [:li.nav-item
            [:a.nav-link {:href (str "/#/@" (:username profile) "/favorites") :class (when (:articles-by-favorites filter) "nav-link active")} "Favorited Articles"]]]]
-        [articles-preview]]]]]))
+        (if (:articles loading)
+          [:div.article-preview
+           [:p "Loading articles ..."]]
+          [articles-preview])]]]]))
 
 (defn settings
   []
@@ -260,6 +267,7 @@
        [:div.col-md-12
         [:p (:body article)]]]
       [tags-list (:tagList article)] ;; defined in Helpers section
+      [:hr]
       [:div.article-actions
        [article-meta article]] ;; defined in Helpers section
       [:div.row
