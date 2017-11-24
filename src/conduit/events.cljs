@@ -35,7 +35,7 @@
 
 (reg-event-fx   ;; usage (dispatch [:get-articles {:limit 10 :tag "tag-name" ...}])
  :get-articles  ;; triggered when the home page is loaded
- (fn [{:keys [db]} [_ params]]  ;; params = {:limit 10}
+ (fn [{:keys [db]} [_ params]]  ;; params = {:limit 10 :tag "tag-name" ...}
    {:http-xhrio {:method          :get
                  :uri             (uri "articles")
                  :params          params                                    ;; include params in the request
@@ -50,9 +50,10 @@
 
 (reg-event-db
  :get-articles-success
- (fn [db [_ {articles :articles}]]
+ (fn [db [_ {articles :articles, articles-count :articlesCount}]]
    (-> db
        (assoc-in [:loading :articles] false)
+       (assoc :articles-count articles-count)
        (assoc :articles articles))))
 
 (reg-event-fx  ;; usage (dispatch [:get-articles])

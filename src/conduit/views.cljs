@@ -99,20 +99,25 @@
                         [:span "Read more ..."]
                         [tags-list tagList]]]))])) ; defined in Helpers section
 
+(defn articles-pagination
+  []
+  (let [articles-count @(subscribe [:articles-count])]
+    [:li.page-item.active
+     [:a.page-link {:href "" :on-click #()} "1"]]))
 
 ;; -- Home -------------------------------------------------------------------
 ;;
-(defn get-articles [event tag] ;; @daniel - don't know about this here. Maybe it should be in events?
-  (.preventDefault event)      ;; can we pass event when we do dispatch?
-  (dispatch [:get-articles {:tag tag}]))
+(defn get-articles [event params] ;; @daniel - don't know about this here. Maybe it should be in events?
+  (.preventDefault event)         ;; can we pass event when we do dispatch?
+  (dispatch [:get-articles params]))
 
 (defn home
   []
   (let [filter @(subscribe [:filter])
         tags @(subscribe [:tags])
-        loading @(subscribe [:loading])]
+        loading @(subscribe [:loading])
+        articles-count @(subscribe [:articles-count])]
     [:div.home-page
-     (js/console.log loading)
      [:div.banner
       [:div.container
        [:h1.logo-font "conduit"]
@@ -124,8 +129,8 @@
          (if (:articles-by-tag filter)
            [:ul.nav.nav-pills.outline-active
             [:li.nav-item
-             [:a.nav-link {:href "" :on-click #(get-articles % nil)} "Global Feed"]] ;; first argument: % is browser event
-            [:li.nav-item                                                            ;; second: nil to remove filter by tags
+             [:a.nav-link {:href "" :on-click #(get-articles % {:tag nil})} "Global Feed"]] ;; first argument: % is browser event
+            [:li.nav-item                                                                   ;; second: nil to remove filter by tags
              [:a.nav-link.active
               [:i.ion-pound] (str " " (:articles-by-tag filter))]]]
            [:ul.nav.nav-pills.outline-active
@@ -134,7 +139,9 @@
          (if (:articles loading)
            [:div.article-preview
             [:p "Loading articles ..."]]
-           [articles-preview])]]
+           [articles-preview])
+         [:li.page-item.active
+          [:a.page-link {:on-click #(get-articles % {:tag nil :offset 10})} "1"]]]]
        [:div.col-md-3
         [:div.sidebar
          [:p "Popular Tags"]
@@ -142,7 +149,7 @@
            [:p "Loading tags ..."]
            [:div.tag-list
             (for [tag tags]
-              ^{:key tag} [:a.tag-pill.tag-default {:href "" :on-click #(get-articles % tag)} tag])])]]]]]))
+              ^{:key tag} [:a.tag-pill.tag-default {:href "" :on-click #(get-articles % {:tag tag})} tag])])]]]]]))
 
 (defn login
   []

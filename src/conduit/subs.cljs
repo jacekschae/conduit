@@ -12,6 +12,11 @@
    (:articles db)))
 
 (reg-sub
+ :articles-count  ;; usage: (subscribe [:articles])
+ (fn [db _]
+   (:articles-count db)))
+
+(reg-sub
  :article ;; usage (subscribe [:article])
  (fn [db _]
    (let [article (:active-article db)]
