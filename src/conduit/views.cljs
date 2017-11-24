@@ -97,7 +97,7 @@
                         [:h1 title]
                         [:p description]
                         [:span "Read more ..."]
-                        [tags-list tagList]]]))])) ; defined in Helpers section
+                        [tags-list tagList]]]))])) ;; defined in Helpers section
 
 (defn articles-pagination
   []
@@ -118,6 +118,7 @@
         loading @(subscribe [:loading])
         articles-count @(subscribe [:articles-count])]
     [:div.home-page
+     (js/console.log articles-count)
      [:div.banner
       [:div.container
        [:h1.logo-font "conduit"]
@@ -140,8 +141,12 @@
            [:div.article-preview
             [:p "Loading articles ..."]]
            [articles-preview])
-         [:li.page-item.active
-          [:a.page-link {:on-click #(get-articles % {:tag nil :offset 10})} "1"]]]]
+         [:nav
+          [:ul.pagination
+           (for [offset (range (/ articles-count 10))]
+             ^{:key offset} [:li.page-item {:on-click #(get-articles % {:offset (* offset 10)})}
+                             [:a.page-link (+ 1 offset)]])]]]]
+
        [:div.col-md-3
         [:div.sidebar
          [:p "Popular Tags"]
