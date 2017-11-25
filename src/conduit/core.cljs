@@ -23,7 +23,7 @@
   (secretary/set-config! :prefix "#")
   (defroute "/" []
             (do (dispatch [:set-active-page :home])
-                (dispatch [:get-articles {:limit 10}])))
+                (dispatch [:get-articles {:offset 0}])))
   (defroute "/login" [] (dispatch [:set-active-page :login]))
   (defroute "/register" [] (dispatch [:set-active-page :register]))
   (defroute "/settings" [] (dispatch [:set-active-page :settings]))
@@ -70,7 +70,7 @@
 
   ;; Send request to get articles and tags so that we can display them to the
   ;; user when the page loads for the first time.
-  (dispatch [:get-articles {:limit 10}]) ;; @daniel I would like to avoid that somehow on the startup, just don't know how
+  (dispatch [:get-articles {:offset 0}]) ;; @daniel I would like to avoid that somehow on the startup, just don't know how
   (dispatch [:get-tags])                 ;; this too ...
 
   ;; Render the UI into the HTML's <div id="app" /> element

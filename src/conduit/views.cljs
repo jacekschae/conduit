@@ -118,7 +118,6 @@
         loading @(subscribe [:loading])
         articles-count @(subscribe [:articles-count])]
     [:div.home-page
-     (js/console.log articles-count)
      [:div.banner
       [:div.container
        [:h1.logo-font "conduit"]
@@ -136,16 +135,15 @@
               [:i.ion-pound] (str " " (:tag filter))]]]
            [:ul.nav.nav-pills.outline-active
             [:li.nav-item
-             [:a.nav-link.active {:href "/#/"} "Global Feed"]]])
-         (if (:articles loading)
-           [:div.article-preview
-            [:p "Loading articles ..."]]
-           [articles-preview])
-         [:nav
-          [:ul.pagination
-           (for [offset (range (/ articles-count 10))]
-             ^{:key offset} [:li.page-item {:class (when (= (* offset 10) (:offset filter)) "active") :on-click #(get-articles % {:offset (* offset 10) :tag (:tag filter)})}
-                             [:a.page-link (+ 1 offset)]])]]]]
+             [:a.nav-link.active {:href "/#/"} "Global Feed"]]])]
+        (if (:articles loading)
+          [:div.article-preview
+           [:p "Loading articles ..."]]
+          [articles-preview])
+        [:ul.pagination
+         (for [offset (range (/ articles-count 10))]
+           ^{:key offset} [:li.page-item {:class (when (= (* offset 10) (:offset filter)) "active") :on-click #(get-articles % {:offset (* offset 10) :tag (:tag filter)})}
+                           [:a.page-link {:href ""} (+ 1 offset)]])]]
 
        [:div.col-md-3
         [:div.sidebar
