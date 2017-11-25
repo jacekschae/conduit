@@ -76,34 +76,22 @@
     [:span.counter "(" favorites-count ")"]]])
 
 (defn articles-preview
-  []
-  (let [articles @(subscribe [:articles])]
-    [:div
-     (if (empty? articles)
-       [:div.article-preview
-        [:p "No articles are here... yet."]]
-       (for [{:keys [description slug createdAt title author favoritesCount tagList]} articles]
-         ^{:key slug} [:div.article-preview
-                       [:div.article-meta
-                        [:a {:href (str "/#/@" (:username author))}
-                         [:img {:src (:image author)}]]
-                        [:div.info
-                         [:a.author {:href (str "/#/@" (:username author))} (:username author)]
-                         [:span.date (format-date createdAt)]]
-                        [:button.btn.btn-outline-primary.btn-sm.pull-xs-right
-                         [:i.ion-heart " "]
-                         [:span favoritesCount]]]
-                       [:a.preview-link {:href (str "/#/article/" slug)}
-                        [:h1 title]
-                        [:p description]
-                        [:span "Read more ..."]
-                        [tags-list tagList]]]))])) ;; defined in Helpers section
-
-(defn articles-pagination
-  []
-  (let [articles-count @(subscribe [:articles-count])]
-    [:li.page-item.active
-     [:a.page-link {:href "" :on-click #()} "1"]]))
+  [{:keys [description slug createdAt title author favoritesCount tagList]}]
+  [:div.article-preview
+   [:div.article-meta
+    [:a {:href (str "/#/@" (:username author))}
+     [:img {:src (:image author)}]]
+    [:div.info
+     [:a.author {:href (str "/#/@" (:username author))} (:username author)]
+     [:span.date (format-date createdAt)]]
+    [:button.btn.btn-outline-primary.btn-sm.pull-xs-right
+     [:i.ion-heart " "]
+     [:span favoritesCount]]]
+   [:a.preview-link {:href (str "/#/article/" slug)}
+    [:h1 title]
+    [:p description]
+    [:span "Read more ..."]
+    [tags-list tagList]]]) ;; defined in Helpers section
 
 ;; -- Home -------------------------------------------------------------------
 ;;
@@ -116,6 +104,7 @@
   (let [filter @(subscribe [:filter])
         tags @(subscribe [:tags])
         loading @(subscribe [:loading])
+        articles @(subscribe [:articles])
         articles-count @(subscribe [:articles-count])]
     [:div.home-page
      [:div.banner
@@ -129,20 +118,23 @@
          (if (:tag filter)
            [:ul.nav.nav-pills.outline-active
             [:li.nav-item
-             [:a.nav-link {:href "" :on-click #(get-articles % {:tag nil})} "Global Feed"]] ;; first argument: % is browser event
+             [:a.nav-link {:href "" :on-click #(get-articles % {:tag nil :offset 0 :limit 10})} "Global Feed"]] ;; first argument: % is browser event
             [:li.nav-item                                                                   ;; second: nil to remove filter by tags
              [:a.nav-link.active
               [:i.ion-pound] (str " " (:tag filter))]]]
            [:ul.nav.nav-pills.outline-active
             [:li.nav-item
              [:a.nav-link.active {:href "/#/"} "Global Feed"]]])]
-        (if (:articles loading)
-          [:div.article-preview
-           [:p "Loading articles ..."]]
-          [articles-preview])
+        (cond
+          ; (:articles loading) [:div.article-preview
+          ;                      [:p "Loading articles ..."]]
+          (empty? articles) [:div.article-preview
+                             [:p "No articles are here... yet."]]
+          :else (for [article articles]
+                  ^{:key (:slug article)} [articles-preview article]))
         [:ul.pagination
          (for [offset (range (/ articles-count 10))]
-           ^{:key offset} [:li.page-item {:class (when (= (* offset 10) (:offset filter)) "active") :on-click #(get-articles % {:offset (* offset 10) :tag (:tag filter)})}
+           ^{:key offset} [:li.page-item {:class (when (= (* offset 10) (:offset filter)) "active") :on-click #(get-articles % {:offset (* offset 10) :tag (:tag filter) :limit 10})}
                            [:a.page-link {:href ""} (+ 1 offset)]])]]
 
        [:div.col-md-3
@@ -152,7 +144,7 @@
            [:p "Loading tags ..."]
            [:div.tag-list
             (for [tag tags]
-              ^{:key tag} [:a.tag-pill.tag-default {:href "" :on-click #(get-articles % {:tag tag})} tag])])]]]]]))
+              ^{:key tag} [:a.tag-pill.tag-default {:href "" :on-click #(get-articles % {:tag tag :limit 10 :offset 0})} tag])])]]]]]))
 
 (defn login
   []
@@ -193,7 +185,8 @@
   []
   (let [profile @(subscribe [:profile])
         filter @(subscribe [:filter])
-        loading @(subscribe [:loading])]
+        loading @(subscribe [:loading])
+        articles @(subscribe [:articles])]
     [:div.profile-page
      [:div.user-info
       [:div.container
@@ -214,10 +207,13 @@
            [:a.nav-link {:href (str "/#/@" (:username profile)) :class (when (:author filter) " active")} "My Articles"]]
           [:li.nav-item
            [:a.nav-link {:href (str "/#/@" (:username profile) "/favorites") :class (when (:favorites filter) "nav-link active")} "Favorited Articles"]]]]
-        (if (:articles loading)
-          [:div.article-preview
-           [:p "Loading articles ..."]]
-          [articles-preview])]]]]))
+        (cond
+          ; (:articles loading) [:div.article-preview
+          ;                      [:p "Loading articles ..."]]
+          (empty? articles) [:div.article-preview
+                             [:p "No articles are here... yet."]]
+          :else (for [article articles]
+                  ^{:key (:slug article)} [articles-preview article]))]]]]))
 
 (defn settings
   []
