@@ -125,13 +125,13 @@
            [:ul.nav.nav-pills.outline-active
             [:li.nav-item
              [:a.nav-link.active {:href "/#/"} "Global Feed"]]])]
+        (for [article articles]
+          ^{:key (:slug article)} [articles-preview article])
         (cond
-          ; (:articles loading) [:div.article-preview
-          ;                      [:p "Loading articles ..."]]
+          (:articles loading) [:div.article-preview
+                               [:p "Loading articles ..."]]
           (empty? articles) [:div.article-preview
-                             [:p "No articles are here... yet."]]
-          :else (for [article articles]
-                  ^{:key (:slug article)} [articles-preview article]))
+                             [:p "No articles are here... yet."]])
         [:ul.pagination
          (for [offset (range (/ articles-count 10))]
            ^{:key offset} [:li.page-item {:class (when (= (* offset 10) (:offset filter)) "active") :on-click #(get-articles % {:offset (* offset 10) :tag (:tag filter) :limit 10})}
@@ -207,14 +207,13 @@
            [:a.nav-link {:href (str "/#/@" (:username profile)) :class (when (:author filter) " active")} "My Articles"]]
           [:li.nav-item
            [:a.nav-link {:href (str "/#/@" (:username profile) "/favorites") :class (when (:favorites filter) "nav-link active")} "Favorited Articles"]]]]
+        (for [article articles]
+          ^{:key (:slug article)} [articles-preview article])
         (cond
-          ; (:articles loading) [:div.article-preview
-          ;                      [:p "Loading articles ..."]]
+          (:articles loading) [:div.article-preview
+                               [:p "Loading articles ..."]]
           (empty? articles) [:div.article-preview
-                             [:p "No articles are here... yet."]]
-          :else (for [article articles]
-                  ^{:key (:slug article)} [articles-preview article]))]]]]))
-
+                             [:p "No articles are here... yet."]])]]]]))
 (defn settings
   []
   [:div.settings-page
