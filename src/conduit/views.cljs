@@ -1,5 +1,6 @@
 (ns conduit.views
-  (:require [re-frame.core :refer [subscribe dispatch]]
+  (:require [reagent.core  :as reagent]
+            [re-frame.core :refer [subscribe dispatch]]
             [conduit.subs :as subs]))
 
 ;; -- Layout ------------------------------------------------------------------
@@ -93,7 +94,7 @@
     [:span "Read more ..."]
     [tags-list tagList]]]) ;; defined in Helpers section
 
-;; -- Home -------------------------------------------------------------------
+;; -- Home --------------------------------------------------------------------
 ;;
 (defn get-articles [event params] ;; @daniel - don't know about this here. Maybe it should be in events?
   (.preventDefault event)         ;; can we pass event when we do dispatch?
@@ -125,13 +126,14 @@
            [:ul.nav.nav-pills.outline-active
             [:li.nav-item
              [:a.nav-link.active {:href "/#/"} "Global Feed"]]])]
-        (for [article articles]
-          ^{:key (:slug article)} [articles-preview article])
-        (cond
-          (:articles loading) [:div.article-preview
-                               [:p "Loading articles ..."]]
-          (empty? articles) [:div.article-preview
-                             [:p "No articles are here... yet."]])
+        (if (empty? articles)
+          [:div.article-preview
+           [:p "No articles are here... yet."]]
+          (for [article articles]
+            ^{:key (:slug article)} [articles-preview article]))
+        (when (:articles loading)
+          [:div.article-preview
+           [:p "Loading articles ..."]])
         [:ul.pagination
          (for [offset (range (/ articles-count 10))]
            ^{:key offset} [:li.page-item {:class (when (= (* offset 10) (:offset filter)) "active") :on-click #(get-articles % {:offset (* offset 10) :tag (:tag filter) :limit 10})}
@@ -146,33 +148,55 @@
             (for [tag tags]
               ^{:key tag} [:a.tag-pill.tag-default {:href "" :on-click #(get-articles % {:tag tag :limit 10 :offset 0})} tag])])]]]]]))
 
+;; -- Login -------------------------------------------------------------------
+;;
+(defn login-user [event credentials]
+  (.preventDefault event)
+  (dispatch [:login credentials]))
+
 (defn login
   []
-  [:div.auth-page
-   [:div.container.page
-    [:div.row
-     [:div.col-md-6.offset-md-3.col-xs-12
-      [:h1.text-xs-center "Sign in"]
-      [:p.text-xs-center
-       [:a {:href ""} "Need an account?"]]
-      [:form
-       [:fieldset.form-group
-        [:input.form-control.form-control-lg {:type "text" :placeholder "Email"}]]
-       [:fieldset.form-group
-        [:input.form-control.form-control-lg {:type "password" :placeholder "Password"}]]
-       [:button.btn.btn-lg.btn-primary.pull-xs-right "Sign in"]]]]]])
+  (let [default {:email "" :password ""}
+        credentials (reagent/atom default)]
+    (fn []
+      [:div.auth-page
+       [:div.container.page
+        [:div.row
+         [:div.col-md-6.offset-md-3.col-xs-12
+          [:h1.text-xs-center "Sign in"]
+          [:p.text-xs-center
+           [:a {:href "/#/register"} "Need an account?"]]
+          [:form {:on-submit #(login-user % @credentials)}
+           [:fieldset.form-group
+            [:input.form-control.form-control-lg {:type "text"
+                                                  :placeholder "Email"
+                                                  :value (:email @credentials)
+                                                  :on-change #(swap! credentials assoc :email (-> % .-target .-value))}]]
+           [:fieldset.form-group
+            [:input.form-control.form-control-lg {:type "password"
+                                                  :placeholder "Password"
+                                                  :value (:password @credentials)
+                                                  :on-change #(swap! credentials assoc :password (-> % .-target .-value))}]]
+           [:button.btn.btn-lg.btn-primary.pull-xs-right "Sign in"]]]]]])))
+
+;; -- Register ----------------------------------------------------------------
+;;
+(defn register-user [event user]
+  (.preventDefault event)
+  (.log js/console user))
 
 (defn register
   []
-  (let [profile @(subscribe [:profile])]
+  (let [default {:username "" :email "" :password ""}
+        user (reagent/atom default)]
     [:div.auth-page
      [:div.container.page
       [:div.row
        [:div.col-md-6.offset-md-3.col-xs-12
         [:h1.text-xs-center "Sign up"]
         [:p.text-xs-center
-         [:a {:href ""} "Have an account?"]]
-        [:form
+         [:a {:href "/#/login"} "Have an account?"]]
+        [:form {:on-submit #(register-user % @user)}
          [:fieldset.form-group
           [:input.form-control.form-control-lg {:type "text" :placeholder "Your Name"}]]
          [:fieldset.form-group
@@ -207,13 +231,14 @@
            [:a.nav-link {:href (str "/#/@" (:username profile)) :class (when (:author filter) " active")} "My Articles"]]
           [:li.nav-item
            [:a.nav-link {:href (str "/#/@" (:username profile) "/favorites") :class (when (:favorites filter) "nav-link active")} "Favorited Articles"]]]]
-        (for [article articles]
-          ^{:key (:slug article)} [articles-preview article])
-        (cond
-          (:articles loading) [:div.article-preview
-                               [:p "Loading articles ..."]]
-          (empty? articles) [:div.article-preview
-                             [:p "No articles are here... yet."]])]]]]))
+        (if (empty? articles)
+          [:div.article-preview
+           [:p "No articles are here... yet."]]
+          (for [article articles]
+            ^{:key (:slug article)} [articles-preview article]))
+        (when (:articles loading)
+          [:div.article-preview
+           [:p "Loading articles ..."]])]]]]))
 (defn settings
   []
   [:div.settings-page

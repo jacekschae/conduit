@@ -96,9 +96,9 @@
  (fn [{:keys [db]} [_ params]]  ;; params = {:profile "profile"}
    {:db         (assoc-in db [:loading :profile] true)
     :http-xhrio {:method          :get
-                 :uri             (uri "profiles" (:profile params))        ;; evaluates to "/profiles/:profile"
-                 :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
-                 :on-success      [:get-user-profile-success]               ;; trigger get-user-profile-success
+                 :uri             (uri "profiles" (:profile params))            ;; evaluates to "/profiles/:profile"
+                 :response-format (json-response-format {:keywords? true})      ;; json and all keys to keywords
+                 :on-success      [:get-user-profile-success]                   ;; trigger get-user-profile-success
                  :on-failure      [:api-request-failure :get-user-profile]}}))  ;; trigger api-request-failure with :get-articles param
 
 (reg-event-db
@@ -117,3 +117,22 @@
                (into [:loading] request)
                [:failed (or (get-in response [:response :errors])
                             {:error [(get response :status-text)]})]))))
+
+(reg-event-fx  ;; usage (dispatch [:login user])
+ :login        ;; triggered when the article page is loaded
+ (fn [{:keys [db]} [_ credentials]]  ;; credentials = {:email ... :password ...}
+   {:db         (assoc-in db [:loading :login] true)
+    :http-xhrio {:method          :post
+                 :uri             (uri "users" "login")                     ;; evaluates to "/users/login"
+                 :params          {:user credentials}                       ;; {:user {:email ... :password ...}}
+                 :format          (json-request-format)                     ;; convert to json
+                 :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
+                 :on-success      [:login-success]                          ;; trigger get-articles-success
+                 :on-failure      [:api-request-failure :login]}}))         ;; trigger api-request-failure with :get-articles param
+
+(reg-event-db
+ :login-success
+ (fn [db [_ {user :user}]]
+   (-> db
+       (assoc-in [:loading :login] false)
+       (assoc :user user))))
