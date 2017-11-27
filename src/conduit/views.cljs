@@ -94,6 +94,7 @@
     [:span "Read more ..."]
     [tags-list tagList]]]) ;; defined in Helpers section
 
+
 ;; -- Home --------------------------------------------------------------------
 ;;
 (defn get-articles [event params] ;; @daniel - don't know about this here. Maybe it should be in events?
@@ -118,7 +119,7 @@
        [:div.col-md-9
         [:div.feed-toggle
          (if (:tag filter)
-           [:ul.nav.nav-pills.outline-active
+           [:ul.nav.nav-pills
             [:li.nav-item
              [:a.nav-link {:href "" :on-click #(get-articles % {:tag nil :profile (:username user) :offset 0 :limit 10})} "Your Feed"]]
             [:li.nav-item
@@ -254,26 +255,36 @@
         (when (:articles loading)
           [:div.article-preview
            [:p "Loading articles ..."]])]]]]))
+
+;; -- Settings ----------------------------------------------------------------
+;;
+(defn logout-user [event]
+  (.preventDefault event)
+  (dispatch [:logout]))
+
 (defn settings
   []
-  [:div.settings-page
-   [:div.container.page
-    [:div.row
-     [:div.col-md-6.offset-md-3.col-xs-12
-      [:h1.text-xs-center "Your Settings"]
-      [:form
-       [:fieldset
-        [:fieldset.form-group
-         [:input.form-control {:type "text", :placeholder "URL of profile picture"}]]
-        [:fieldset.form-group
-         [:input.form-control.form-control-lg {:type "text", :placeholder "Your Name"}]]
-        [:fieldset.form-group
-         [:textarea.form-control.form-control-lg {:rows "8", :placeholder "Short bio about you"}]]
-        [:fieldset.form-group
-         [:input.form-control.form-control-lg {:type "text", :placeholder "Email"}]]
-        [:fieldset.form-group
-         [:input.form-control.form-control-lg {:type "password", :placeholder "Password"}]]
-        [:button.btn.btn-lg.btn-primary.pull-xs-right "Update Settings"]]]]]]])
+  (let [user @(subscribe [:user])]
+    [:div.settings-page
+     [:div.container.page
+      [:div.row
+       [:div.col-md-6.offset-md-3.col-xs-12
+        [:h1.text-xs-center "Your Settings"]
+        [:form
+         [:fieldset
+          [:fieldset.form-group
+           [:input.form-control {:type "text", :placeholder "URL of profile picture" :default-value (:image user)}]]
+          [:fieldset.form-group
+           [:input.form-control.form-control-lg {:type "text", :placeholder "Your Name" :default-value (:usernae user)}]]
+          [:fieldset.form-group
+           [:textarea.form-control.form-control-lg {:rows "8", :placeholder "Short bio about you" :default-value (:bio user)}]]
+          [:fieldset.form-group
+           [:input.form-control.form-control-lg {:type "text", :placeholder "Email" :default-value (:email user)}]]
+          [:fieldset.form-group
+           [:input.form-control.form-control-lg {:type "password", :placeholder "Password" :default-value ""}]]
+          [:button.btn.btn-lg.btn-primary.pull-xs-right "Update Settings"]]]
+        [:hr]
+        [:button.btn.btn-outline-danger {:on-click #(logout-user %)} "Or click here to logout."]]]]])) ;; TODO write handler for loggint out
 
 (defn editor
   []

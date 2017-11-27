@@ -18,7 +18,6 @@
 ;; Part of the conduit challenge is to store a user in LocalStorage, and
 ;; on app startup, reload the user from when the program was last run.
 ;;
-
 (def ls-key "conduit-user")                       ;; localstore key
 
 (defn conduit->local-store
@@ -41,9 +40,7 @@
 (re-frame/reg-cofx
  :local-store-user
  (fn [cofx _]
-      ;; put the localstore user into the coeffect under :local-store-user
-   (assoc cofx :local-store-user
-             ;; read in user from localstore, and process into a sorted map
-          (into (sorted-map)
+   (assoc cofx :local-store-user  ;; put the localstore user into the coeffect under :local-store-user
+          (into (sorted-map)      ;; read in user from localstore, and process into a sorted map
                 (some->> (.getItem js/localStorage ls-key)
                          (cljs.reader/read-string))))))  ;; EDN map -> map

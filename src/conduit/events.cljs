@@ -129,17 +129,25 @@
     :http-xhrio {:method          :post
                  :uri             (uri "users" "login")                     ;; evaluates to "/users/login"
                  :params          {:user credentials}                       ;; {:user {:email ... :password ...}}
-                 :format          (json-request-format)                     ;; convert to json
+                 :format          (json-request-format)                     ;; make sure it's json
                  :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
                  :on-success      [:login-success]                          ;; trigger get-articles-success
                  :on-failure      [:api-request-error :login]}}))           ;; trigger api-request-error with :get-articles param
 
-(reg-event-db
+(reg-event-fx
  :login-success
  (fn [{:keys [db]} [_ {user :user}]]
    {:db       (-> db
                   (assoc-in [:loading :login] false)
                   (assoc :user user))
+    :dispatch [:set-active-page :home]}))
+
+;; -- Logout ------------------------------------------------------------------
+;;
+(reg-event-fx  ;; usage (dispatch [:logout])
+ :logout
+ (fn [{:keys [db]} [_ _]]
+   {:db       (dissoc db :user)
     :dispatch [:set-active-page :home]}))
 
 ;; -- Error Handler -----------------------------------------------------------
