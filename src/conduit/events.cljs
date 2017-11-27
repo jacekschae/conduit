@@ -1,14 +1,14 @@
 (ns conduit.events
   (:require
    [conduit.db :refer [default-db]]
-   [re-frame.core :refer [reg-event-db reg-event-fx]]
+   [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx]]
    [day8.re-frame.http-fx]
    [ajax.core :refer [json-request-format json-response-format]]
    [clojure.string :as str]
    [conduit.db :as db]))
 
 ;; -- Helpers -----------------------------------------------------------------
-
+;;
 (def api-url "https://conduit.productionready.io/api")
 
 (defn uri [& path]
@@ -16,12 +16,16 @@
   (str/join "/" (concat [api-url] path)))
 
 ;; -- Event Handlers ----------------------------------------------------------
-
+;;
 (reg-event-db    ;; usage: (dispatch [:initialise-db])
  :initialise-db  ;; sets up initial application state
- (fn  [_ _]      ;; the two parameters are not important here, so use _
-   default-db))  ;; what it returns becomes the new application state
 
+ ;; the interceptor chain (a vector of interceptors)
+ [(inject-cofx :local-store-user)]  ;; gets user from localstore, and puts into coeffects arg
+
+ ;; the event handler (function) being registered
+ (fn  [{:keys [db local-store-user]} _]               ;; take 2 vals from coeffects. Ignore event vector itself.
+   {:db (assoc default-db :user local-store-user)}))  ;; what it returns becomes the new application state
 
 (reg-event-db              ;; usage: (dispatch [:set-active-page :home])
  :set-active-page          ;; triggered when the user clicks on a link
@@ -33,6 +37,8 @@
  (fn [db [_ active-article]]
    (assoc db :active-article active-article)))
 
+;; -- GET Articles ------------------------------------------------------------
+;;
 (reg-event-fx   ;; usage (dispatch [:get-articles {:limit 10 :tag "tag-name" ...}])
  :get-articles  ;; triggered when the home page is loaded
  (fn [{:keys [db]} [_ params]]  ;; params = {:limit 10 :tag "tag-name" ...}
@@ -57,6 +63,8 @@
        (assoc :articles-count articles-count)
        (assoc :articles articles))))
 
+;; -- GET Tags ----------------------------------------------------------------
+;;
 (reg-event-fx  ;; usage (dispatch [:get-articles])
  :get-tags     ;; triggered when the home page is loaded
  (fn [{:keys [db]} _]  ;; second parameter is not important, therefore _
@@ -74,6 +82,8 @@
        (assoc-in [:loading :tags] false)
        (assoc :tags tags))))
 
+;; -- GET Comments ------------------------------------------------------------
+;;
 (reg-event-fx           ;; usage (dispatch [:get-article-comments {:slug "article-slug"}])
  :get-article-comments  ;; triggered when the article page is loaded
  (fn [{:keys [db]} [_ params]]  ;; params = {:slug "article-slug"}
@@ -91,6 +101,8 @@
        (assoc-in [:loading :comments] false)
        (assoc :comments comments))))
 
+;; -- GET Profile -------------------------------------------------------------
+;;
 (reg-event-fx       ;; usage (dispatch [:get-user-profile {:profile "profile"}])
  :get-user-profile  ;; triggered when the profile page is loaded
  (fn [{:keys [db]} [_ params]]  ;; params = {:profile "profile"}
@@ -108,16 +120,8 @@
        (assoc-in [:loading :profile] false)
        (assoc :profile profile))))
 
-(reg-event-db
- :api-request-error
- (fn [db [_ & event]]
-   (let [request (butlast event)
-         response (last event)]
-     (assoc-in db
-               (into [:errors] request)
-               (or (get-in response [:response :errors]
-                           {:error [(get response :status-text)]}))))))
-
+;; -- Login -------------------------------------------------------------------
+;;
 (reg-event-fx  ;; usage (dispatch [:login user])
  :login        ;; triggered when the article page is loaded
  (fn [{:keys [db]} [_ credentials]]  ;; credentials = {:email ... :password ...}
@@ -128,7 +132,7 @@
                  :format          (json-request-format)                     ;; convert to json
                  :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
                  :on-success      [:login-success]                          ;; trigger get-articles-success
-                 :on-failure      [:api-request-error :login]}}))         ;; trigger api-request-error with :get-articles param
+                 :on-failure      [:api-request-error :login]}}))           ;; trigger api-request-error with :get-articles param
 
 (reg-event-db
  :login-success
@@ -138,9 +142,14 @@
                   (assoc :user user))
     :dispatch [:set-active-page :home]}))
 
+;; -- Error Handler -----------------------------------------------------------
+;;
 (reg-event-db
- :login-success
- (fn [db [_ {user :user}]]
-   (-> db
-       (assoc-in [:loading :login] false)
-       (assoc :user user))))
+ :api-request-error
+ (fn [db [_ & event]]
+   (let [request (butlast event)
+         response (last event)]
+     (assoc-in db
+               (into [:errors] request)
+               (or (get-in response [:response :errors]
+                           {:error [(get response :status-text)]}))))))

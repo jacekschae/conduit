@@ -106,7 +106,8 @@
         tags @(subscribe [:tags])
         loading @(subscribe [:loading])
         articles @(subscribe [:articles])
-        articles-count @(subscribe [:articles-count])]
+        articles-count @(subscribe [:articles-count])
+        user @(subscribe [:user])]
     [:div.home-page
      [:div.banner
       [:div.container
@@ -119,8 +120,10 @@
          (if (:tag filter)
            [:ul.nav.nav-pills.outline-active
             [:li.nav-item
+             [:a.nav-link {:href "" :on-click #(get-articles % {:tag nil :profile (:username user) :offset 0 :limit 10})} "Your Feed"]]
+            [:li.nav-item
              [:a.nav-link {:href "" :on-click #(get-articles % {:tag nil :offset 0 :limit 10})} "Global Feed"]] ;; first argument: % is browser event
-            [:li.nav-item                                                                   ;; second: nil to remove filter by tags
+            [:li.nav-item                                                                                       ;; second: nil to remove filter by tags
              [:a.nav-link.active
               [:i.ion-pound] (str " " (:tag filter))]]]
            [:ul.nav.nav-pills.outline-active

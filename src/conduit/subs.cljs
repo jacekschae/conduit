@@ -17,7 +17,7 @@
    (:articles-count db)))
 
 (reg-sub
- :article ;; usage (subscribe [:article])
+ :article  ;; usage (subscribe [:article])
  (fn [db _]
    (let [article (:active-article db)]
      (into {} (filter #(= article (:slug %)) (:articles db)))))) ;; @daniel, is there a way we can avoid into {} ... ?
