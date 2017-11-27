@@ -7,7 +7,7 @@
 ;;
 (defn header
   []
-  (let [user false] ;; create subscription for user
+  (let [user @(subscribe [:user])] ;; create subscription for user
     [:nav.navbar.navbar-light
      [:div.container
       [:a.navbar-brand {:href "/#/"} "conduit"]
@@ -22,7 +22,7 @@
           [:a.nav-link {:href "/#/settings"}
            [:i.ion-gear-a "Settings"]]]
          [:li.nav-item
-          [:a.nav-link {:href "/#/@profile"} "username"]]]
+          [:a.nav-link {:href (str "/#/@" (:username user))} (:username user)]]]
         [:ul.nav.navbar-nav.pull-xs-right
          [:li.nav-item
           [:a.nav-link.active {:href "/#/"} "Home"]]
@@ -157,27 +157,39 @@
 (defn login
   []
   (let [default {:email "" :password ""}
-        credentials (reagent/atom default)]
+        credentials (reagent/atom default)
+        loading @(subscribe [:loading])
+        errors @(subscribe [:errors])]
     (fn []
       [:div.auth-page
+       (js/console.log loading)
        [:div.container.page
         [:div.row
          [:div.col-md-6.offset-md-3.col-xs-12
           [:h1.text-xs-center "Sign in"]
           [:p.text-xs-center
            [:a {:href "/#/register"} "Need an account?"]]
+          (.log js/console errors)
+          (when (:login errors)
+            [:ul.error-messages
+             [:li "email or password is invalid"]])
+          ; (for [error errors]
+          ;   (.log js/console error))
           [:form {:on-submit #(login-user % @credentials)}
            [:fieldset.form-group
             [:input.form-control.form-control-lg {:type "text"
                                                   :placeholder "Email"
                                                   :value (:email @credentials)
-                                                  :on-change #(swap! credentials assoc :email (-> % .-target .-value))}]]
+                                                  :on-change #(swap! credentials assoc :email (-> % .-target .-value))
+                                                  :disabled (when (:login loading) :disabled)}]]
+
            [:fieldset.form-group
             [:input.form-control.form-control-lg {:type "password"
                                                   :placeholder "Password"
                                                   :value (:password @credentials)
-                                                  :on-change #(swap! credentials assoc :password (-> % .-target .-value))}]]
-           [:button.btn.btn-lg.btn-primary.pull-xs-right "Sign in"]]]]]])))
+                                                  :on-change #(swap! credentials assoc :password (-> % .-target .-value))
+                                                  :disabled (when (:login loading) :disabled)}]]
+           [:button.btn.btn-lg.btn-primary.pull-xs-right {:class (when (:login loading) "disabled")} "Sign in"]]]]]])))
 
 ;; -- Register ----------------------------------------------------------------
 ;;

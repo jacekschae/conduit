@@ -41,7 +41,7 @@
                  :params          params                                    ;; include params in the request
                  :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
                  :on-success      [:get-articles-success]                   ;; trigger get-articles-success event
-                 :on-failure      [:api-request-failure :get-articles]}
+                 :on-failure      [:api-request-error :get-articles]}
     :db          (-> db
                      (assoc-in [:loading :articles] true)
                      (assoc-in [:filter :offset] (:offset params))
@@ -65,7 +65,7 @@
                  :uri             (uri "tags")
                  :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
                  :on-success      [:get-tags-success]                       ;; trigger get-tags-success event
-                 :on-failure      [:api-request-failure :get-tags]}}))      ;; trigger api-request-failure with :get-tags param
+                 :on-failure      [:api-request-error :get-tags]}}))      ;; trigger api-request-error with :get-tags param
 
 (reg-event-db
  :get-tags-success
@@ -82,7 +82,7 @@
                  :uri             (uri "articles" (:slug params) "comments")  ;; evaluates to "/articles/:slug/comments"
                  :response-format (json-response-format {:keywords? true})    ;; json and all keys to keywords
                  :on-success      [:get-article-comments-success]             ;; trigger get-articles-success
-                 :on-failure      [:api-request-failure :get-article-comments]}}))  ;; trigger api-request-failure with :get-articles param
+                 :on-failure      [:api-request-error :get-article-comments]}}))  ;; trigger api-request-error with :get-articles param
 
 (reg-event-db
  :get-article-comments-success
@@ -99,7 +99,7 @@
                  :uri             (uri "profiles" (:profile params))            ;; evaluates to "/profiles/:profile"
                  :response-format (json-response-format {:keywords? true})      ;; json and all keys to keywords
                  :on-success      [:get-user-profile-success]                   ;; trigger get-user-profile-success
-                 :on-failure      [:api-request-failure :get-user-profile]}}))  ;; trigger api-request-failure with :get-articles param
+                 :on-failure      [:api-request-error :get-user-profile]}}))  ;; trigger api-request-error with :get-articles param
 
 (reg-event-db
  :get-user-profile-success
@@ -109,14 +109,14 @@
        (assoc :profile profile))))
 
 (reg-event-db
- :api-request-failure
- (fn [db [_ & q]]
-   (let [request (butlast q)
-         response (last q)]
+ :api-request-error
+ (fn [db [_ & event]]
+   (let [request (butlast event)
+         response (last event)]
      (assoc-in db
-               (into [:loading] request)
-               [:failed (or (get-in response [:response :errors])
-                            {:error [(get response :status-text)]})]))))
+               (into [:errors] request)
+               (or (get-in response [:response :errors]
+                           {:error [(get response :status-text)]}))))))
 
 (reg-event-fx  ;; usage (dispatch [:login user])
  :login        ;; triggered when the article page is loaded
@@ -128,7 +128,15 @@
                  :format          (json-request-format)                     ;; convert to json
                  :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
                  :on-success      [:login-success]                          ;; trigger get-articles-success
-                 :on-failure      [:api-request-failure :login]}}))         ;; trigger api-request-failure with :get-articles param
+                 :on-failure      [:api-request-error :login]}}))         ;; trigger api-request-error with :get-articles param
+
+(reg-event-db
+ :login-success
+ (fn [{:keys [db]} [_ {user :user}]]
+   {:db       (-> db
+                  (assoc-in [:loading :login] false)
+                  (assoc :user user))
+    :dispatch [:set-active-page :home]}))
 
 (reg-event-db
  :login-success

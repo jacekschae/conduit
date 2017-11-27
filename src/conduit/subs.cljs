@@ -43,6 +43,16 @@
    (:loading db)))
 
 (reg-sub
- :filter  ;; usage: (subscribe [:loading])
+ :filter  ;; usage: (subscribe [:filter])
  (fn [db _]
    (:filter db)))
+
+(reg-sub
+ :errors  ;; usage: (subscribe [:errors])
+ (fn [db _]
+   (:errors db)))
+
+(reg-sub
+ :user  ;; usage: (subscribe [:user])
+ (fn [db _]
+   (:user db)))
