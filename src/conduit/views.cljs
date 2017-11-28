@@ -119,21 +119,20 @@
       [:div.row
        [:div.col-md-9
         [:div.feed-toggle
-         (if (:tag filter)
-           [:ul.nav.nav-pills
+         [:ul.nav.nav-pills.outline-active
+          (when-not (empty? user)
             [:li.nav-item
-             [:a.nav-link {:href "" :on-click #(get-articles % {:tag nil :profile (:username user) :offset 0 :limit 10})} "Your Feed"]]
+             [:a.nav-link {:href ""
+                           :class (when (:author filter) "active")
+                           :on-click #(get-articles % {:tag nil :author (:username user) :offset 0 :limit 10})} "Your Feed"]])
+          [:li.nav-item
+           [:a.nav-link {:href ""
+                         :class (when-not (or (:tag filter) (:author filter)) "active")
+                         :on-click #(get-articles % {:tag nil :offset 0 :limit 10})} "Global Feed"]] ;; first argument: % is browser event, second: nil to remove filter by tags
+          (when (:tag filter)
             [:li.nav-item
-             [:a.nav-link {:href "" :on-click #(get-articles % {:tag nil :offset 0 :limit 10})} "Global Feed"]] ;; first argument: % is browser event
-            [:li.nav-item                                                                                       ;; second: nil to remove filter by tags
              [:a.nav-link.active
-              [:i.ion-pound] (str " " (:tag filter))]]]
-           [:ul.nav.nav-pills.outline-active
-            (when user
-              [:li.nav-item
-               [:a.nav-link.active {:href "" :on-click #(get-articles % {:tag nil :profile (:username user) :offset 0 :limit 10})} "Your Feed"]])
-            [:li.nav-item
-             [:a.nav-link.active {:href "" :on-click #(get-articles % {:tag nil :offset 0 :limit 10})} "Global Feed"]]])]
+              [:i.ion-pound] (str " " (:tag filter))]])]]
         (if (empty? articles)
           [:div.article-preview
            [:p "No articles are here... yet."]]

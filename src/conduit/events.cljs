@@ -137,9 +137,9 @@
  (fn [{:keys [db]} [_ params]]  ;; params = {:profile "profile"}
    {:db         (assoc-in db [:loading :profile] true)
     :http-xhrio {:method          :get
-                 :uri             (uri "profiles" (:profile params))            ;; evaluates to "/profiles/:profile"
-                 :response-format (json-response-format {:keywords? true})      ;; json and all keys to keywords
-                 :on-success      [:get-user-profile-success]                   ;; trigger get-user-profile-success
+                 :uri             (uri "profiles" (:profile params))          ;; evaluates to "/profiles/:profile"
+                 :response-format (json-response-format {:keywords? true})    ;; json and all keys to keywords
+                 :on-success      [:get-user-profile-success]                 ;; trigger get-user-profile-success
                  :on-failure      [:api-request-error :get-user-profile]}}))  ;; trigger api-request-error with :get-articles param
 
 (reg-event-db
