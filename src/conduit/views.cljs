@@ -81,29 +81,36 @@
       [:span.counter "(" favorites-count ")"]]]))
 
 (defn articles-preview
-  [{:keys [description slug createdAt title author favoritesCount tagList]}]
-  [:div.article-preview
-   [:div.article-meta
-    [:a {:href (str "/#/@" (:username author))}
-     [:img {:src (:image author)}]]
-    [:div.info
-     [:a.author {:href (str "/#/@" (:username author))} (:username author)]
-     [:span.date (format-date createdAt)]]
-    [:button.btn.btn-outline-primary.btn-sm.pull-xs-right
-     [:i.ion-heart " "]
-     [:span favoritesCount]]]
-   [:a.preview-link {:href (str "/#/article/" slug)}
-    [:h1 title]
-    [:p description]
-    [:span "Read more ..."]
-    [tags-list tagList]]]) ;; defined in Helpers section
-
+  [{:keys [description slug createdAt title author favoritesCount favorited tagList]}]
+  (let [loading @(subscribe [:loading])]
+    [:div.article-preview
+     [:div.article-meta
+      [:a {:href (str "/#/@" (:username author))}
+       [:img {:src (:image author)}]]
+      [:div.info
+       [:a.author {:href (str "/#/@" (:username author))} (:username author)]
+       [:span.date (format-date createdAt)]]
+      [:button.btn.btn-primary.btn-sm.pull-xs-right {:on-click #(dispatch [:toggle-favorite-article slug])
+                                                     :class (cond
+                                                              (not favorited) "btn-outline-primary"
+                                                              (:toggle-favorite-article loading) "disabled")}
+       [:i.ion-heart " "]
+       [:span favoritesCount]]]
+     [:a.preview-link {:href (str "/#/article/" slug)}
+      [:h1 title]
+      [:p description]
+      [:span "Read more ..."]
+      [tags-list tagList]]])) ;; defined in Helpers section
 
 ;; -- Home --------------------------------------------------------------------
 ;;
 (defn get-articles [event params] ;; @daniel - don't know about this here. Maybe it should be in events?
   (.preventDefault event)         ;; can we pass event when we do dispatch?
   (dispatch [:get-articles params]))
+
+(defn get-feed-articles [event params]
+  (.preventDefault event)
+  (dispatch [:get-feed-articles params]))
 
 (defn home
   []
@@ -127,11 +134,11 @@
           (when-not (empty? user)
             [:li.nav-item
              [:a.nav-link {:href ""
-                           :class (when (:author filter) "active")
-                           :on-click #(get-articles % {:tag nil :author (:username user) :offset 0 :limit 10})} "Your Feed"]])
+                           :class (when (:feed filter) "active")
+                           :on-click #(get-feed-articles % {:tag nil :author nil :offset 0 :limit 10})} "Your Feed"]])
           [:li.nav-item
            [:a.nav-link {:href ""
-                         :class (when-not (or (:tag filter) (:author filter)) "active")
+                         :class (when-not (or (:tag filter) (:feed filter)) "active")
                          :on-click #(get-articles % {:tag nil :offset 0 :limit 10})} "Global Feed"]] ;; first argument: % is browser event, second: nil to remove filter by tags
           (when (:tag filter)
             [:li.nav-item

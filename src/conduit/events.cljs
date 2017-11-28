@@ -76,8 +76,8 @@
 
 ;; -- GET Articles @ /api/articles --------------------------------------------
 ;;
-(reg-event-fx   ;; usage (dispatch [:get-articles {:limit 10 :tag "tag-name" ...}])
- :get-articles  ;; triggered when the home page is loaded
+(reg-event-fx                   ;; usage (dispatch [:get-articles {:limit 10 :tag "tag-name" ...}])
+ :get-articles                  ;; triggered when the home page is loaded
  (fn [{:keys [db]} [_ params]]  ;; params = {:limit 10 :tag "tag-name" ...}
    {:http-xhrio {:method          :get
                  :uri             (uri "articles")                          ;; evaluates to "api/articles/"
@@ -91,7 +91,8 @@
                      (assoc-in [:filter :offset] (:offset params))            ;; base on paassed param set a filter
                      (assoc-in [:filter :tag] (:tag params))                  ;; so that we can easily show and hide
                      (assoc-in [:filter :author] (:author params))            ;; appropriate views
-                     (assoc-in [:filter :favorites] (:favorited params)))}))
+                     (assoc-in [:filter :favorites] (:favorited params))
+                     (assoc-in [:filter :feed] false))}))                     ;; we need to disable filter by feed every time since it's not supported query param
 
 (reg-event-db
  :get-articles-success
@@ -101,17 +102,41 @@
        (assoc :articles-count articles-count)
        (assoc :articles (index-by :slug articles)))))  ;; @daniel, is that the idiomatic way to do it?
 
+;; -- GET Feed Articles @ /api/articles/feed ----------------------------------
+;;
+(reg-event-fx                   ;; usage (dispatch [:get-feed-articles {:limit 10 :offset 0 ...}])
+ :get-feed-articles             ;; triggered when the Your Feed tab is loaded
+ (fn [{:keys [db]} [_ params]]  ;; second parameter is not important, therefore _
+   {:http-xhrio {:method          :get
+                 :uri             (uri "articles" "feed")                   ;; evaluates to "api/articles/feed"
+                 :params          params                                    ;; include params in the request
+                 :headers         (authorization-header db)                 ;; get and pass user token obtained during login
+                 :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
+                 :on-success      [:get-feed-articles-success]              ;; trigger get-articles-success event
+                 :on-failure      [:api-request-error :get-feed-articles]}
+    :db          (-> db
+                     (assoc-in [:loading :articles] true)
+                     (assoc-in [:filter :feed] true))}))                    ;; we need to enable filter by feed every time since it's not supported query param
+
+(reg-event-db
+ :get-feed-articles-success
+ (fn [db [_ {articles :articles, articles-count :articlesCount}]]
+   (-> db
+       (assoc-in [:loading :articles] false)
+       (assoc :articles-count articles-count)
+       (assoc :articles (index-by :slug articles)))))  ;; @daniel, is that the idiomatic way to do it?
+
 ;; -- GET Tags @ /api/tags ----------------------------------------------------
 ;;
-(reg-event-fx  ;; usage (dispatch [:get-articles])
- :get-tags     ;; triggered when the home page is loaded
+(reg-event-fx          ;; usage (dispatch [:get-articles])
+ :get-tags             ;; triggered when the home page is loaded
  (fn [{:keys [db]} _]  ;; second parameter is not important, therefore _
    {:db         (assoc-in db [:loading :tags] true)
     :http-xhrio {:method          :get
                  :uri             (uri "tags")                              ;; evaluates to "tags/articles/"
                  :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
                  :on-success      [:get-tags-success]                       ;; trigger get-tags-success event
-                 :on-failure      [:api-request-error :get-tags]}}))      ;; trigger api-request-error with :get-tags param
+                 :on-failure      [:api-request-error :get-tags]}}))        ;; trigger api-request-error with :get-tags param
 
 (reg-event-db
  :get-tags-success
@@ -196,7 +221,7 @@
  :toggle-follow-user              ;; triggered when user clicks follow/unfollow button on profile page
  (fn [{:keys [db]} [_ username]]  ;; username = :username
    {:db         (assoc-in db [:loading :toggle-follow-user] true)
-    :http-xhrio {:method          (if (get-in db [:profile :following]) :delete :post) ;; check if we follow if yes DELETE, no POST
+    :http-xhrio {:method          (if (get-in db [:profile :following]) :delete :post)  ;; check if we follow if yes DELETE, no POST
                  :uri             (uri "profiles" username "follow")                    ;; evaluates to "/profiles/:username/follow"
                  :headers         (authorization-header db)                             ;; get and pass user token obtained during login
                  :format          (json-request-format)                                 ;; make sure it's json
@@ -213,9 +238,9 @@
 
 ;; -- Toggle favorite article @ /api/articles/:slug/favorite ------------------
 ;;
-(reg-event-fx                     ;; usage (dispatch [:toggle-favorite-article slug])
- :toggle-favorite-article         ;; triggered when user clicks favorite/unfavorite button on profile page
- (fn [{:keys [db]} [_ slug]]      ;; slug = :slug
+(reg-event-fx                 ;; usage (dispatch [:toggle-favorite-article slug])
+ :toggle-favorite-article     ;; triggered when user clicks favorite/unfavorite button on profile page
+ (fn [{:keys [db]} [_ slug]]  ;; slug = :slug
    {:db         (assoc-in db [:loading :toggle-favorite-article] true)
     :http-xhrio {:method          (if (get-in db [:articles slug :favorited]) :delete :post)  ;; check if article is favorite if yes DELETE, no POST
                  :uri             (uri "articles" slug "favorite")                            ;; evaluates to "/profiles/:username/follow"
@@ -228,9 +253,14 @@
 (reg-event-db  ;; usage: (dispatch [:toggle-favorite-article-success])
  :toggle-favorite-article-success
  (fn [db [_ {article :article}]]
-   (-> db
-       (assoc-in [:loading :toggle-favorite-article] false)
-       (assoc-in [:articles (:active-article db) :favorited] (:favorited article)))))
+   (let [slug (:slug article)
+         favorited (:favorited article)]
+     (-> db
+         (assoc-in [:loading :toggle-favorite-article] false)
+         (assoc-in [:articles slug :favorited] favorited)
+         (assoc-in [:articles slug :favoritesCount] (if favorited
+                                                      (:favoritesCount article inc)
+                                                      (:favoritesCount article dec)))))))
 
 ;; -- Logout ------------------------------------------------------------------
 ;;
