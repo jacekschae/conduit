@@ -49,7 +49,7 @@
   [:Authorization (str "Token " (get-in db [:user :token]))])
 
 (defn index-by [key coll]
-  "Transform a coll to a map with a given key as lookup value"
+  "Transform a coll to a map with a given key as a lookup value"
   (into {} (map (juxt key identity) coll)))
 
 ;; -- Event Handlers ----------------------------------------------------------
@@ -133,7 +133,7 @@
  (fn [{:keys [db]} _]  ;; second parameter is not important, therefore _
    {:db         (assoc-in db [:loading :tags] true)
     :http-xhrio {:method          :get
-                 :uri             (uri "tags")                              ;; evaluates to "tags/articles/"
+                 :uri             (uri "tags")                              ;; evaluates to "api/tags/articles/"
                  :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
                  :on-success      [:get-tags-success]                       ;; trigger get-tags-success event
                  :on-failure      [:api-request-error :get-tags]}}))        ;; trigger api-request-error with :get-tags param
@@ -147,14 +147,14 @@
 
 ;; -- GET Comments @ /api/articles/:slug/comments -----------------------------
 ;;
-(reg-event-fx           ;; usage (dispatch [:get-article-comments {:slug "article-slug"}])
- :get-article-comments  ;; triggered when the article page is loaded
+(reg-event-fx                   ;; usage (dispatch [:get-article-comments {:slug "article-slug"}])
+ :get-article-comments          ;; triggered when the article page is loaded
  (fn [{:keys [db]} [_ params]]  ;; params = {:slug "article-slug"}
    {:db         (assoc-in db [:loading :comments] true)
     :http-xhrio {:method          :get
-                 :uri             (uri "articles" (:slug params) "comments")  ;; evaluates to "/articles/:slug/comments"
-                 :response-format (json-response-format {:keywords? true})    ;; json and all keys to keywords
-                 :on-success      [:get-article-comments-success]             ;; trigger get-articles-success
+                 :uri             (uri "articles" (:slug params) "comments")      ;; evaluates to "api/articles/:slug/comments"
+                 :response-format (json-response-format {:keywords? true})        ;; json and all keys to keywords
+                 :on-success      [:get-article-comments-success]                 ;; trigger get-articles-success
                  :on-failure      [:api-request-error :get-article-comments]}}))  ;; trigger api-request-error with :get-articles param
 
 (reg-event-db
@@ -171,7 +171,7 @@
  (fn [{:keys [db]} [_ params]]  ;; params = {:profile "profile"}
    {:db         (assoc-in db [:loading :profile] true)
     :http-xhrio {:method          :get
-                 :uri             (uri "profiles" (:profile params))          ;; evaluates to "/profiles/:profile"
+                 :uri             (uri "profiles" (:profile params))          ;; evaluates to "api/profiles/:profile"
                  :headers         (authorization-header db)                   ;; get and pass user token obtained during login
                  :response-format (json-response-format {:keywords? true})    ;; json and all keys to keywords
                  :on-success      [:get-user-profile-success]                 ;; trigger get-user-profile-success
@@ -186,12 +186,12 @@
 
 ;; -- POST Login @ /api/users/login -------------------------------------------
 ;;
-(reg-event-fx  ;; usage (dispatch [:login user])
- :login        ;; triggered when the article page is loaded
+(reg-event-fx                        ;; usage (dispatch [:login user])
+ :login                              ;; triggered when a users submits login form
  (fn [{:keys [db]} [_ credentials]]  ;; credentials = {:email ... :password ...}
    {:db         (assoc-in db [:loading :login] true)
     :http-xhrio {:method          :post
-                 :uri             (uri "users" "login")                     ;; evaluates to "/users/login"
+                 :uri             (uri "users" "login")                     ;; evaluates to "api/users/login"
                  :params          {:user credentials}                       ;; {:user {:email ... :password ...}}
                  :format          (json-request-format)                     ;; make sure it's json
                  :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
@@ -215,6 +215,37 @@
  (fn [user [{props :user}]]
    (merge user props)))
 
+;; -- POST Registration @ /api/users ------------------------------------------
+;;
+(reg-event-fx                         ;; usage (dispatch [:register-user registration])
+ :register-user                       ;; triggered when a users submits registration form
+ (fn [{:keys [db]} [_ registration]]  ;; registration = {:username ... :email ... :password ...}
+   {:db         (assoc-in db [:loading :register-user] true)
+    :http-xhrio {:method          :post
+                 :uri             (uri "users")                             ;; evaluates to "api/users/login"
+                 :params          {:user registration}                      ;; {:user {:username ... :email ... :password ...}}
+                 :format          (json-request-format)                     ;; make sure it's json
+                 :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
+                 :on-success      [:register-user-success]                  ;; trigger login-success
+                 :on-failure      [:api-request-error :register-user]}}))   ;; trigger api-request-error with :register-user param
+
+(reg-event-db
+ :register-user-success
+ ;; The standard set of interceptors, defined above, which we
+ ;; use for all user-modifying event handlers. Looks after
+ ;; writing user to LocalStore.
+ ;; NOTE: this chain includes `path` and `trim-v`
+ user-interceptors
+
+  ;; The event handler function.
+  ;; The "path" interceptor in `user-interceptors` means 1st parameter is the
+  ;; value at `:user` path within `db`, rather than the full `db`.
+  ;; And, further, it means the event handler returns just the value to be
+  ;; put into `:user` path, and not the entire `db`.
+  ;; So, a path interceptor makes the event handler act more like clojure's `update-in`
+ (fn [user [{props :user}]]
+   (merge user props)))
+
 ;; -- Toggle follow user @ /api/profiles/:username/follow -----------------------
 ;;
 (reg-event-fx                     ;; usage (dispatch [:toggle-follow-user username])
@@ -222,7 +253,7 @@
  (fn [{:keys [db]} [_ username]]  ;; username = :username
    {:db         (assoc-in db [:loading :toggle-follow-user] true)
     :http-xhrio {:method          (if (get-in db [:profile :following]) :delete :post)  ;; check if we follow if yes DELETE, no POST
-                 :uri             (uri "profiles" username "follow")                    ;; evaluates to "/profiles/:username/follow"
+                 :uri             (uri "profiles" username "follow")                    ;; evaluates to "api/profiles/:username/follow"
                  :headers         (authorization-header db)                             ;; get and pass user token obtained during login
                  :format          (json-request-format)                                 ;; make sure it's json
                  :response-format (json-response-format {:keywords? true})              ;; json and all keys to keywords
@@ -243,7 +274,7 @@
  (fn [{:keys [db]} [_ slug]]  ;; slug = :slug
    {:db         (assoc-in db [:loading :toggle-favorite-article] true)
     :http-xhrio {:method          (if (get-in db [:articles slug :favorited]) :delete :post)  ;; check if article is favorite if yes DELETE, no POST
-                 :uri             (uri "articles" slug "favorite")                            ;; evaluates to "/profiles/:username/follow"
+                 :uri             (uri "articles" slug "favorite")                            ;; evaluates to "api/profiles/:username/follow"
                  :headers         (authorization-header db)                                   ;; get and pass user token obtained during login
                  :format          (json-request-format)                                       ;; make sure it's json
                  :response-format (json-response-format {:keywords? true})                    ;; json and all keys to keywords

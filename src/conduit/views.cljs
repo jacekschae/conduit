@@ -102,6 +102,12 @@
       [:span "Read more ..."]
       [tags-list tagList]]])) ;; defined in Helpers section
 
+(defn errors-list
+  [errors]
+  [:ul.error-messages
+   (for [[key [val]] errors]
+     ^{:key key} [:li (str (name key) " " val)])])
+
 ;; -- Home --------------------------------------------------------------------
 ;;
 (defn get-articles [event params] ;; @daniel - don't know about this here. Maybe it should be in events?
@@ -185,13 +191,11 @@
         [:div.row
          [:div.col-md-6.offset-md-3.col-xs-12
           [:h1.text-xs-center "Sign in"]
+          (js/console.log (:login errors))
           [:p.text-xs-center
            [:a {:href "/#/register"} "Need an account?"]]
           (when (:login errors)
-            [:ul.error-messages
-             [:li "email or password is invalid"]])
-          ; (for [error errors]
-          ;   (.log js/console error))
+            [errors-list (:login errors)])
           [:form {:on-submit #(login-user % @credentials)}
            [:fieldset.form-group
             [:input.form-control.form-control-lg {:type "text"
@@ -210,14 +214,16 @@
 
 ;; -- Register ----------------------------------------------------------------
 ;;
-(defn register-user [event user]
+(defn register-user [event registration]
   (.preventDefault event)
-  (.log js/console user)) ;; TODO
+  (dispatch [:register-user registration]))
 
 (defn register
   []
   (let [default {:username "" :email "" :password ""}
-        user (reagent/atom default)]
+        registration (reagent/atom default)
+        loading @(subscribe [:loading])
+        errors @(subscribe [:errors])]
     [:div.auth-page
      [:div.container.page
       [:div.row
@@ -225,14 +231,28 @@
         [:h1.text-xs-center "Sign up"]
         [:p.text-xs-center
          [:a {:href "/#/login"} "Have an account?"]]
-        [:form {:on-submit #(register-user % @user)}
+        (when (:register-user errors)
+          [errors-list (:register-user errors)])
+        [:form {:on-submit #(register-user % @registration)}
          [:fieldset.form-group
-          [:input.form-control.form-control-lg {:type "text" :placeholder "Your Name"}]]
+          [:input.form-control.form-control-lg {:type "text"
+                                                :placeholder "Your Name"
+                                                :value (:username @registration)
+                                                :on-change #(swap! registration assoc :username (-> % .-target .-value))
+                                                :disabled (when (:register-user loading))}]]
          [:fieldset.form-group
-          [:input.form-control.form-control-lg {:type "text" :placeholder "Email"}]]
+          [:input.form-control.form-control-lg {:type "text"
+                                                :placeholder "Email"
+                                                :value (:email @registration)
+                                                :on-change #(swap! registration assoc :email (-> % .-target .-value))
+                                                :disabled (when (:register-user loading))}]]
          [:fieldset.form-group
-          [:input.form-control.form-control-lg {:type "password" :placeholder "Password"}]]
-         [:button.btn.btn-lg.btn-primary.pull-xs-right "Sign up"]]]]]]))
+          [:input.form-control.form-control-lg {:type "password"
+                                                :placeholder "Password"
+                                                :value (:password @registration)
+                                                :on-change #(swap! registration assoc :password (-> % .-target .-value))
+                                                :disabled (when (:register-user loading))}]]
+         [:button.btn.btn-lg.btn-primary.pull-xs-right {:class (when (:register-user loading) "disabled")} "Sign up"]]]]]]))
 
 (defn profile
   []
@@ -324,7 +344,7 @@
                                                  :on-change #(swap! update assoc :password (-> % .-target .-value))}]]
           [:button.btn.btn-lg.btn-primary.pull-xs-right {:class (when (:update-user loading) "disabled")} "Update Settings"]]]
         [:hr]
-        [:button.btn.btn-outline-danger {:on-click #(logout-user %)} "Or click here to logout."]]]]])) ;; TODO write handler for loggint out
+        [:button.btn.btn-outline-danger {:on-click #(logout-user %)} "Or click here to logout."]]]]]))
 
 ;; -- Editor ------------------------------------------------------------------
 ;;
