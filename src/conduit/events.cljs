@@ -44,6 +44,9 @@
   "Concat any params elements to api-url separated by /"
   (str/join "/" (concat [api-url] params)))
 
+(defn authorization-header [db]
+  [:Authorization (str "Token " (get-in db [:user :token]))])
+
 ;; -- Event Handlers ----------------------------------------------------------
 ;;
 (reg-event-fx    ;; usage: (dispatch [:initialise-db])
@@ -138,6 +141,7 @@
    {:db         (assoc-in db [:loading :profile] true)
     :http-xhrio {:method          :get
                  :uri             (uri "profiles" (:profile params))          ;; evaluates to "/profiles/:profile"
+                 :headers         (authorization-header db)                   ;; get and pass user token obtained during login
                  :response-format (json-response-format {:keywords? true})    ;; json and all keys to keywords
                  :on-success      [:get-user-profile-success]                 ;; trigger get-user-profile-success
                  :on-failure      [:api-request-error :get-user-profile]}}))  ;; trigger api-request-error with :get-articles param
@@ -160,8 +164,8 @@
                  :params          {:user credentials}                       ;; {:user {:email ... :password ...}}
                  :format          (json-request-format)                     ;; make sure it's json
                  :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
-                 :on-success      [:login-success]                          ;; trigger get-articles-success
-                 :on-failure      [:api-request-error :login]}}))           ;; trigger api-request-error with :get-articles param
+                 :on-success      [:login-success]                          ;; trigger login-success
+                 :on-failure      [:api-request-error :login]}}))           ;; trigger api-request-error with :credentials param
 
 (reg-event-db
  :login-success
@@ -179,6 +183,27 @@
   ;; So, a path interceptor makes the event handler act more like clojure's `update-in`
  (fn [user [{props :user}]]
    (merge user props)))
+
+;; -- Toggle follow user @ /api/profiles/:username/follow -----------------------
+;;
+(reg-event-fx         ;; usage (dispatch [:toggle-follow-user username])
+ :toggle-follow-user  ;; triggered when user clicks follow/unfollow button on profile page
+ (fn [{:keys [db]} [_ username]]  ;; username = :username
+   {:db         (assoc-in db [:loading :toggle-follow-user] true)
+    :http-xhrio {:method          (if (get-in db [:profile :following]) :delete :post)  ;; check if we follow if yes DELETE, no POST
+                 :uri             (uri "profiles" username "follow")                    ;; evaluates to "/profiles/:username/follow"
+                 :headers         (authorization-header db)                             ;; get and pass user token obtained during login
+                 :format          (json-request-format)                                 ;; make sure it's json
+                 :response-format (json-response-format {:keywords? true})              ;; json and all keys to keywords
+                 :on-success      [:toggle-follow-user-success]                         ;; trigger follow-user-success
+                 :on-failure      [:api-request-error :login]}}))                       ;; trigger api-request-error with :username param
+
+(reg-event-db  ;; usage: (dispatch [:toggle-follow-user-success])
+ :toggle-follow-user-success
+ (fn [db [_ {profile :profile}]]
+   (-> db
+       (assoc-in [:loading :toggle-follow-user] false)
+       (assoc-in [:profile :following] (:following profile)))))
 
 ;; -- Logout ------------------------------------------------------------------
 ;;

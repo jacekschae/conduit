@@ -227,7 +227,8 @@
   (let [profile @(subscribe [:profile])
         filter @(subscribe [:filter])
         loading @(subscribe [:loading])
-        articles @(subscribe [:articles])]
+        articles @(subscribe [:articles])
+        user @(subscribe [:user])]
     [:div.profile-page
      [:div.user-info
       [:div.container
@@ -236,10 +237,14 @@
          [:img.user-img {:src (:image profile)}]
          [:h4 (:username profile)]
          [:p (:bio profile)]
-         [:button.btn.btn-sm.action-btn.ng-binding.btn-outline-secondary
-          [:i.ion-plus-round " "]
-          [:span (str "Follow " (:username profile))]]]]]]
-     [:container
+         (if (= (:username user) (:username profile))
+           [:a.btn.btn-sm.btn-outline-secondary.action-btn {:href "/#/settings"}
+            [:i.ion-gear-a] " Edit Profile Settings"]
+           [:button.btn.btn-sm.action-btn.btn-outline-secondary {:on-click #(dispatch [:toggle-follow-user (:username profile)])
+                                                                 :class (when (:toggle-follow-user loading) "disabled")}
+            [:i {:class (if (:following profile) "ion-minus-round" "ion-plus-round")}]
+            [:span (if (:following profile) (str " Unfollow " (:username profile)) (str " Follow " (:username profile)))]])]]]]
+     [:div.container
       [:row
        [:div.col-xs-12.col-md-10.offset-md-1
         [:div.articles-toggle
