@@ -9,8 +9,8 @@
 (reg-sub
  :articles  ;; usage: (subscribe [:articles])
  (fn [db _]
-   (:articles db)))
-
+   (vals (:articles db))))  ;; @daniel i'm sturggling wiht the setup of data structures ...
+                            ;; we need to talk about this ...
 (reg-sub
  :articles-count  ;; usage: (subscribe [:articles])
  (fn [db _]
@@ -20,8 +20,8 @@
  :article  ;; usage (subscribe [:article])
  (fn [db _]
    (let [article (:active-article db)]
-     (into {} (filter #(= article (:slug %)) (:articles db)))))) ;; @daniel, is there a way we can avoid into {} ... ?
-                                                                 ;; maybe we should use different data structure?
+     (get-in db [:articles article]))))
+
 (reg-sub
  :tags  ;; usage: (subscribe [:tags])
  (fn [db _]

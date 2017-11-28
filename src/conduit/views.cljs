@@ -58,23 +58,27 @@
     created-at      :createdAt
     likes           :likes
     favorites-count :favoritesCount
-    favorited       :favorited}]
-  [:div.article-meta
-   [:a {:href (str "/#/@" (:username author))}
-    [:img {:src (:image author)}]]
-   " "
-   [:div.info
-    [:a.author {:href (str "/#/@" (:username author))} (:username author)]
-    [:span.date (format-date created-at)]]
-   [:button.btn.btn-sm.btn-outline-secondary {}
-    [:i.ion-plus-round " "]
-    [:span (str "Follow " (:username author))]
-    [:span.counter "(10)"]]
-   " "
-   [:button.btn.btn-sm.btn-outline-primary
-    [:i.ion-heart " "]
-    [:span (str "Favorite Post ")]
-    [:span.counter "(" favorites-count ")"]]])
+    favorited       :favorited
+    slug            :slug}]
+  (let [loading @(subscribe [:loading])]
+    [:div.article-meta
+     [:a {:href (str "/#/@" (:username author))}
+      [:img {:src (:image author)}]]
+     " "
+     [:div.info
+      [:a.author {:href (str "/#/@" (:username author))} (:username author)]
+      [:span.date (format-date created-at)]]
+     [:button.btn.btn-sm.btn-outline-secondary {}
+      [:i.ion-plus-round " "]
+      [:span (str "Follow " (:username author))]]
+     " "
+     [:button.btn.btn-sm.btn-primary {:on-click #(dispatch [:toggle-favorite-article slug])
+                                      :class (cond
+                                               (not favorited) "btn-outline-primary"
+                                               (:toggle-favorite-article loading) "disabled")}
+      [:i.ion-heart]
+      [:span (if favorited " Unfavorite Post " " Favorite Post ")]
+      [:span.counter "(" favorites-count ")"]]]))
 
 (defn articles-preview
   [{:keys [description slug createdAt title author favoritesCount tagList]}]
@@ -143,7 +147,8 @@
            [:p "Loading articles ..."]])
         [:ul.pagination
          (for [offset (range (/ articles-count 10))]
-           ^{:key offset} [:li.page-item {:class (when (= (* offset 10) (:offset filter)) "active") :on-click #(get-articles % {:offset (* offset 10) :tag (:tag filter) :limit 10})}
+           ^{:key offset} [:li.page-item {:class (when (= (* offset 10) (:offset filter)) "active")
+                                          :on-click #(get-articles % {:offset (* offset 10) :tag (:tag filter) :limit 10})}
                            [:a.page-link {:href ""} (+ 1 offset)]])]]
 
        [:div.col-md-3

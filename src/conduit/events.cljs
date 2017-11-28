@@ -41,11 +41,16 @@
 (def api-url "https://conduit.productionready.io/api")
 
 (defn uri [& params]
-  "Concat any params elements to api-url separated by /"
+  "Concat any params to api-url separated by /"
   (str/join "/" (concat [api-url] params)))
 
 (defn authorization-header [db]
+  "Get user token and format for API authorization"
   [:Authorization (str "Token " (get-in db [:user :token]))])
+
+(defn index-by [key coll]
+  "Transform a coll to a map with a given key as lookup value"
+  (into {} (map (juxt key identity) coll)))
 
 ;; -- Event Handlers ----------------------------------------------------------
 ;;
@@ -69,22 +74,23 @@
  (fn [db [_ active-article]]
    (assoc db :active-article active-article)))
 
-;; -- GET Articles ------------------------------------------------------------
+;; -- GET Articles @ /api/articles --------------------------------------------
 ;;
 (reg-event-fx   ;; usage (dispatch [:get-articles {:limit 10 :tag "tag-name" ...}])
  :get-articles  ;; triggered when the home page is loaded
  (fn [{:keys [db]} [_ params]]  ;; params = {:limit 10 :tag "tag-name" ...}
    {:http-xhrio {:method          :get
-                 :uri             (uri "articles")
+                 :uri             (uri "articles")                          ;; evaluates to "api/articles/"
                  :params          params                                    ;; include params in the request
+                 :headers         (authorization-header db)                 ;; get and pass user token obtained during login
                  :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
                  :on-success      [:get-articles-success]                   ;; trigger get-articles-success event
                  :on-failure      [:api-request-error :get-articles]}
     :db          (-> db
                      (assoc-in [:loading :articles] true)
-                     (assoc-in [:filter :offset] (:offset params))
-                     (assoc-in [:filter :tag] (:tag params))
-                     (assoc-in [:filter :author] (:author params))
+                     (assoc-in [:filter :offset] (:offset params))            ;; base on paassed param set a filter
+                     (assoc-in [:filter :tag] (:tag params))                  ;; so that we can easily show and hide
+                     (assoc-in [:filter :author] (:author params))            ;; appropriate views
                      (assoc-in [:filter :favorites] (:favorited params)))}))
 
 (reg-event-db
@@ -93,16 +99,16 @@
    (-> db
        (assoc-in [:loading :articles] false)
        (assoc :articles-count articles-count)
-       (assoc :articles articles))))
+       (assoc :articles (index-by :slug articles)))))  ;; @daniel, is that the idiomatic way to do it?
 
-;; -- GET Tags ----------------------------------------------------------------
+;; -- GET Tags @ /api/tags ----------------------------------------------------
 ;;
 (reg-event-fx  ;; usage (dispatch [:get-articles])
  :get-tags     ;; triggered when the home page is loaded
  (fn [{:keys [db]} _]  ;; second parameter is not important, therefore _
    {:db         (assoc-in db [:loading :tags] true)
     :http-xhrio {:method          :get
-                 :uri             (uri "tags")
+                 :uri             (uri "tags")                              ;; evaluates to "tags/articles/"
                  :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
                  :on-success      [:get-tags-success]                       ;; trigger get-tags-success event
                  :on-failure      [:api-request-error :get-tags]}}))      ;; trigger api-request-error with :get-tags param
@@ -114,7 +120,7 @@
        (assoc-in [:loading :tags] false)
        (assoc :tags tags))))
 
-;; -- GET Comments ------------------------------------------------------------
+;; -- GET Comments @ /api/articles/:slug/comments -----------------------------
 ;;
 (reg-event-fx           ;; usage (dispatch [:get-article-comments {:slug "article-slug"}])
  :get-article-comments  ;; triggered when the article page is loaded
@@ -133,7 +139,7 @@
        (assoc-in [:loading :comments] false)
        (assoc :comments comments))))
 
-;; -- GET Profile -------------------------------------------------------------
+;; -- GET Profile @ /api/profiles/:username -----------------------------------
 ;;
 (reg-event-fx       ;; usage (dispatch [:get-user-profile {:profile "profile"}])
  :get-user-profile  ;; triggered when the profile page is loaded
@@ -153,7 +159,7 @@
        (assoc-in [:loading :profile] false)
        (assoc :profile profile))))
 
-;; -- POST Login --------------------------------------------------------------
+;; -- POST Login @ /api/users/login -------------------------------------------
 ;;
 (reg-event-fx  ;; usage (dispatch [:login user])
  :login        ;; triggered when the article page is loaded
@@ -186,11 +192,11 @@
 
 ;; -- Toggle follow user @ /api/profiles/:username/follow -----------------------
 ;;
-(reg-event-fx         ;; usage (dispatch [:toggle-follow-user username])
- :toggle-follow-user  ;; triggered when user clicks follow/unfollow button on profile page
+(reg-event-fx                     ;; usage (dispatch [:toggle-follow-user username])
+ :toggle-follow-user              ;; triggered when user clicks follow/unfollow button on profile page
  (fn [{:keys [db]} [_ username]]  ;; username = :username
    {:db         (assoc-in db [:loading :toggle-follow-user] true)
-    :http-xhrio {:method          (if (get-in db [:profile :following]) :delete :post)  ;; check if we follow if yes DELETE, no POST
+    :http-xhrio {:method          (if (get-in db [:profile :following]) :delete :post) ;; check if we follow if yes DELETE, no POST
                  :uri             (uri "profiles" username "follow")                    ;; evaluates to "/profiles/:username/follow"
                  :headers         (authorization-header db)                             ;; get and pass user token obtained during login
                  :format          (json-request-format)                                 ;; make sure it's json
@@ -204,6 +210,27 @@
    (-> db
        (assoc-in [:loading :toggle-follow-user] false)
        (assoc-in [:profile :following] (:following profile)))))
+
+;; -- Toggle favorite article @ /api/articles/:slug/favorite ------------------
+;;
+(reg-event-fx                     ;; usage (dispatch [:toggle-favorite-article slug])
+ :toggle-favorite-article         ;; triggered when user clicks favorite/unfavorite button on profile page
+ (fn [{:keys [db]} [_ slug]]      ;; slug = :slug
+   {:db         (assoc-in db [:loading :toggle-favorite-article] true)
+    :http-xhrio {:method          (if (get-in db [:articles slug :favorited]) :delete :post)  ;; check if article is favorite if yes DELETE, no POST
+                 :uri             (uri "articles" slug "favorite")                            ;; evaluates to "/profiles/:username/follow"
+                 :headers         (authorization-header db)                                   ;; get and pass user token obtained during login
+                 :format          (json-request-format)                                       ;; make sure it's json
+                 :response-format (json-response-format {:keywords? true})                    ;; json and all keys to keywords
+                 :on-success      [:toggle-favorite-article-success]                          ;; trigger follow-user-success
+                 :on-failure      [:api-request-error :login]}}))                             ;; trigger api-request-error with :username param
+
+(reg-event-db  ;; usage: (dispatch [:toggle-favorite-article-success])
+ :toggle-favorite-article-success
+ (fn [db [_ {article :article}]]
+   (-> db
+       (assoc-in [:loading :toggle-favorite-article] false)
+       (assoc-in [:articles (:active-article db) :favorited] (:favorited article)))))
 
 ;; -- Logout ------------------------------------------------------------------
 ;;
