@@ -20,7 +20,7 @@
 ;;
 (def ls-key "conduit-user")                       ;; localstore key
 
-(defn conduit->local-store
+(defn user->local-store
   "Puts user into localStorage"
   [user]
   (.setItem js/localStorage ls-key (str user)))  ;; sorted-map written as an EDN map

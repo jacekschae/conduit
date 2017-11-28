@@ -11,7 +11,14 @@
     [:nav.navbar.navbar-light
      [:div.container
       [:a.navbar-brand {:href "/#/"} "conduit"]
-      (if user
+      (if (empty? user)
+        [:ul.nav.navbar-nav.pull-xs-right
+         [:li.nav-item
+          [:a.nav-link.active {:href "/#/"} "Home"]]
+         [:li.nav-item
+          [:a.nav-link {:href "/#/login"} "Sign in"]]
+         [:li.nav-item
+          [:a.nav-link {:href "/#/register"} "Sign up"]]]
         [:ul.nav.navbar-nav.pull-xs-right
          [:li.nav-item
           [:a.nav-link.active {:href "/#/"} "Home"]]
@@ -22,14 +29,7 @@
           [:a.nav-link {:href "/#/settings"}
            [:i.ion-gear-a "Settings"]]]
          [:li.nav-item
-          [:a.nav-link {:href (str "/#/@" (:username user))} (:username user)]]]
-        [:ul.nav.navbar-nav.pull-xs-right
-         [:li.nav-item
-          [:a.nav-link.active {:href "/#/"} "Home"]]
-         [:li.nav-item
-          [:a.nav-link {:href "/#/login"} "Sign in"]]
-         [:li.nav-item
-          [:a.nav-link {:href "/#/register"} "Sign up"]]])]]))
+          [:a.nav-link {:href (str "/#/@" (:username user))} (:username user)]]])]]))
 
 (defn footer
   []
@@ -110,10 +110,11 @@
         articles-count @(subscribe [:articles-count])
         user @(subscribe [:user])]
     [:div.home-page
-     [:div.banner
-      [:div.container
-       [:h1.logo-font "conduit"]
-       [:p "A place to share your knowledge."]]]
+     (when (empty? user)
+       [:div.banner
+        [:div.container
+         [:h1.logo-font "conduit"]
+         [:p "A place to share your knowledge."]]])
      [:div.container.page
       [:div.row
        [:div.col-md-9
@@ -128,8 +129,11 @@
              [:a.nav-link.active
               [:i.ion-pound] (str " " (:tag filter))]]]
            [:ul.nav.nav-pills.outline-active
+            (when user
+              [:li.nav-item
+               [:a.nav-link.active {:href "" :on-click #(get-articles % {:tag nil :profile (:username user) :offset 0 :limit 10})} "Your Feed"]])
             [:li.nav-item
-             [:a.nav-link.active {:href "/#/"} "Global Feed"]]])]
+             [:a.nav-link.active {:href "" :on-click #(get-articles % {:tag nil :offset 0 :limit 10})} "Global Feed"]]])]
         (if (empty? articles)
           [:div.article-preview
            [:p "No articles are here... yet."]]
@@ -166,14 +170,12 @@
         errors @(subscribe [:errors])]
     (fn []
       [:div.auth-page
-       (js/console.log loading)
        [:div.container.page
         [:div.row
          [:div.col-md-6.offset-md-3.col-xs-12
           [:h1.text-xs-center "Sign in"]
           [:p.text-xs-center
            [:a {:href "/#/register"} "Need an account?"]]
-          (.log js/console errors)
           (when (:login errors)
             [:ul.error-messages
              [:li "email or password is invalid"]])
@@ -185,21 +187,21 @@
                                                   :placeholder "Email"
                                                   :value (:email @credentials)
                                                   :on-change #(swap! credentials assoc :email (-> % .-target .-value))
-                                                  :disabled (when (:login loading) :disabled)}]]
+                                                  :disabled (when (:login loading))}]]
 
            [:fieldset.form-group
             [:input.form-control.form-control-lg {:type "password"
                                                   :placeholder "Password"
                                                   :value (:password @credentials)
                                                   :on-change #(swap! credentials assoc :password (-> % .-target .-value))
-                                                  :disabled (when (:login loading) :disabled)}]]
+                                                  :disabled (when (:login loading))}]]
            [:button.btn.btn-lg.btn-primary.pull-xs-right {:class (when (:login loading) "disabled")} "Sign in"]]]]]])))
 
 ;; -- Register ----------------------------------------------------------------
 ;;
 (defn register-user [event user]
   (.preventDefault event)
-  (.log js/console user))
+  (.log js/console user)) ;; TODO
 
 (defn register
   []
@@ -262,30 +264,54 @@
   (.preventDefault event)
   (dispatch [:logout]))
 
+(defn update-user [event update]
+  (.preventDefault event)
+  (dispatch [:update-user update]))
+
 (defn settings
   []
-  (let [user @(subscribe [:user])]
+  (let [default {:image "" :username "" :bio "" :email "" :password ""}
+        update (reagent/atom default)
+        loading @(subscribe [:loading])
+        user @(subscribe [:user])]
     [:div.settings-page
      [:div.container.page
       [:div.row
        [:div.col-md-6.offset-md-3.col-xs-12
         [:h1.text-xs-center "Your Settings"]
-        [:form
+        [:form {:on-submit #(update-user % @user)}
          [:fieldset
           [:fieldset.form-group
-           [:input.form-control {:type "text", :placeholder "URL of profile picture" :default-value (:image user)}]]
+           [:input.form-control {:type "text"
+                                 :placeholder "URL of profile picture"
+                                 :default-value (:image user)
+                                 :on-change #(swap! update assoc :image (-> % .-target .-value))}]]
           [:fieldset.form-group
-           [:input.form-control.form-control-lg {:type "text", :placeholder "Your Name" :default-value (:usernae user)}]]
+           [:input.form-control.form-control-lg {:type "text"
+                                                 :placeholder "Your Name"
+                                                 :default-value (:username user)
+                                                 :on-change #(swap! update assoc :username (-> % .-target .-value))}]]
           [:fieldset.form-group
-           [:textarea.form-control.form-control-lg {:rows "8", :placeholder "Short bio about you" :default-value (:bio user)}]]
+           [:textarea.form-control.form-control-lg {:rows "8"
+                                                    :placeholder "Short bio about you"
+                                                    :default-value (:bio user)
+                                                    :on-change #(swap! update assoc :bio (-> % .-target .-value))}]]
           [:fieldset.form-group
-           [:input.form-control.form-control-lg {:type "text", :placeholder "Email" :default-value (:email user)}]]
+           [:input.form-control.form-control-lg {:type "text"
+                                                 :placeholder "Email"
+                                                 :default-value (:email user)
+                                                 :on-change #(swap! update assoc :email (-> % .-target .-value))}]]
           [:fieldset.form-group
-           [:input.form-control.form-control-lg {:type "password", :placeholder "Password" :default-value ""}]]
-          [:button.btn.btn-lg.btn-primary.pull-xs-right "Update Settings"]]]
+           [:input.form-control.form-control-lg {:type "password"
+                                                 :placeholder "Password"
+                                                 :default-value ""
+                                                 :on-change #(swap! update assoc :password (-> % .-target .-value))}]]
+          [:button.btn.btn-lg.btn-primary.pull-xs-right {:class (when (:update-user loading) "disabled")} "Update Settings"]]]
         [:hr]
         [:button.btn.btn-outline-danger {:on-click #(logout-user %)} "Or click here to logout."]]]]])) ;; TODO write handler for loggint out
 
+;; -- Editor ------------------------------------------------------------------
+;;
 (defn editor
   []
   [:div.editor-page
@@ -307,7 +333,6 @@
 
 ;; -- Article -----------------------------------------------------------------
 ;;
-
 (defn article
   []
   (let [article @(subscribe [:article])
