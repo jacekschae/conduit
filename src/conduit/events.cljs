@@ -153,6 +153,7 @@
    {:db         (assoc-in db [:loading :comments] true)
     :http-xhrio {:method          :get
                  :uri             (uri "articles" (:slug params) "comments")      ;; evaluates to "api/articles/:slug/comments"
+                 :headers         (authorization-header db)                   ;; get and pass user token obtained during login
                  :response-format (json-response-format {:keywords? true})        ;; json and all keys to keywords
                  :on-success      [:get-article-comments-success]                 ;; trigger get-articles-success
                  :on-failure      [:api-request-error :get-article-comments]}}))  ;; trigger api-request-error with :get-articles param
@@ -163,6 +164,27 @@
    (-> db
        (assoc-in [:loading :comments] false)
        (assoc :comments comments))))
+
+;; -- POST Comments @ /api/articles/:slug/comments -----------------------------
+;;
+(reg-event-fx                   ;; usage (dispatch [:post-article-comments comment])
+ :post-article-comments         ;; triggered when a person submits a comment
+ (fn [{:keys [db]} [_ params]]  ;; params = {:slug "article-slug" :comment {:body "comment body"} }
+   {:db         (assoc-in db [:loading :comments] true)
+    :http-xhrio {:method          :post
+                 :uri             (uri "articles" (:slug params) "comments")       ;; evaluates to "api/articles/:slug/comments"
+                 :headers         (authorization-header db)                        ;; get and pass user token obtained during login
+                 :params          (:comment params)
+                 :response-format (json-response-format {:keywords? true})         ;; json and all keys to keywords
+                 :on-success      [:post-article-comments-success]                 ;; trigger get-articles-success
+                 :on-failure      [:api-request-error :post-article-comments]}}))  ;; trigger api-request-error with :get-articles param
+
+(reg-event-db  ;; TODO
+ :post-article-comments-success
+ (fn [db [_ {comment :comment}]]
+   (-> db
+       (assoc-in [:loading :comments] false)
+       (assoc (:slug comments) :comments comment)))) ;; TODO get the article slug to upate the article
 
 ;; -- GET Profile @ /api/profiles/:username -----------------------------------
 ;;
@@ -253,8 +275,9 @@
  (fn [{:keys [db]} [_ user]]          ;; user = {:img ... :username ... :bio ... :email ... :password ...}
    {:db         (assoc-in db [:loading :update-user] true)
     :http-xhrio {:method          :put
-                 :uri             (uri "user")                             ;; evaluates to "api/users/login"
+                 :uri             (uri "user")                              ;; evaluates to "api/users/login"
                  :params          {:user user}                              ;; {:user {:img ... :username ... :bio ... :email ... :password ...}}
+                 :headers         (authorization-header db)                 ;; get and pass user token obtained during login
                  :format          (json-request-format)                     ;; make sure it's json
                  :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
                  :on-success      [:update-user-success]                    ;; trigger update-user-success

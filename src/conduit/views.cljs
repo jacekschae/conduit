@@ -300,20 +300,19 @@
   (.preventDefault event)
   (dispatch [:logout]))
 
-(defn update-user [event user]
+(defn update-user [event update]
   (.preventDefault event)
-  (js/console.log user))
+  (js/console.log update))
 ; (dispatch [:update-user user]))
 
 (defn settings
   []
   (let [default {:image "" :username "" :bio "" :email "" :password ""}
-        update (reagent/atom default)
+        user-update (reagent/atom default)
         loading @(subscribe [:loading])
         user @(subscribe [:user])]
     [:div.settings-page
      [:div.container.page
-      (js/console.log user)
       [:div.row
        [:div.col-md-6.offset-md-3.col-xs-12
         [:h1.text-xs-center "Your Settings"]
@@ -323,30 +322,31 @@
            [:input.form-control {:type "text"
                                  :placeholder "URL of profile picture"
                                  :default-value (:image user)
-                                 :on-change #(swap! update assoc :image (-> % .-target .-value))}]]
+                                 :on-change #(swap! user-update assoc :image (-> % .-target .-value))}]]
           [:fieldset.form-group
            [:input.form-control.form-control-lg {:type "text"
                                                  :placeholder "Your Name"
                                                  :default-value (:username user)
-                                                 :on-change #(swap! update assoc :username (-> % .-target .-value))}]]
+                                                 :on-change #(swap! user-update assoc :username (-> % .-target .-value))}]]
           [:fieldset.form-group
            [:textarea.form-control.form-control-lg {:rows "8"
                                                     :placeholder "Short bio about you"
                                                     :default-value (:bio user)
-                                                    :on-change #(swap! update assoc :bio (-> % .-target .-value))}]]
+                                                    :on-change #(swap! user-update assoc :bio (-> % .-target .-value))}]]
           [:fieldset.form-group
            [:input.form-control.form-control-lg {:type "text"
                                                  :placeholder "Email"
                                                  :default-value (:email user)
-                                                 :on-change #(swap! update assoc :email (-> % .-target .-value))}]]
+                                                 :on-change #(swap! user-update assoc :email (-> % .-target .-value))}]]
           [:fieldset.form-group
            [:input.form-control.form-control-lg {:type "password"
                                                  :placeholder "Password"
                                                  :default-value ""
-                                                 :on-change #(swap! update assoc :password (-> % .-target .-value))}]]
+                                                 :on-change #(swap! user-update assoc :password (-> % .-target .-value))}]]
           [:button.btn.btn-lg.btn-primary.pull-xs-right {:on-click #(update-user % @update)
                                                          :class (when (:update-user loading) "disabled")} "Update Settings"]]]
         [:hr]
+        (.log js/console @user-update)
         [:button.btn.btn-outline-danger {:on-click #(logout-user %)} "Or click here to logout."]]]]]))
 
 ;; -- Editor ------------------------------------------------------------------
