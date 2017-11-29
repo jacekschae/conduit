@@ -300,9 +300,10 @@
   (.preventDefault event)
   (dispatch [:logout]))
 
-(defn update-user [event update]
+(defn update-user [event user]
   (.preventDefault event)
-  (dispatch [:update-user update]))
+  (js/console.log user))
+; (dispatch [:update-user user]))
 
 (defn settings
   []
@@ -312,10 +313,11 @@
         user @(subscribe [:user])]
     [:div.settings-page
      [:div.container.page
+      (js/console.log user)
       [:div.row
        [:div.col-md-6.offset-md-3.col-xs-12
         [:h1.text-xs-center "Your Settings"]
-        [:form {:on-submit #(update-user % @user)}
+        [:form
          [:fieldset
           [:fieldset.form-group
            [:input.form-control {:type "text"
@@ -342,7 +344,8 @@
                                                  :placeholder "Password"
                                                  :default-value ""
                                                  :on-change #(swap! update assoc :password (-> % .-target .-value))}]]
-          [:button.btn.btn-lg.btn-primary.pull-xs-right {:class (when (:update-user loading) "disabled")} "Update Settings"]]]
+          [:button.btn.btn-lg.btn-primary.pull-xs-right {:on-click #(update-user % @update)
+                                                         :class (when (:update-user loading) "disabled")} "Update Settings"]]]
         [:hr]
         [:button.btn.btn-outline-danger {:on-click #(logout-user %)} "Or click here to logout."]]]]]))
 

@@ -246,6 +246,37 @@
  (fn [user [{props :user}]]
    (merge user props)))
 
+;; -- PUT Update User @ /api/user ---------------------------------------------
+;;
+(reg-event-fx                         ;; usage (dispatch [:register-user user])
+ :update-user                         ;; triggered when a users updates settgins
+ (fn [{:keys [db]} [_ user]]          ;; user = {:img ... :username ... :bio ... :email ... :password ...}
+   {:db         (assoc-in db [:loading :update-user] true)
+    :http-xhrio {:method          :put
+                 :uri             (uri "user")                             ;; evaluates to "api/users/login"
+                 :params          {:user user}                              ;; {:user {:img ... :username ... :bio ... :email ... :password ...}}
+                 :format          (json-request-format)                     ;; make sure it's json
+                 :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
+                 :on-success      [:update-user-success]                    ;; trigger update-user-success
+                 :on-failure      [:api-request-error :update-user]}}))     ;; trigger api-request-error with :update-user param
+
+(reg-event-db
+ :update-user-success
+ ;; The standard set of interceptors, defined above, which we
+ ;; use for all user-modifying event handlers. Looks after
+ ;; writing user to LocalStore.
+ ;; NOTE: this chain includes `path` and `trim-v`
+ user-interceptors
+
+  ;; The event handler function.
+  ;; The "path" interceptor in `user-interceptors` means 1st parameter is the
+  ;; value at `:user` path within `db`, rather than the full `db`.
+  ;; And, further, it means the event handler returns just the value to be
+  ;; put into `:user` path, and not the entire `db`.
+  ;; So, a path interceptor makes the event handler act more like clojure's `update-in`
+ (fn [user [{props :user}]]
+   (merge user props)))
+
 ;; -- Toggle follow user @ /api/profiles/:username/follow -----------------------
 ;;
 (reg-event-fx                     ;; usage (dispatch [:toggle-follow-user username])
