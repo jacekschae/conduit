@@ -1,6 +1,6 @@
 (ns conduit.events
   (:require
-   [conduit.db :refer [default-db user->local-store]]
+   [conduit.db :refer [default-db user->local-store local-store->nil]]
    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx trim-v after path debug]]
    [day8.re-frame.http-fx]
    [ajax.core :refer [json-request-format json-response-format]]
@@ -21,16 +21,14 @@
 ;; This interceptor runs `after` an event handler, and it stores the
 ;; current user into local storage.
 ;; Later, we include this interceptor into the interceptor chain
-;; of all event handlers which modify user  In this way, we ensure that
+;; of all event handlers which modify user. In this way, we ensure that
 ;; any change to the user is written to local storage.
-(def ->local-store (after user->local-store)) ;; @daniel, why do we need to run this after?
+(def ->local-store (after user->local-store))
 
-;; Each event handler can have its own chain of interceptors.
-;; Below we create the interceptor chain shared by all event handlers
-;; which manipulate user.
+;; Each event handler can have its own chain of interceptors. Below we create
+;; the interceptor chain shared by all event handlers which manipulate user.
 ;; A chain of interceptors is a vector.
 ;; Explanation of `trim-v` is given further below.
-;; @daniel, I would like to discuss interceptors in a bit more detail
 (def user-interceptors [(path :user)
                         ->local-store                        ;; write user to localstore  (after)
                         (when ^boolean js/goog.DEBUG debug)  ;; look at the js browser console for debug logs
@@ -88,11 +86,11 @@
                  :on-failure      [:api-request-error :get-articles]}
     :db          (-> db
                      (assoc-in [:loading :articles] true)
-                     (assoc-in [:filter :offset] (:offset params))            ;; base on paassed param set a filter
-                     (assoc-in [:filter :tag] (:tag params))                  ;; so that we can easily show and hide
-                     (assoc-in [:filter :author] (:author params))            ;; appropriate views
+                     (assoc-in [:filter :offset] (:offset params))        ;; base on paassed param set a filter
+                     (assoc-in [:filter :tag] (:tag params))              ;; so that we can easily show and hide
+                     (assoc-in [:filter :author] (:author params))        ;; appropriate views
                      (assoc-in [:filter :favorites] (:favorited params))
-                     (assoc-in [:filter :feed] false))}))                     ;; we need to disable filter by feed every time since it's not supported query param
+                     (assoc-in [:filter :feed] false))}))                 ;; we need to disable filter by feed every time since it's not supported query param
 
 (reg-event-db
  :get-articles-success
@@ -116,7 +114,7 @@
                  :on-failure      [:api-request-error :get-feed-articles]}
     :db          (-> db
                      (assoc-in [:loading :articles] true)
-                     (assoc-in [:filter :feed] true))}))                    ;; we need to enable filter by feed every time since it's not supported query param
+                     (assoc-in [:filter :feed] true))}))  ;; we need to enable filter by feed every time since it's not supported query param
 
 (reg-event-db
  :get-feed-articles-success
@@ -153,7 +151,7 @@
    {:db         (assoc-in db [:loading :comments] true)
     :http-xhrio {:method          :get
                  :uri             (uri "articles" (:slug params) "comments")      ;; evaluates to "api/articles/:slug/comments"
-                 :headers         (authorization-header db)                   ;; get and pass user token obtained during login
+                 :headers         (authorization-header db)                       ;; get and pass user token obtained during login
                  :response-format (json-response-format {:keywords? true})        ;; json and all keys to keywords
                  :on-success      [:get-article-comments-success]                 ;; trigger get-articles-success
                  :on-failure      [:api-request-error :get-article-comments]}}))  ;; trigger api-request-error with :get-articles param
@@ -165,7 +163,7 @@
        (assoc-in [:loading :comments] false)
        (assoc :comments comments))))
 
-;; -- POST Comments @ /api/articles/:slug/comments -----------------------------
+;; -- POST Comments @ /api/articles/:slug/comments ----------------------------
 ;;
 (reg-event-fx                   ;; usage (dispatch [:post-article-comments comment])
  :post-article-comments         ;; triggered when a person submits a comment
@@ -184,9 +182,9 @@
  (fn [db [_ {comment :comment}]]
    (-> db
        (assoc-in [:loading :comments] false)
-       (assoc (:slug comments) :comments comment)))) ;; TODO get the article slug to upate the article
+       (assoc (:slug comment) :comments comment)))) ;; TODO get the article slug to upate the article
 
-;; -- POST/PUT  Article @ /api/articles(/:slug) ---------------------------------
+;; -- POST/PUT  Article @ /api/articles(/:slug) -------------------------------
 ;;
 (reg-event-fx                   ;; usage (dispatch [:post-article-comments comment])
  :upsert-article                ;; triggered when a person submits a comment
@@ -194,9 +192,9 @@
    {:db         (assoc-in db [:loading :article] true)
     :http-xhrio {:method          (if (:slug params) :put :post)            ;; when we get a slug we'll do update (:put) article
                  :uri             (if (:slug params)                        ;; otherwise we'll insert (:post) article
-                                    (uri "articles" (:slug params))         ;; Same logic as above but we go wiht different 
-                                    (uri "articles"))                       ;; endpoint - one with :slug to update and another 
-                 :headers         (authorization-header db)                 ;; without to inster
+                                    (uri "articles" (:slug params))         ;; Same logic as above but we go wiht different
+                                    (uri "articles"))                       ;; endpoint - one with :slug to update and another
+                 :headers         (authorization-header db)                 ;; without to insert
                  :params          (:article params)
                  :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
                  :on-success      [:upsert-article-success]                 ;; trigger get-articles-success
@@ -208,14 +206,14 @@
    (-> db
        (assoc-in [:loading :article] false))))
 
-;; -- DELETE  Article @ /api/articles/:slug ---------------------------------
+;; -- DELETE Article @ /api/articles/:slug ------------------------------------
 ;;
 (reg-event-fx                 ;; usage (dispatch [:delete-article slug])
  :delete-article              ;; triggered when a user deletes an article
  (fn [{:keys [db]} [_ slug]]  ;; params = {:slug "article-slug"}
    {:db         (assoc-in db [:loading :article] true)
     :http-xhrio {:method          :delete
-                 :uri             (uri "articles" (:slug params))           ;; evaluates to "api/articles/:slug"
+                 :uri             (uri "articles" slug)                     ;; evaluates to "api/articles/:slug"
                  :headers         (authorization-header db)                 ;; get and pass user token obtained during login
                  :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
                  :on-success      [:delete-article-success]                 ;; trigger get-articles-success
@@ -341,7 +339,7 @@
  (fn [user [{props :user}]]
    (merge user props)))
 
-;; -- Toggle follow user @ /api/profiles/:username/follow -----------------------
+;; -- Toggle follow user @ /api/profiles/:username/follow ---------------------
 ;;
 (reg-event-fx                     ;; usage (dispatch [:toggle-follow-user username])
  :toggle-follow-user              ;; triggered when user clicks follow/unfollow button on profile page
@@ -394,7 +392,9 @@
  :logout
  (fn [{:keys [db]} [_ _]]
    {:db       (dissoc db :user)
-    :dispatch [:set-active-page :home]}))
+    :dispatch (do
+                ;; (local-store->nil)
+                [:set-active-page :home])}))
 
 ;; -- Error Handler -----------------------------------------------------------
 ;;

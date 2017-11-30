@@ -25,6 +25,14 @@
   [user]
   (.setItem js/localStorage ls-key (str user)))  ;; sorted-map written as an EDN map
 
+;; When we logout we should remove the user from local-storage so that when the
+;; application is refreshed it doesn't get the find the information about the
+;; user in the local-store.
+;;
+(defn local-store->nil
+  "Removes user from localStorage"
+  []
+  (.removeItem js/localStorage ls-key))
 
 ;; -- cofx Registrations  -----------------------------------------------------
 ;;

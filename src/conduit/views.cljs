@@ -351,7 +351,6 @@
 
 ;; -- Editor ------------------------------------------------------------------
 ;;
-
 (defn upsert-article [event article]
   (.preventDefault event)
   (dispatch [:upsert-article article]))
@@ -359,7 +358,7 @@
 (defn editor
   []
   (let [article @(subscribe [:article])
-        default {:title "" :header "" :body "" :tags ""}
+        default {:title "" :description "" :body "" :tagList ""}
         article-update (reagent/atom default)]
     [:div.editor-page
      [:div.container.page
@@ -376,8 +375,8 @@
           [:fieldset.form-group
            [:input.form-control {:type "text"
                                  :placeholder "What's this article about?"
-                                 :default-value (:header article)
-                                 :on-change #(swap! article-update assoc :header (-> % .-target .-value))}]]
+                                 :default-value (:description article)
+                                 :on-change #(swap! article-update assoc :description (-> % .-target .-value))}]]
           [:fieldset.form-group
            [:textarea.form-control {:rows "8"
                                     :placeholder "Write your article (in markdown)"
@@ -386,8 +385,8 @@
           [:fieldset.form-group
            [:input.form-control {:type "text"
                                  :placeholder "Enter tags"
-                                 :default-value (:tags article)
-                                 :on-change #(swap! article-update assoc :tags (-> % .-target .-value))}]
+                                 :default-value (:tagList article)
+                                 :on-change #(swap! article-update assoc :tagList (-> % .-target .-value))}]
            [:div.tag-list]]
           [:button.btn.btn-lg.pull-xs-right.btn-primary {:type "button" :on-click #(upsert-article % @article-update)} "Publish Article"]]]]]]]))
 
