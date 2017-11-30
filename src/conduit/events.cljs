@@ -186,6 +186,47 @@
        (assoc-in [:loading :comments] false)
        (assoc (:slug comments) :comments comment)))) ;; TODO get the article slug to upate the article
 
+;; -- POST/PUT  Article @ /api/articles(/:slug) ---------------------------------
+;;
+(reg-event-fx                   ;; usage (dispatch [:post-article-comments comment])
+ :upsert-article                ;; triggered when a person submits a comment
+ (fn [{:keys [db]} [_ params]]  ;; params = {:slug "article-slug" :comment {:body "comment body"} }
+   {:db         (assoc-in db [:loading :article] true)
+    :http-xhrio {:method          (if (:slug params) :put :post)            ;; when we get a slug we'll do update (:put) article
+                 :uri             (if (:slug params)                        ;; otherwise we'll insert (:post) article
+                                    (uri "articles" (:slug params))         ;; Same logic as above but we go wiht different 
+                                    (uri "articles"))                       ;; endpoint - one with :slug to update and another 
+                 :headers         (authorization-header db)                 ;; without to inster
+                 :params          (:article params)
+                 :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
+                 :on-success      [:upsert-article-success]                 ;; trigger get-articles-success
+                 :on-failure      [:api-request-error :upsert-article]}}))  ;; trigger api-request-error with :get-articles param
+
+(reg-event-db  ;; TODO
+ :upsert-article-success
+ (fn [db [_ {article :article}]]
+   (-> db
+       (assoc-in [:loading :article] false))))
+
+;; -- DELETE  Article @ /api/articles/:slug ---------------------------------
+;;
+(reg-event-fx                 ;; usage (dispatch [:delete-article slug])
+ :delete-article              ;; triggered when a user deletes an article
+ (fn [{:keys [db]} [_ slug]]  ;; params = {:slug "article-slug"}
+   {:db         (assoc-in db [:loading :article] true)
+    :http-xhrio {:method          :delete
+                 :uri             (uri "articles" (:slug params))           ;; evaluates to "api/articles/:slug"
+                 :headers         (authorization-header db)                 ;; get and pass user token obtained during login
+                 :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
+                 :on-success      [:delete-article-success]                 ;; trigger get-articles-success
+                 :on-failure      [:api-request-error :delete-article]}}))  ;; trigger api-request-error with :get-articles param
+
+(reg-event-db  ;; TODO Redirect to home page
+ :delete-article-sucsseess
+ (fn [db [_ {article :article}]]
+   (-> db
+       (assoc-in [:loading :article] false))))
+
 ;; -- GET Profile @ /api/profiles/:username -----------------------------------
 ;;
 (reg-event-fx       ;; usage (dispatch [:get-user-profile {:profile "profile"}])

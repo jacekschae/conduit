@@ -351,8 +351,15 @@
 
 ;; -- Editor ------------------------------------------------------------------
 ;;
+
+(defn upsert-article [event article]
+  (.preventDefault event)
+  (dispatch [:upsert-article article]))
+
 (defn editor
   []
+  (let [article @(subscribe :article)]
+       default {:title "" :header "" :body "" :tags ""})
   [:div.editor-page
    [:div.container.page
     [:div.row
@@ -360,21 +367,34 @@
       [:form
        [:fieldset
         [:fieldset.form-group
-         [:input.form-control.form-control-lg {:type "text", :placeholder "Article Title"}]]
+         [:input.form-control.form-control-lg {:type "text"
+                                               :placeholder "Article Title"
+                                               :default-value (:title artcile)
+                                               :on-change #(swap! article assoc :title (-> % .-target .-value))}]]
+
         [:fieldset.form-group
-         [:input.form-control {:type "text", :placeholder "What's this article about?"}]]
+         [:input.form-control {:type "text"
+                               :placeholder "What's this article about?"
+                               :default-value (:header article)
+                               :on-change #(swap! article assoc :header (-> % .-target .-value))}]]
         [:fieldset.form-group
-         [:textarea.form-control {:rows "8", :placeholder "Write your article (in markdown)"}]]
+         [:textarea.form-control {:rows "8"
+                                  :placeholder "Write your article (in markdown)"
+                                  :default-value (:body article)
+                                  :on-change #(swap! article assoc :title (-> % .-target .-value))}]]
         [:fieldset.form-group
-         [:input.form-control {:type "text", :placeholder "Enter tags"}]
+         [:input.form-control {:type "text",
+                               :placeholder "Enter tags"
+                               :default-value (:tags article)
+                               :on-change #(swap! article assoc :tags (-> % .-target .-value))}]
          [:div.tag-list]]
-        [:button.btn.btn-lg.pull-xs-right.btn-primary {:type "button"} "Publish Article"]]]]]]])
+        [:button.btn.btn-lg.pull-xs-right.btn-primary {:type "button" :on-click #(upsert-article)} "Publish Article"]]]]]]])
 
 ;; -- Article -----------------------------------------------------------------
 ;;
 (defn article
   []
-  (let [article @(subscribe [:article])
+  (let [article @(subscribe [:article]) ;; TODO
         user false ;; create subscription for auth-user
         comments @(subscribe [:comments])]
     [:div.article-page
