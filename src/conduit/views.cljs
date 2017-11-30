@@ -307,10 +307,10 @@
 
 (defn settings
   []
-  (let [default {:image "" :username "" :bio "" :email "" :password ""}
-        user-update (reagent/atom default)
+  (let [user @(subscribe [:user])
         loading @(subscribe [:loading])
-        user @(subscribe [:user])]
+        default {:image "" :username "" :bio "" :email "" :password ""}
+        user-update (reagent/atom default)]
     [:div.settings-page
      [:div.container.page
       [:div.row
@@ -343,7 +343,7 @@
                                                  :placeholder "Password"
                                                  :default-value ""
                                                  :on-change #(swap! user-update assoc :password (-> % .-target .-value))}]]
-          [:button.btn.btn-lg.btn-primary.pull-xs-right {:on-click #(update-user % @update)
+          [:button.btn.btn-lg.btn-primary.pull-xs-right {:on-click #(update-user % @user-update)
                                                          :class (when (:update-user loading) "disabled")} "Update Settings"]]]
         [:hr]
         (.log js/console @user-update)
@@ -358,37 +358,38 @@
 
 (defn editor
   []
-  (let [article @(subscribe :article)]
-       default {:title "" :header "" :body "" :tags ""})
-  [:div.editor-page
-   [:div.container.page
-    [:div.row
-     [:div.col-md-10.offset-md-1.col-xs-12
-      [:form
-       [:fieldset
-        [:fieldset.form-group
-         [:input.form-control.form-control-lg {:type "text"
-                                               :placeholder "Article Title"
-                                               :default-value (:title artcile)
-                                               :on-change #(swap! article assoc :title (-> % .-target .-value))}]]
+  (let [article @(subscribe [:article])
+        default {:title "" :header "" :body "" :tags ""}
+        article-update (reagent/atom default)]
+    [:div.editor-page
+     [:div.container.page
+      [:div.row
+       [:div.col-md-10.offset-md-1.col-xs-12
+        [:form
+         [:fieldset
+          [:fieldset.form-group
+           [:input.form-control.form-control-lg {:type "text"
+                                                 :placeholder "Article Title"
+                                                 :default-value (:title article)
+                                                 :on-change #(swap! article-update assoc :title (-> % .-target .-value))}]]
 
-        [:fieldset.form-group
-         [:input.form-control {:type "text"
-                               :placeholder "What's this article about?"
-                               :default-value (:header article)
-                               :on-change #(swap! article assoc :header (-> % .-target .-value))}]]
-        [:fieldset.form-group
-         [:textarea.form-control {:rows "8"
-                                  :placeholder "Write your article (in markdown)"
-                                  :default-value (:body article)
-                                  :on-change #(swap! article assoc :title (-> % .-target .-value))}]]
-        [:fieldset.form-group
-         [:input.form-control {:type "text",
-                               :placeholder "Enter tags"
-                               :default-value (:tags article)
-                               :on-change #(swap! article assoc :tags (-> % .-target .-value))}]
-         [:div.tag-list]]
-        [:button.btn.btn-lg.pull-xs-right.btn-primary {:type "button" :on-click #(upsert-article)} "Publish Article"]]]]]]])
+          [:fieldset.form-group
+           [:input.form-control {:type "text"
+                                 :placeholder "What's this article about?"
+                                 :default-value (:header article)
+                                 :on-change #(swap! article-update assoc :header (-> % .-target .-value))}]]
+          [:fieldset.form-group
+           [:textarea.form-control {:rows "8"
+                                    :placeholder "Write your article (in markdown)"
+                                    :default-value (:body article)
+                                    :on-change #(swap! article-update assoc :title (-> % .-target .-value))}]]
+          [:fieldset.form-group
+           [:input.form-control {:type "text"
+                                 :placeholder "Enter tags"
+                                 :default-value (:tags article)
+                                 :on-change #(swap! article-update assoc :tags (-> % .-target .-value))}]
+           [:div.tag-list]]
+          [:button.btn.btn-lg.pull-xs-right.btn-primary {:type "button" :on-click #(upsert-article % @article-update)} "Publish Article"]]]]]]]))
 
 ;; -- Article -----------------------------------------------------------------
 ;;
