@@ -60,7 +60,8 @@
     favorites-count :favoritesCount
     favorited       :favorited
     slug            :slug}]
-  (let [loading @(subscribe [:loading])]
+  (let [loading @(subscribe [:loading])
+        user @(subscribe [:user])]
     [:div.article-meta
      [:a {:href (str "/#/@" (:username author))}
       [:img {:src (:image author)}]]
@@ -68,17 +69,27 @@
      [:div.info
       [:a.author {:href (str "/#/@" (:username author))} (:username author)]
       [:span.date (format-date created-at)]]
-     [:button.btn.btn-sm.btn-outline-secondary {}
-      [:i.ion-plus-round " "]
-      [:span (str "Follow " (:username author))]]
-     " "
-     [:button.btn.btn-sm.btn-primary {:on-click #(dispatch [:toggle-favorite-article slug])
-                                      :class (cond
-                                               (not favorited) "btn-outline-primary"
-                                               (:toggle-favorite-article loading) "disabled")}
-      [:i.ion-heart]
-      [:span (if favorited " Unfavorite Post " " Favorite Post ")]
-      [:span.counter "(" favorites-count ")"]]]))
+     (if (= (:username user) (:username author))
+       [:span
+        [:button.btn.btn-sm.btn-outline-secondary {:on-click #(dispatch [:delete-article slug])}
+         [:i.ion-edit]
+         [:span " Edit Article "]]
+        " "
+        [:button.btn.btn-outline-danger.btn-sm {:on-click #(dispatch [:delete-article slug])}
+         [:i.ion-trash-a]
+         [:span " Delete Article "]]]
+       [:span
+        [:button.btn.btn-sm.btn-outline-secondary {}
+         [:i.ion-plus-round]
+         [:span (str " Follow " (:username author))]]
+        " "
+        [:button.btn.btn-sm.btn-primary {:on-click #(dispatch [:toggle-favorite-article slug])
+                                         :class (cond
+                                                  (not favorited) "btn-outline-primary"
+                                                  (:toggle-favorite-article loading) "disabled")}
+         [:i.ion-heart]
+         [:span (if favorited " Unfavorite Post " " Favorite Post ")]
+         [:span.counter "(" favorites-count ")"]]])]))
 
 (defn articles-preview
   [{:keys [description slug createdAt title author favoritesCount favorited tagList]}]
@@ -150,19 +161,20 @@
             [:li.nav-item
              [:a.nav-link.active
               [:i.ion-pound] (str " " (:tag filter))]])]]
-        (if (empty? articles)
+        (if (:articles loading)
           [:div.article-preview
-           [:p "No articles are here... yet."]]
-          (for [article articles]
-            ^{:key (:slug article)} [articles-preview article]))
-        (when (:articles loading)
-          [:div.article-preview
-           [:p "Loading articles ..."]])
-        [:ul.pagination
-         (for [offset (range (/ articles-count 10))]
-           ^{:key offset} [:li.page-item {:class (when (= (* offset 10) (:offset filter)) "active")
-                                          :on-click #(get-articles % {:offset (* offset 10) :tag (:tag filter) :limit 10})}
-                           [:a.page-link {:href ""} (+ 1 offset)]])]]
+           [:p "Loading articles ..."]]
+          (if (empty? articles)
+            [:div.article-preview
+             [:p "No articles are here... yet."]]
+            (for [article articles]
+              ^{:key (:slug article)} [articles-preview article])))
+        (when-not (or (:articles loading) (< articles-count 10))
+          [:ul.pagination
+           (for [offset (range (/ articles-count 10))]
+             ^{:key offset} [:li.page-item {:class (when (= (* offset 10) (:offset filter)) "active")
+                                            :on-click #(get-articles % {:offset (* offset 10) :tag (:tag filter) :limit 10})}
+                             [:a.page-link {:href ""} (+ 1 offset)]])])]
 
        [:div.col-md-3
         [:div.sidebar
@@ -360,15 +372,15 @@
 
 ;; -- Editor ------------------------------------------------------------------
 ;;
-(defn upsert-article [event article]
+(defn upsert-article [event content slug]
   (.preventDefault event)
-  (dispatch [:upsert-article article]))
+  (dispatch [:upsert-article {:article content :slug slug}]))
 
 (defn editor
   []
-  (let [article @(subscribe [:article])
-        default {:title "" :description "" :body "" :tagList ""}
-        article-update (reagent/atom default)]
+  (let [{:keys [title description body tagList slug]} @(subscribe [:article])
+        default {:title title :description description :body body :tagList tagList}
+        content (reagent/atom default)]
     [:div.editor-page
      [:div.container.page
       [:div.row
@@ -378,26 +390,26 @@
           [:fieldset.form-group
            [:input.form-control.form-control-lg {:type "text"
                                                  :placeholder "Article Title"
-                                                 :default-value (:title article)
-                                                 :on-change #(swap! article-update assoc :title (-> % .-target .-value))}]]
+                                                 :default-value title
+                                                 :on-change #(swap! content assoc :title (-> % .-target .-value))}]]
 
           [:fieldset.form-group
            [:input.form-control {:type "text"
                                  :placeholder "What's this article about?"
-                                 :default-value (:description article)
-                                 :on-change #(swap! article-update assoc :description (-> % .-target .-value))}]]
+                                 :default-value description
+                                 :on-change #(swap! content assoc :description (-> % .-target .-value))}]]
           [:fieldset.form-group
            [:textarea.form-control {:rows "8"
                                     :placeholder "Write your article (in markdown)"
-                                    :default-value (:body article)
-                                    :on-change #(swap! article-update assoc :title (-> % .-target .-value))}]]
+                                    :default-value body
+                                    :on-change #(swap! content assoc :body (-> % .-target .-value))}]]
           [:fieldset.form-group
            [:input.form-control {:type "text"
                                  :placeholder "Enter tags"
-                                 :default-value (:tagList article)
-                                 :on-change #(swap! article-update assoc :tagList (-> % .-target .-value))}]
+                                 :default-value tagList
+                                 :on-change #(swap! content assoc :tagList (-> % .-target .-value))}]
            [:div.tag-list]]
-          [:button.btn.btn-lg.pull-xs-right.btn-primary {:type "button" :on-click #(upsert-article % @article-update)} "Publish Article"]]]]]]]))
+          [:button.btn.btn-lg.pull-xs-right.btn-primary {:type "button" :on-click #(upsert-article % @content slug)} "Publish Article"]]]]]]]))
 
 ;; -- Article -----------------------------------------------------------------
 ;;

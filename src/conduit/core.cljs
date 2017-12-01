@@ -28,11 +28,13 @@
   (defroute "/login" [] (dispatch [:set-active-page :login]))
   (defroute "/register" [] (dispatch [:set-active-page :register]))
   (defroute "/settings" [] (dispatch [:set-active-page :settings]))
-  (defroute "/editor" [] (dispatch [:set-active-page :editor]))
-  (defroute "/logout" [] (dispatch [:logout]))
+  (defroute "/editor" []
+            (do (dispatch [:set-active-article nil])
+                (dispatch [:set-active-page :editor])))
   (defroute "/editor/:slug" [slug]
             (do (dispatch [:set-active-page :editor])
                 (dispatch [:set-active-article slug])))
+  (defroute "/logout" [] (dispatch [:logout]))
   (defroute "/article/:slug" [slug]
             (do (dispatch [:set-active-page :article])
                 (dispatch [:set-active-article slug])
