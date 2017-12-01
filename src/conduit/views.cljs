@@ -110,8 +110,8 @@
 
 ;; -- Home --------------------------------------------------------------------
 ;;
-(defn get-articles [event params] ;; @daniel - don't know about this here. Maybe it should be in events?
-  (.preventDefault event)         ;; can we pass event when we do dispatch?
+(defn get-articles [event params]
+  (.preventDefault event)
   (dispatch [:get-articles params]))
 
 (defn get-feed-articles [event params]
@@ -183,34 +183,38 @@
   []
   (let [default {:email "" :password ""}
         credentials (reagent/atom default)
-        loading @(subscribe [:loading])
-        errors @(subscribe [:errors])]
+        loading (subscribe [:loading])
+        errors (subscribe [:errors])]
     (fn []
-      [:div.auth-page
-       [:div.container.page
-        [:div.row
-         [:div.col-md-6.offset-md-3.col-xs-12
-          [:h1.text-xs-center "Sign in"]
-          (js/console.log (:login errors))
-          [:p.text-xs-center
-           [:a {:href "/#/register"} "Need an account?"]]
-          (when (:login errors)
-            [errors-list (:login errors)])
-          [:form {:on-submit #(login-user % @credentials)}
-           [:fieldset.form-group
-            [:input.form-control.form-control-lg {:type "text"
-                                                  :placeholder "Email"
-                                                  :value (:email @credentials)
-                                                  :on-change #(swap! credentials assoc :email (-> % .-target .-value))
-                                                  :disabled (when (:login loading))}]]
+      (let [email (get @credentials :email)
+            password (get @credentials :password)
+            login-errors (get @errors :login)
+            login-loading (get @loading :login)]
+        [:div.auth-page
+         (.log js/console login-errors loading)
+         [:div.container.page
+          [:div.row
+           [:div.col-md-6.offset-md-3.col-xs-12
+            [:h1.text-xs-center "Sign in"]
+            [:p.text-xs-center
+             [:a {:href "/#/register"} "Need an account?"]]
+            (when login-errors
+              [errors-list login-errors])
+            [:form {:on-submit #(login-user % @credentials)}
+             [:fieldset.form-group
+              [:input.form-control.form-control-lg {:type "text"
+                                                    :placeholder "Email"
+                                                    :value email
+                                                    :on-change #(swap! credentials assoc :email (-> % .-target .-value))
+                                                    :disabled (when login-loading)}]]
 
-           [:fieldset.form-group
-            [:input.form-control.form-control-lg {:type "password"
-                                                  :placeholder "Password"
-                                                  :value (:password @credentials)
-                                                  :on-change #(swap! credentials assoc :password (-> % .-target .-value))
-                                                  :disabled (when (:login loading))}]]
-           [:button.btn.btn-lg.btn-primary.pull-xs-right {:class (when (:login loading) "disabled")} "Sign in"]]]]]])))
+             [:fieldset.form-group
+              [:input.form-control.form-control-lg {:type "password"
+                                                    :placeholder "Password"
+                                                    :value password
+                                                    :on-change #(swap! credentials assoc :password (-> % .-target .-value))
+                                                    :disabled (when login-loading)}]]
+             [:button.btn.btn-lg.btn-primary.pull-xs-right {:class (when login-loading "disabled")} "Sign in"]]]]]]))))
 
 ;; -- Register ----------------------------------------------------------------
 ;;
@@ -222,37 +226,43 @@
   []
   (let [default {:username "" :email "" :password ""}
         registration (reagent/atom default)
-        loading @(subscribe [:loading])
-        errors @(subscribe [:errors])]
-    [:div.auth-page
-     [:div.container.page
-      [:div.row
-       [:div.col-md-6.offset-md-3.col-xs-12
-        [:h1.text-xs-center "Sign up"]
-        [:p.text-xs-center
-         [:a {:href "/#/login"} "Have an account?"]]
-        (when (:register-user errors)
-          [errors-list (:register-user errors)])
-        [:form {:on-submit #(register-user % @registration)}
-         [:fieldset.form-group
-          [:input.form-control.form-control-lg {:type "text"
-                                                :placeholder "Your Name"
-                                                :value (:username @registration)
-                                                :on-change #(swap! registration assoc :username (-> % .-target .-value))
-                                                :disabled (when (:register-user loading))}]]
-         [:fieldset.form-group
-          [:input.form-control.form-control-lg {:type "text"
-                                                :placeholder "Email"
-                                                :value (:email @registration)
-                                                :on-change #(swap! registration assoc :email (-> % .-target .-value))
-                                                :disabled (when (:register-user loading))}]]
-         [:fieldset.form-group
-          [:input.form-control.form-control-lg {:type "password"
-                                                :placeholder "Password"
-                                                :value (:password @registration)
-                                                :on-change #(swap! registration assoc :password (-> % .-target .-value))
-                                                :disabled (when (:register-user loading))}]]
-         [:button.btn.btn-lg.btn-primary.pull-xs-right {:class (when (:register-user loading) "disabled")} "Sign up"]]]]]]))
+        loading (subscribe [:loading])
+        errors (subscribe [:errors])]
+    (fn []
+      (let [username (get @registration :username)
+            email (get @registration :email)
+            password (get @registration :password)
+            register-user-errors (get @errors :register-user)
+            register-user-loading (get @loading :register-user)]
+        [:div.auth-page
+         [:div.container.page
+          [:div.row
+           [:div.col-md-6.offset-md-3.col-xs-12
+            [:h1.text-xs-center "Sign up"]
+            [:p.text-xs-center
+             [:a {:href "/#/login"} "Have an account?"]]
+            (when register-user-errors
+              [errors-list register-user-errors])
+            [:form {:on-submit #(register-user % @registration)}
+             [:fieldset.form-group
+              [:input.form-control.form-control-lg {:type "text"
+                                                    :placeholder "Your Name"
+                                                    :value username
+                                                    :on-change #(swap! registration assoc :username (-> % .-target .-value))
+                                                    :disabled (when register-user-loading)}]]
+             [:fieldset.form-group
+              [:input.form-control.form-control-lg {:type "text"
+                                                    :placeholder "Email"
+                                                    :value email
+                                                    :on-change #(swap! registration assoc :email (-> % .-target .-value))
+                                                    :disabled (when register-user-loading)}]]
+             [:fieldset.form-group
+              [:input.form-control.form-control-lg {:type "password"
+                                                    :placeholder "Password"
+                                                    :value password
+                                                    :on-change #(swap! registration assoc :password (-> % .-target .-value))
+                                                    :disabled (when register-user-loading)}]]
+             [:button.btn.btn-lg.btn-primary.pull-xs-right {:class (when register-user-loading "disabled")} "Sign up"]]]]]]))))
 
 (defn profile
   []
@@ -346,7 +356,6 @@
           [:button.btn.btn-lg.btn-primary.pull-xs-right {:on-click #(update-user % @user-update)
                                                          :class (when (:update-user loading) "disabled")} "Update Settings"]]]
         [:hr]
-        (.log js/console @user-update)
         [:button.btn.btn-outline-danger {:on-click #(logout-user %)} "Or click here to logout."]]]]]))
 
 ;; -- Editor ------------------------------------------------------------------

@@ -9,8 +9,8 @@
 (reg-sub
  :articles  ;; usage: (subscribe [:articles])
  (fn [db _]
-   (sort-by :createdAt (vals (:articles db)))))  ;; @daniel i'm sturggling wiht the setup of data structures ...
-                                                 ;; we need to talk about this ...
+   (sort-by :createdAt (vals (:articles db)))))
+
 (reg-sub
  :articles-count  ;; usage: (subscribe [:articles])
  (fn [db _]

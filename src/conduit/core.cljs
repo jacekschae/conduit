@@ -32,9 +32,9 @@
   (defroute "/logout" [] (dispatch [:logout]))
   (defroute "/editor/:slug" [slug]
             (do (dispatch [:set-active-page :editor])
-                (dispatch [:set-active-article slug]))) ;; @daniel I save the slug to get active-article in JS we would
-  (defroute "/article/:slug" [slug]                     ;; read it from URL without saving soewhere, do we have access
-            (do (dispatch [:set-active-page :article])  ;; to router from views?
+                (dispatch [:set-active-article slug])))
+  (defroute "/article/:slug" [slug]
+            (do (dispatch [:set-active-page :article])
                 (dispatch [:set-active-article slug])
                 (dispatch [:get-article-comments {:slug slug}])))
   (defroute "/:username/favorites" [username]
@@ -71,8 +71,8 @@
 
   ;; Send request to get articles and tags so that we can display them to the
   ;; user when the page loads for the first time.
-  (dispatch [:get-articles {:offset 0 :limit 10}]) ;; @daniel I would like to avoid that somehow on the startup, just don't know how
-  (dispatch [:get-tags])                           ;; this too ...
+  (dispatch [:get-articles {:offset 0 :limit 10}]) ;; we might move it to bootstrap or init when it get's larger
+  (dispatch [:get-tags])
 
   ;; Render the UI into the HTML's <div id="app" /> element
   ;; The view function `conduit.views/conduit-app` is the

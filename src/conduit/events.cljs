@@ -67,10 +67,11 @@
  (fn [db [_ active-page]]  ;; destructure 2nd parameter to obtain active-page
    (assoc db :active-page active-page)))  ;; compute and return the new state
 
-(reg-event-db  ;; usage: (dispatch [:set-active-page :home])
+(reg-event-fx  ;; usage: (dispatch [:set-active-article slug])
  :set-active-article
- (fn [db [_ active-article]]
-   (assoc db :active-article active-article)))
+ (fn [{:keys [db]} [_ slug]]
+   {:db       (assoc db :active-article slug)
+    :dispatch [:get-article-comments {:slug slug}]}))
 
 ;; -- GET Articles @ /api/articles --------------------------------------------
 ;;
@@ -97,8 +98,8 @@
  (fn [db [_ {articles :articles, articles-count :articlesCount}]]
    (-> db
        (assoc-in [:loading :articles] false)
-       (assoc :articles-count articles-count)
-       (assoc :articles (index-by :slug articles)))))  ;; @daniel, is that the idiomatic way to do it?
+       (assoc :articles-count articles-count
+              :articles (index-by :slug articles)))))
 
 ;; -- GET Feed Articles @ /api/articles/feed ----------------------------------
 ;;
@@ -121,8 +122,8 @@
  (fn [db [_ {articles :articles, articles-count :articlesCount}]]
    (-> db
        (assoc-in [:loading :articles] false)
-       (assoc :articles-count articles-count)
-       (assoc :articles (index-by :slug articles)))))  ;; @daniel, is that the idiomatic way to do it?
+       (assoc :articles-count articles-count
+              :articles (index-by :slug articles)))))
 
 ;; -- GET Tags @ /api/tags ----------------------------------------------------
 ;;
@@ -259,7 +260,7 @@
                  :on-success      [:login-success]                          ;; trigger login-success
                  :on-failure      [:api-request-error :login]}}))           ;; trigger api-request-error with :credentials param
 
-(reg-event-db
+(reg-event-fx
  :login-success
  ;; The standard set of interceptors, defined above, which we
  ;; use for all user-modifying event handlers. Looks after
@@ -273,8 +274,9 @@
   ;; And, further, it means the event handler returns just the value to be
   ;; put into `:user` path, and not the entire `db`.
   ;; So, a path interceptor makes the event handler act more like clojure's `update-in`
- (fn [user [{props :user}]]
+ (fn [{user :db} [{props :user}]]
    (merge user props)))
+   ;; TODO [:loading :login false]
 
 ;; -- POST Registration @ /api/users ------------------------------------------
 ;;
@@ -399,11 +401,21 @@
 ;; -- Error Handler -----------------------------------------------------------
 ;;
 (reg-event-db
+ :complete-request
+ (fn [db [_ request-type]]
+   (assoc-in db [:loading request-type] false)))
+
+(reg-event-fx
  :api-request-error
- (fn [db [_ & event]]
-   (let [request (butlast event)
-         response (last event)]
-     (assoc-in db
-               (into [:errors] request)
-               (or (get-in response [:response :errors]
-                           {:error [(get response :status-text)]}))))))
+ (fn [{:keys [db]} [_ request-type response]]
+   {:db (assoc-in db [:errors request-type] (get-in response [:response :errors]))
+    :dispatch [:complete-request request-type]}))
+
+; (reg-event-fx
+;  :api-request-error
+;  (fn [{:keys [db] [_ request-type response]}]
+;    {:db (assoc-in db
+;              [:errors request-type]
+;              (or (get-in response [:response :errors])
+;                  (get-in response [:last-error])))
+;     :dispatch}))
