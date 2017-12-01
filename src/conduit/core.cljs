@@ -29,7 +29,7 @@
   (defroute "/register" [] (dispatch [:set-active-page :register]))
   (defroute "/settings" [] (dispatch [:set-active-page :settings]))
   (defroute "/editor" []
-            (do (dispatch [:set-active-article nil])
+            (do (dispatch [:reset-active-article])
                 (dispatch [:set-active-page :editor])))
   (defroute "/editor/:slug" [slug]
             (do (dispatch [:set-active-page :editor])

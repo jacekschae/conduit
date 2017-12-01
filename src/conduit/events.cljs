@@ -67,6 +67,11 @@
  (fn [db [_ active-page]]  ;; destructure 2nd parameter to obtain active-page
    (assoc db :active-page active-page)))  ;; compute and return the new state
 
+(reg-event-db              ;; usage: (dispatch [:reset-active-article])
+ :reset-active-article     ;; triggered when the user enters new-article path
+ (fn [db [_ _]]            ;; destructure 2nd parameter to obtain active-page
+   (dissoc db :active-article)))  ;; compute and return the new state
+
 (reg-event-fx  ;; usage: (dispatch [:set-active-article slug])
  :set-active-article
  (fn [{:keys [db]} [_ slug]]
