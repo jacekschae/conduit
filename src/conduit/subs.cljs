@@ -17,10 +17,10 @@
    (:articles-count db)))
 
 (reg-sub
- :article  ;; usage (subscribe [:article])
+ :active-article  ;; usage (subscribe [:active-article])
  (fn [db _]
-   (let [article (:active-article db)]
-     (get-in db [:articles article]))))
+   (let [active-article (:active-article db)]
+     (get-in db [:articles active-article]))))
 
 (reg-sub
  :tags  ;; usage: (subscribe [:tags])
@@ -30,7 +30,7 @@
 (reg-sub
  :comments  ;; usage: (subscribe [:comments])
  (fn [db _]
-   (:comments db)))
+   (vals (:comments db))))
 
 (reg-sub
  :profile  ;; usage: (subscribe [:profile])

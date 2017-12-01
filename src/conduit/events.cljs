@@ -167,7 +167,7 @@
  (fn [db [_ {comments :comments}]]
    (-> db
        (assoc-in [:loading :comments] false)
-       (assoc :comments comments))))
+       (assoc :comments (index-by :id comments)))))
 
 ;; -- POST Comments @ /api/articles/:slug/comments ----------------------------
 ;;
@@ -195,7 +195,7 @@
 ;;
 (reg-event-fx                       ;; usage (dispatch [:delete-comment comment-id])
  :delete-comment                    ;; triggered when a user deletes an article
- (fn [{:keys [db]} [_ comment-id]]  ;; params = {:slug "article-slug"}
+ (fn [{:keys [db]} [_ comment-id]]  ;; comment-id = 1234
    {:db         (do
                   (assoc-in db [:loading :comments] true)
                   (assoc db :active-comment comment-id))
@@ -211,7 +211,8 @@
  :delete-comment-success
  (fn [db _]
    (-> db
-       (update-in [:articles (:active-article db) :comments] dissoc (:active-comment db))
+       (update-in [:comments] dissoc (:active-comment db))
+       (dissoc :active-comment)
        (assoc-in [:loading :comment] false))))
 
 ;; -- POST/PUT  Article @ /api/articles(/:slug) -------------------------------

@@ -419,7 +419,7 @@
 
 (defn article
   []
-  (let [article @(subscribe [:article])
+  (let [active-article @(subscribe [:active-article])
         user @(subscribe [:user])
         profile @(subscribe [:profile])
         comments @(subscribe [:comments])
