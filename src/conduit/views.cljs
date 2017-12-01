@@ -415,7 +415,7 @@
 ;;
 (defn post-comment [event body]
   (.preventDefault event)
-  (dispatch [:post-comments {:comment body}]))
+  (dispatch [:post-comment body]))
 
 (defn article
   []
@@ -443,7 +443,9 @@
         (if user
           [:form.card.comment-form
            [:div.card-block
-            [:textarea.form-control {:placeholder "Write a comment...", :rows "3"}]]
+            [:textarea.form-control {:placeholder "Write a comment..."
+                                     :rows "3"
+                                     :on-change #(swap! body assoc :body (-> % .-target .-value))}]]
            [:div.card-footer
             [:img.comment-author-img {:src (:image user)}]
             [:button.btn.btn-sm.btn-primary {:on-click #(post-comment % @body)} "Post Comment"]]]

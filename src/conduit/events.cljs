@@ -168,15 +168,16 @@
 ;;
 (reg-event-fx                   ;; usage (dispatch [:post-comment comment])
  :post-comment                  ;; triggered when a person submits a comment
- (fn [{:keys [db]} [_ params]]  ;; params = {:slug "article-slug" :comment {:body "comment body"} }
+ (fn [{:keys [db]} [_ body]]    ;; body = {:body "body" }
    {:db         (assoc-in db [:loading :comments] true)
     :http-xhrio {:method          :post
-                 :uri             (uri "articles" (:slug params) "comments")       ;; evaluates to "api/articles/:slug/comments"
-                 :headers         (authorization-header db)                        ;; get and pass user token obtained during login
-                 :params          (:comment params)
-                 :response-format (json-response-format {:keywords? true})         ;; json and all keys to keywords
-                 :on-success      [:post-comment-success]                          ;; trigger get-articles-success
-                 :on-failure      [:api-request-error :post-comment]}}))           ;; trigger api-request-error with :post-comment
+                 :uri             (uri "articles" (:active-article db) "comments")  ;; evaluates to "api/articles/:slug/comments"
+                 :headers         (authorization-header db)                         ;; get and pass user token obtained during login
+                 :params          body
+                 :format          (json-request-format)                             ;; make sure we are doint request format wiht json
+                 :response-format (json-response-format {:keywords? true})          ;; json and all keys to keywords
+                 :on-success      [:post-comment-success]                           ;; trigger get-articles-success
+                 :on-failure      [:api-request-error :post-comment]}}))            ;; trigger api-request-error with :post-comment
 
 (reg-event-db
  :post-comment-success
