@@ -84,7 +84,7 @@
                  :headers         (authorization-header db)                 ;; get and pass user token obtained during login
                  :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
                  :on-success      [:get-articles-success]                   ;; trigger get-articles-success event
-                 :on-failure      [:api-request-error :get-articles]}
+                 :on-failure      [:api-request-error :get-articles]}       ;; trigger api-request-error with :get-articles
     :db          (-> db
                      (assoc-in [:loading :articles] true)
                      (assoc-in [:filter :offset] (:offset params))        ;; base on paassed param set a filter
@@ -112,7 +112,7 @@
                  :headers         (authorization-header db)                 ;; get and pass user token obtained during login
                  :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
                  :on-success      [:get-feed-articles-success]              ;; trigger get-articles-success event
-                 :on-failure      [:api-request-error :get-feed-articles]}
+                 :on-failure      [:api-request-error :get-feed-articles]}  ;; trigger api-request-error with :get-feed-articles
     :db          (-> db
                      (assoc-in [:loading :articles] true)
                      (assoc-in [:filter :feed] true))}))  ;; we need to enable filter by feed every time since it's not supported query param
@@ -135,7 +135,7 @@
                  :uri             (uri "tags")                              ;; evaluates to "api/tags/articles/"
                  :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
                  :on-success      [:get-tags-success]                       ;; trigger get-tags-success event
-                 :on-failure      [:api-request-error :get-tags]}}))        ;; trigger api-request-error with :get-tags param
+                 :on-failure      [:api-request-error :get-tags]}}))        ;; trigger api-request-error with :get-tags
 
 (reg-event-db
  :get-tags-success
@@ -155,7 +155,7 @@
                  :headers         (authorization-header db)                       ;; get and pass user token obtained during login
                  :response-format (json-response-format {:keywords? true})        ;; json and all keys to keywords
                  :on-success      [:get-article-comments-success]                 ;; trigger get-articles-success
-                 :on-failure      [:api-request-error :get-article-comments]}}))  ;; trigger api-request-error with :get-articles param
+                 :on-failure      [:api-request-error :get-article-comments]}}))  ;; trigger api-request-error with :get-article-comments
 
 (reg-event-db
  :get-article-comments-success
@@ -166,42 +166,64 @@
 
 ;; -- POST Comments @ /api/articles/:slug/comments ----------------------------
 ;;
-(reg-event-fx                   ;; usage (dispatch [:post-article-comments comment])
- :post-article-comments         ;; triggered when a person submits a comment
+(reg-event-fx                   ;; usage (dispatch [:post-comment comment])
+ :post-comment                  ;; triggered when a person submits a comment
  (fn [{:keys [db]} [_ params]]  ;; params = {:slug "article-slug" :comment {:body "comment body"} }
    {:db         (assoc-in db [:loading :comments] true)
     :http-xhrio {:method          :post
                  :uri             (uri "articles" (:slug params) "comments")       ;; evaluates to "api/articles/:slug/comments"
                  :headers         (authorization-header db)                        ;; get and pass user token obtained during login
-                 :params          {:comment params}
+                 :params          (:comment params)
                  :response-format (json-response-format {:keywords? true})         ;; json and all keys to keywords
-                 :on-success      [:post-article-comments-success]                 ;; trigger get-articles-success
-                 :on-failure      [:api-request-error :post-article-comments]}}))  ;; trigger api-request-error with :get-articles param
+                 :on-success      [:post-comment-success]                          ;; trigger get-articles-success
+                 :on-failure      [:api-request-error :post-comment]}}))           ;; trigger api-request-error with :post-comment
 
-(reg-event-db  ;; TODO
- :post-article-comments-success
+(reg-event-db
+ :post-comment-success
  (fn [db [_ {comment :comment}]]
    (-> db
        (assoc-in [:loading :comments] false)
-       (assoc (:slug comment) :comments comment)))) ;; TODO get the article slug to upate the article
+       (assoc-in [:articles (:active-article db) :comments] comment))))
+
+;; -- DELETE Comments @ /api/articles/:slug/comments/:comment-id ----------------------
+;;
+(reg-event-fx                       ;; usage (dispatch [:delete-comment comment-id])
+ :delete-comment                    ;; triggered when a user deletes an article
+ (fn [{:keys [db]} [_ comment-id]]  ;; params = {:slug "article-slug"}
+   {:db         (do
+                  (assoc-in db [:loading :comments] true)
+                  (assoc db :active-comment comment-id))
+    :http-xhrio {:method          :delete
+                 :uri             (uri "articles" (:active-article db) "comments" comment-id)  ;; evaluates to "api/articles/:slug"
+                 :headers         (authorization-header db)                                    ;; get and pass user token obtained during login
+                 :format          (json-request-format)                                        ;; make sure we are doint request format wiht json
+                 :response-format (json-response-format {:keywords? true})                     ;; json and all keys to keywords
+                 :on-success      [:delete-comment-success]                                    ;; trigger get-articles-success
+                 :on-failure      [:api-request-error :delete-comment]}}))                     ;; trigger api-request-error with :delete-comment
+
+(reg-event-db
+ :delete-comment-success
+ (fn [db _]
+   (-> db
+       (update-in [:articles (:active-article db) :comments] dissoc (:active-comment db))
+       (assoc-in [:loading :comment] false))))
 
 ;; -- POST/PUT  Article @ /api/articles(/:slug) -------------------------------
 ;;
-(reg-event-fx                   ;; usage (dispatch [:post-article-comments article])
+(reg-event-fx                   ;; usage (dispatch [:post-comment article])
  :upsert-article                ;; triggered when a person creates new article updates or updates existing
  (fn [{:keys [db]} [_ params]]  ;; params = {:slug "article-slug" :article {:body "article body"} }
-   (js/console.log params)
    {:db         (assoc-in db [:loading :article] true)
     :http-xhrio {:method          (if (:slug params) :put :post)            ;; when we get a slug we'll update (:put) otherwise insert (:post)
                  :uri             (if (:slug params)                        ;; Same logic as above but we go with different
-                                    (uri "articles" (:slug params))         ;; endpoint - one with :slug to update and another to insert
-                                    (uri "articles"))
+                                    (uri "articles" (:slug params))         ;; endpoint - one with :slug to update
+                                    (uri "articles"))                       ;; and another to insert
                  :headers         (authorization-header db)                 ;; get and pass user token obtained during login
                  :params          (:article params)
                  :format          (json-request-format)                     ;; make sure we are doint request format wiht json
                  :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
                  :on-success      [:upsert-article-success]                 ;; trigger get-articles-success
-                 :on-failure      [:api-request-error :upsert-article]}}))  ;; trigger api-request-error with :get-articles param
+                 :on-failure      [:api-request-error :upsert-article]}}))  ;; trigger api-request-error with :upsert-article
 
 (reg-event-db
  :upsert-article-success
@@ -223,7 +245,7 @@
                  :format          (json-request-format)                     ;; make sure we are doint request format wiht json
                  :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
                  :on-success      [:delete-article-success]                 ;; trigger get-articles-success
-                 :on-failure      [:api-request-error :delete-article]}}))  ;; trigger api-request-error with :get-articles param
+                 :on-failure      [:api-request-error :delete-article]}}))  ;; trigger api-request-error with :delete-article
 
 (reg-event-fx
  :delete-article-success
@@ -244,7 +266,7 @@
                  :headers         (authorization-header db)                   ;; get and pass user token obtained during login
                  :response-format (json-response-format {:keywords? true})    ;; json and all keys to keywords
                  :on-success      [:get-user-profile-success]                 ;; trigger get-user-profile-success
-                 :on-failure      [:api-request-error :get-user-profile]}}))  ;; trigger api-request-error with :get-articles param
+                 :on-failure      [:api-request-error :get-user-profile]}}))  ;; trigger api-request-error with :get-user-profile
 
 (reg-event-db
  :get-user-profile-success
@@ -265,7 +287,7 @@
                  :format          (json-request-format)                     ;; make sure it's json
                  :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
                  :on-success      [:login-success]                          ;; trigger login-success
-                 :on-failure      [:api-request-error :login]}}))           ;; trigger api-request-error with :credentials param
+                 :on-failure      [:api-request-error :login]}}))           ;; trigger api-request-error with :login
 
 (reg-event-fx
  :login-success
@@ -297,7 +319,7 @@
                  :format          (json-request-format)                     ;; make sure it's json
                  :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
                  :on-success      [:register-user-success]                  ;; trigger login-success
-                 :on-failure      [:api-request-error :register-user]}}))   ;; trigger api-request-error with :register-user param
+                 :on-failure      [:api-request-error :register-user]}}))   ;; trigger api-request-error with :login-success
 
 (reg-event-db
  :register-user-success
@@ -329,7 +351,7 @@
                  :format          (json-request-format)                     ;; make sure it's json
                  :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
                  :on-success      [:update-user-success]                    ;; trigger update-user-success
-                 :on-failure      [:api-request-error :update-user]}}))     ;; trigger api-request-error with :update-user param
+                 :on-failure      [:api-request-error :update-user]}}))     ;; trigger api-request-error with :update-user
 
 (reg-event-db
  :update-user-success
@@ -360,7 +382,7 @@
                  :format          (json-request-format)                                 ;; make sure it's json
                  :response-format (json-response-format {:keywords? true})              ;; json and all keys to keywords
                  :on-success      [:toggle-follow-user-success]                         ;; trigger follow-user-success
-                 :on-failure      [:api-request-error :login]}}))                       ;; trigger api-request-error with :username param
+                 :on-failure      [:api-request-error :login]}}))                       ;; trigger api-request-error with :update-user-success
 
 (reg-event-db  ;; usage: (dispatch [:toggle-follow-user-success])
  :toggle-follow-user-success
@@ -381,7 +403,7 @@
                  :format          (json-request-format)                                       ;; make sure it's json
                  :response-format (json-response-format {:keywords? true})                    ;; json and all keys to keywords
                  :on-success      [:toggle-favorite-article-success]                          ;; trigger follow-user-success
-                 :on-failure      [:api-request-error :login]}}))                             ;; trigger api-request-error with :username param
+                 :on-failure      [:api-request-error :login]}}))                             ;; trigger api-request-error with :toggle-favorite-article
 
 (reg-event-db  ;; usage: (dispatch [:toggle-favorite-article-success])
  :toggle-favorite-article-success

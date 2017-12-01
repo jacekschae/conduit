@@ -413,11 +413,18 @@
 
 ;; -- Article -----------------------------------------------------------------
 ;;
+(defn post-comment [event body]
+  (.preventDefault event)
+  (dispatch [:post-comments {:comment body}]))
+
 (defn article
   []
-  (let [article @(subscribe [:article]) ;; TODO
-        user false ;; create subscription for auth-user
-        comments @(subscribe [:comments])]
+  (let [article @(subscribe [:article])
+        user @(subscribe [:user])
+        profile @(subscribe [:profile])
+        comments @(subscribe [:comments])
+        default {:body ""}
+        body (reagent/atom default)]
     [:div.article-page
      [:div.banner
       [:div.container
@@ -438,16 +445,8 @@
            [:div.card-block
             [:textarea.form-control {:placeholder "Write a comment...", :rows "3"}]]
            [:div.card-footer
-            [:img.comment-author-img {:src "http://i.imgur.com/Qr71crq.jpg"}]
-            [:button.btn.btn-sm.btn-primary "Post Comment"]]
-           [:div.card
-            [:div.card-block
-             [:p.card-text "With supporting text below as a natural lead-in to additional content."]]
-            [:div.card-footer
-             [:a.comment-author {:href ""}
-              [:img.comment-author-img {:src "http://i.imgur.com/Qr71crq.jpg"}]]
-             [:a.comment-author {:href ""} "Jacob Schmidt"]
-             [:span.date-posted "Dec 29th"]]]]
+            [:img.comment-author-img {:src (:image user)}]
+            [:button.btn.btn-sm.btn-primary {:on-click #(post-comment % @body)} "Post Comment"]]]
           [:p
            [:a {:href "#/register"} "Sign in"]
            " or "
@@ -460,13 +459,14 @@
                         [:div.card-block
                          [:p.card-text body]]
                         [:div.card-footer
-                         [:a.comment-author {:href ""}
+                         [:a.comment-author {:href (str "/#/@" (:username author))}
                           [:img.comment-author-img {:src (:image author)}]]
-                         [:a.comment-author {:href (str "/#/profile/@" (:username author))} (:username author)]
+                         " "
+                         [:a.comment-author {:href (str "/#/@" (:username author))} (:username author)]
                          [:span.date-posted (format-date createdAt)]
-                         [:span.mod-options
-                          [:i.ion-edit]
-                          [:i.ion-trash-a]]]]))]]]]))
+                         (when (= (:username user) (:username profile))
+                           [:span.mod-options {:on-click #(dispatch [:delete-comment id])}
+                            [:i.ion-trash-a]])]]))]]]]))
 
 (defn- pages [page-name]
   (case page-name
