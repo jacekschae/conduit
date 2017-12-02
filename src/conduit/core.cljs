@@ -22,9 +22,7 @@
 (defn routes
   []
   (secretary/set-config! :prefix "#")
-  (defroute "/" []
-            (do (dispatch [:set-active-page :home])
-                (dispatch [:get-articles {:offset 0 :limit 10}])))
+  (defroute "/" [] (dispatch [:set-active-page :home]))
   (defroute "/login" [] (dispatch [:set-active-page :login]))
   (defroute "/register" [] (dispatch [:set-active-page :register]))
   (defroute "/settings" [] (dispatch [:set-active-page :settings]))
@@ -73,7 +71,7 @@
 
   ;; Send request to get articles and tags so that we can display them to the
   ;; user when the page loads for the first time.
-  (dispatch [:get-articles {:offset 0 :limit 10}]) ;; we might move it to bootstrap or init when it get's larger
+  (dispatch [:get-feed-articles {:tag nil :author nil :offset 0 :limit 10}]) ;; we might move it to bootstrap or init when it get's larger
   (dispatch [:get-tags])
 
   ;; Render the UI into the HTML's <div id="app" /> element

@@ -10,7 +10,7 @@
 ;;   1.  `core.cljs` for  "(dispatch-sync [:initialise-db])"
 ;;   2.  `events.cljs` for the registration of :initialise-db handler
 ;;
-(def default-db {})  ;; what gets put into app-db by default.
+(def default-db {:filter {:feed true}})  ;; what gets put into app-db by default.
 
 
 ;; -- Local Storage  ----------------------------------------------------------

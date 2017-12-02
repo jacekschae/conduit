@@ -3,44 +3,6 @@
             [re-frame.core :refer [subscribe dispatch]]
             [conduit.subs :as subs]))
 
-;; -- Layout ------------------------------------------------------------------
-;;
-(defn header
-  []
-  (let [user @(subscribe [:user])] ;; create subscription for user
-    [:nav.navbar.navbar-light
-     [:div.container
-      [:a.navbar-brand {:href "/#/"} "conduit"]
-      (if (empty? user)
-        [:ul.nav.navbar-nav.pull-xs-right
-         [:li.nav-item
-          [:a.nav-link.active {:href "/#/"} "Home"]]
-         [:li.nav-item
-          [:a.nav-link {:href "/#/login"} "Sign in"]]
-         [:li.nav-item
-          [:a.nav-link {:href "/#/register"} "Sign up"]]]
-        [:ul.nav.navbar-nav.pull-xs-right
-         [:li.nav-item
-          [:a.nav-link.active {:href "/#/"} "Home"]]
-         [:li.nav-item
-          [:a.nav-link {:href "/#/editor"}
-           [:i.ion-compose "New Article"]]]
-         [:li.nav-item
-          [:a.nav-link {:href "/#/settings"}
-           [:i.ion-gear-a "Settings"]]]
-         [:li.nav-item
-          [:a.nav-link {:href (str "/#/@" (:username user))} (:username user)]]])]]))
-
-(defn footer
-  []
-  [:footer
-   [:div.container
-    [:a.logo-font {:href "/#/"} "conduit"]
-    [:span.attribution
-     "An interactive learning project from "
-     [:a {:href "https://thinkster.io"} "Thinkster"]
-     ". Code & design licensed under MIT."]]])
-
 ;; -- Helpers -----------------------------------------------------------------
 ;;
 (defn format-date
@@ -118,6 +80,46 @@
   [:ul.error-messages
    (for [[key [val]] errors]
      ^{:key key} [:li (str (name key) " " val)])])
+
+;; -- Header ------------------------------------------------------------------
+;;
+(defn header
+  []
+  (let [user @(subscribe [:user])]
+    [:nav.navbar.navbar-light
+     [:div.container
+      [:a.navbar-brand {:href "/#/"} "conduit"]
+      (if (empty? user)
+        [:ul.nav.navbar-nav.pull-xs-right
+         [:li.nav-item
+          [:a.nav-link.active {:href "/#/"} "Home"]]
+         [:li.nav-item
+          [:a.nav-link {:href "/#/login"} "Sign in"]]
+         [:li.nav-item
+          [:a.nav-link {:href "/#/register"} "Sign up"]]]
+        [:ul.nav.navbar-nav.pull-xs-right
+         [:li.nav-item
+          [:a.nav-link.active {:href "/#/"} "Home"]]
+         [:li.nav-item
+          [:a.nav-link {:href "/#/editor"}
+           [:i.ion-compose "New Article"]]]
+         [:li.nav-item
+          [:a.nav-link {:href "/#/settings"}
+           [:i.ion-gear-a "Settings"]]]
+         [:li.nav-item
+          [:a.nav-link {:href (str "/#/@" (:username user))} (:username user)]]])]]))
+
+;; -- Footer ------------------------------------------------------------------
+;;
+(defn footer
+  []
+  [:footer
+   [:div.container
+    [:a.logo-font {:href "/#/"} "conduit"]
+    [:span.attribution
+     "An interactive learning project from "
+     [:a {:href "https://thinkster.io"} "Thinkster"]
+     ". Code & design licensed under MIT."]]])
 
 ;; -- Home --------------------------------------------------------------------
 ;;
