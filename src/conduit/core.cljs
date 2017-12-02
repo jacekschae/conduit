@@ -69,9 +69,9 @@
   ;; Hookup the router and history that we configured above.
   (routes)
 
-  ;; Send request to get articles and tags so that we can display them to the
-  ;; user when the page loads for the first time.
-  (dispatch [:get-feed-articles {:tag nil :author nil :offset 0 :limit 10}]) ;; we might move it to bootstrap or init when it get's larger
+  ;; Send request to get feed articles and tags so that we can display
+  ;; them to the user when the page loads for the first time.
+  (dispatch [:get-feed-articles {:tag nil :author nil :offset 0 :limit 10}])
   (dispatch [:get-tags])
 
   ;; Render the UI into the HTML's <div id="app" /> element

@@ -218,8 +218,8 @@
 
 ;; -- POST/PUT  Article @ /api/articles(/:slug) -------------------------------
 ;;
-(reg-event-fx                   ;; usage (dispatch [:post-comment article])
- :upsert-article                ;; triggered when a person creates new article updates or updates existing
+(reg-event-fx                   ;; usage (dispatch [:upsert-article article])
+ :upsert-article                ;; triggered when user creates a new article updates or updates existing article
  (fn [{:keys [db]} [_ params]]  ;; params = {:slug "article-slug" :article {:body "article body"} }
    {:db         (assoc-in db [:loading :article] true)
     :http-xhrio {:method          (if (:slug params) :put :post)            ;; when we get a slug we'll update (:put) otherwise insert (:post)
@@ -233,18 +233,20 @@
                  :on-success      [:upsert-article-success]                 ;; trigger get-articles-success
                  :on-failure      [:api-request-error :upsert-article]}}))  ;; trigger api-request-error with :upsert-article
 
-(reg-event-db
+(reg-event-fx
  :upsert-article-success
- (fn [db [_ {article :article}]]
-   (-> db
-       (assoc-in [:loading :article] false)
-       (assoc-in [:articles (:slug article)] article))))
+ (fn [{:keys [db]} [_ article]]
+   (js/console.log _)
+   (js/console.log article)
+   {:db (-> db
+            (assoc-in [:loading :article] false)
+            (assoc-in [:articles (:slug article)] article))}))
 
 ;; -- DELETE Article @ /api/articles/:slug ------------------------------------
 ;;
 (reg-event-fx                 ;; usage (dispatch [:delete-article slug])
  :delete-article              ;; triggered when a user deletes an article
- (fn [{:keys [db]} [_ slug]]  ;; params = {:slug "article-slug"}
+ (fn [{:keys [db]} [_ slug]]  ;; slug = {:slug "article-slug"}
    {:db         (assoc-in db [:loading :article] true)
     :http-xhrio {:method          :delete
                  :uri             (uri "articles" slug)                     ;; evaluates to "api/articles/:slug"

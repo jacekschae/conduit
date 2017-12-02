@@ -1,7 +1,8 @@
 (ns conduit.views
   (:require [reagent.core  :as reagent]
             [re-frame.core :refer [subscribe dispatch]]
-            [conduit.subs :as subs]))
+            [conduit.subs :as subs]
+            [clojure.string :as str :refer [trim]]))
 
 ;; -- Helpers -----------------------------------------------------------------
 ;;
@@ -33,7 +34,7 @@
       [:span.date (format-date created-at)]]
      (if (= (:username user) (:username author))
        [:span
-        [:button.btn.btn-sm.btn-outline-secondary {:on-click #(dispatch [:delete-article slug])}
+        [:a.btn.btn-sm.btn-outline-secondary {:href (str "/#/editor/" slug)}
          [:i.ion-edit]
          [:span " Edit Article "]]
         " "
@@ -380,7 +381,7 @@
 
 (defn editor
   []
-  (let [{:keys [title description body tagList slug]} @(subscribe [:article])
+  (let [{:keys [title description body tagList slug] :as active-article}  @(subscribe [:active-article])
         default {:title title :description description :body body :tagList tagList}
         content (reagent/atom default)]
     [:div.editor-page
@@ -411,24 +412,29 @@
                                  :default-value tagList
                                  :on-change #(swap! content assoc :tagList (-> % .-target .-value))}]
            [:div.tag-list]]
-          [:button.btn.btn-lg.pull-xs-right.btn-primary {:type "button" :on-click #(upsert-article % @content slug)} "Publish Article"]]]]]]]))
+          [:button.btn.btn-lg.pull-xs-right.btn-primary {:type "button"
+                                                         :on-click #(upsert-article % @content slug)} (if active-article
+                                                                                                        "Update Article"
+                                                                                                        "Publish Article")]]]]]]]))
 
 ;; -- Article -----------------------------------------------------------------
 ;;
-(defn post-comment [event body]
+(defn post-comment [event comment default]
   (.preventDefault event)
-  (dispatch [:post-comment body]))
+  (let [body (trim (:body @comment))]
+    (reset! comment default)
+    (dispatch [:post-comment {:body body}])))
 
 (defn article
   []
-  (let [active-article @(subscribe [:active-article])
+  (let [default {:body ""}
+        comment (reagent/atom default)
+        active-article @(subscribe [:active-article])
         articles @(subscribe [:articles])
         user @(subscribe [:user])
         profile @(subscribe [:profile])
         comments @(subscribe [:comments])
-        loading @(subscribe [:loading])
-        comment {:body ""}
-        body (reagent/atom comment)]
+        loading @(subscribe [:loading])]
     [:div.article-page
      [:div.banner
       [:div.container
@@ -449,30 +455,34 @@
            [:div.card-block
             [:textarea.form-control {:placeholder "Write a comment..."
                                      :rows "3"
-                                     :on-change #(swap! body assoc :body (-> % .-target .-value))}]]
+                                     :on-change #(swap! comment assoc :body (-> % .-target .-value))}]]
            [:div.card-footer
             [:img.comment-author-img {:src (:image user)}]
-            [:button.btn.btn-sm.btn-primary {:class (when (:comments loading) "disabled") :on-click #(post-comment % @body)} "Post Comment"]]]
+            [:button.btn.btn-sm.btn-primary {:class (when (:comments loading) "disabled")
+                                             :on-click #(post-comment % comment default)} "Post Comment"]]]
           [:p
            [:a {:href "#/register"} "Sign in"]
            " or "
            [:a {:href "#/login"} "Sign in"]
            " to add comments on this article."])
-        (if (empty? comments)
-          [:div]
-          (for [{:keys [id createdAt body author]} comments]
-            ^{:key id} [:div.card
-                        [:div.card-block
-                         [:p.card-text body]]
-                        [:div.card-footer
-                         [:a.comment-author {:href (str "/#/@" (:username author))}
-                          [:img.comment-author-img {:src (:image author)}]]
-                         " "
-                         [:a.comment-author {:href (str "/#/@" (:username author))} (:username author)]
-                         [:span.date-posted (format-date createdAt)]
-                         (when (= (:username user) (:username author))
-                           [:span.mod-options {:on-click #(dispatch [:delete-comment id])}
-                            [:i.ion-trash-a]])]]))]]]]))
+        (if (:comments loading)
+          [:div
+           [:p "Loading comments ..."]]
+          (if (empty? comments)
+            [:div]
+            (for [{:keys [id createdAt body author]} comments]
+              ^{:key id} [:div.card
+                          [:div.card-block
+                           [:p.card-text body]]
+                          [:div.card-footer
+                           [:a.comment-author {:href (str "/#/@" (:username author))}
+                            [:img.comment-author-img {:src (:image author)}]]
+                           " "
+                           [:a.comment-author {:href (str "/#/@" (:username author))} (:username author)]
+                           [:span.date-posted (format-date createdAt)]
+                           (when (= (:username user) (:username author))
+                             [:span.mod-options {:on-click #(dispatch [:delete-comment id])}
+                              [:i.ion-trash-a]])]])))]]]]))
 
 (defn- pages [page-name]
   (case page-name
