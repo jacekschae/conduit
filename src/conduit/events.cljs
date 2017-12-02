@@ -76,7 +76,8 @@
  :set-active-article
  (fn [{:keys [db]} [_ slug]]
    {:db       (assoc db :active-article slug)
-    :dispatch [:get-article-comments {:slug slug}]}))
+    :dispatch-n (list [:get-article-comments {:slug slug}]
+                      [:get-user-profile {:profile (get-in db [:articles slug :author :username])}])}))
 
 ;; -- GET Articles @ /api/articles --------------------------------------------
 ;;
@@ -314,8 +315,8 @@
   ;; put into `:user` path, and not the entire `db`.
   ;; So, a path interceptor makes the event handler act more like clojure's `update-in`
  (fn [{user :db} [{props :user}]]
-   (merge user props)))
-   ;; TODO [:loading :login false]
+   {:db (merge user props)
+    :dispatch [:complete-request :login]}))
 
 ;; -- POST Registration @ /api/users ------------------------------------------
 ;;
@@ -331,7 +332,7 @@
                  :on-success      [:register-user-success]                  ;; trigger login-success
                  :on-failure      [:api-request-error :register-user]}}))   ;; trigger api-request-error with :login-success
 
-(reg-event-db
+(reg-event-fx
  :register-user-success
  ;; The standard set of interceptors, defined above, which we
  ;; use for all user-modifying event handlers. Looks after
@@ -339,14 +340,15 @@
  ;; NOTE: this chain includes `path` and `trim-v`
  user-interceptors
 
-  ;; The event handler function.
-  ;; The "path" interceptor in `user-interceptors` means 1st parameter is the
-  ;; value at `:user` path within `db`, rather than the full `db`.
-  ;; And, further, it means the event handler returns just the value to be
-  ;; put into `:user` path, and not the entire `db`.
-  ;; So, a path interceptor makes the event handler act more like clojure's `update-in`
- (fn [user [{props :user}]]
-   (merge user props)))
+ ;; The event handler function.
+ ;; The "path" interceptor in `user-interceptors` means 1st parameter is the
+ ;; value at `:user` path within `db`, rather than the full `db`.
+ ;; And, further, it means the event handler returns just the value to be
+ ;; put into `:user` path, and not the entire `db`.
+ ;; So, a path interceptor makes the event handler act more like clojure's `update-in`
+ (fn [{user :db} [{props :user}]]
+   {:db (merge user props)
+    :dispatch [:complete-request :register-user]}))
 
 ;; -- PUT Update User @ /api/user ---------------------------------------------
 ;;
@@ -358,12 +360,12 @@
                  :uri             (uri "user")                              ;; evaluates to "api/users/login"
                  :params          {:user user}                              ;; {:user {:img ... :username ... :bio ... :email ... :password ...}}
                  :headers         (authorization-header db)                 ;; get and pass user token obtained during login
-                 :format          (json-request-format)                     ;; make sure it's json
+                 :format          (json-request-format)                     ;; make sure our request is json
                  :response-format (json-response-format {:keywords? true})  ;; json and all keys to keywords
                  :on-success      [:update-user-success]                    ;; trigger update-user-success
                  :on-failure      [:api-request-error :update-user]}}))     ;; trigger api-request-error with :update-user
 
-(reg-event-db
+(reg-event-fx
  :update-user-success
  ;; The standard set of interceptors, defined above, which we
  ;; use for all user-modifying event handlers. Looks after
@@ -377,8 +379,9 @@
   ;; And, further, it means the event handler returns just the value to be
   ;; put into `:user` path, and not the entire `db`.
   ;; So, a path interceptor makes the event handler act more like clojure's `update-in`
- (fn [user [{props :user}]]
-   (merge user props)))
+ (fn [{user :db} [{props :user}]]
+   {:db (merge user props)
+    :dispatch [:complete-request :update-user]}))
 
 ;; -- Toggle follow user @ /api/profiles/:username/follow ---------------------
 ;;

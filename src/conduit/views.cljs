@@ -24,7 +24,8 @@
     favorited       :favorited
     slug            :slug}]
   (let [loading @(subscribe [:loading])
-        user @(subscribe [:user])]
+        user @(subscribe [:user])
+        profile @(subscribe [:profile])]
     [:div.article-meta
      [:a {:href (str "/#/@" (:username author))}
       [:img {:src (:image author)}]]
@@ -42,9 +43,10 @@
          [:i.ion-trash-a]
          [:span " Delete Article "]]]
        [:span
-        [:button.btn.btn-sm.btn-outline-secondary {}
-         [:i.ion-plus-round]
-         [:span (str " Follow " (:username author))]]
+        [:button.btn.btn-sm.action-btn.btn-outline-secondary {:on-click #(dispatch [:toggle-follow-user (:username profile)])
+                                                              :class (when (:toggle-follow-user loading) "disabled")}
+         [:i {:class (if (:following profile) "ion-minus-round" "ion-plus-round")}]
+         [:span (if (:following profile) (str " Unfollow " (:username profile)) (str " Follow " (:username profile)))]]
         " "
         [:button.btn.btn-sm.btn-primary {:on-click #(dispatch [:toggle-favorite-article slug])
                                          :class (cond
@@ -327,14 +329,16 @@
 
 (defn update-user [event update]
   (.preventDefault event)
-  (js/console.log update))
-; (dispatch [:update-user user]))
+  (dispatch [:update-user update]))
 
 (defn settings
   []
-  (let [user @(subscribe [:user])
+  (let [{:keys [title description body tagList slug] :as active-article}  @(subscribe [:active-article])
+        default {:title title :description description :body body :tagList tagList}
+        content (reagent/atom default)])
+  (let [{:keys [bio email image username] :as user} @(subscribe [:user])
+        default {:bio bio :email email :image image :username username}
         loading @(subscribe [:loading])
-        default {:image "" :username "" :bio "" :email "" :password ""}
         user-update (reagent/atom default)]
     [:div.settings-page
      [:div.container.page

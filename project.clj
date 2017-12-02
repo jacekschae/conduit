@@ -8,6 +8,8 @@
                            [day8.re-frame/http-fx "0.1.4"]
                            [binaryage/devtools "0.9.4"]
                            [secretary "1.2.3"]
+                           [bidi "2.1.2"]
+                           [kibu/pushy "0.3.8"]
                            [re-frisk "0.5.2"]]
 
             :jvm-opts ["--add-modules" "java.xml.bind"]

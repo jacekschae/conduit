@@ -35,8 +35,7 @@
   (defroute "/logout" [] (dispatch [:logout]))
   (defroute "/article/:slug" [slug]
             (do (dispatch [:set-active-page :article])
-                (dispatch [:set-active-article slug])
-                (dispatch [:get-article-comments {:slug slug}])))
+                (dispatch [:set-active-article slug])))
   (defroute "/:username/favorites" [username]
             (do (dispatch [:set-active-page :profile])
                 (dispatch [:get-user-profile {:profile (subs username 1)}]) ;; URL contains @ therefore subs
@@ -59,7 +58,6 @@
 ;;
 (defn ^:export main
   []
-
   ;; Put an initial value into app-db.
   ;; The event handler for `:initialise-db` can be found in `events.cljs`
   ;; Using the sync version of dispatch means that value is in
