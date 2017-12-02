@@ -184,12 +184,13 @@
                  :on-success      [:post-comment-success]                           ;; trigger get-articles-success
                  :on-failure      [:api-request-error :post-comment]}}))            ;; trigger api-request-error with :post-comment
 
-(reg-event-db
+(reg-event-fx
  :post-comment-success
- (fn [db [_ {comment :comment}]]
-   (-> db
-       (assoc-in [:loading :comments] false)
-       (assoc-in [:articles (:active-article db) :comments] comment))))
+ (fn [{:keys [db]} [_ comment]]
+   {:db (-> db
+            (assoc-in [:loading :comments] false)
+            (assoc-in [:articles (:active-article db) :comments] comment))
+    :dispatch [:get-article-comments {:slug (:active-article db)}]}))
 
 ;; -- DELETE Comments @ /api/articles/:slug/comments/:comment-id ----------------------
 ;;

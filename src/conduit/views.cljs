@@ -422,24 +422,26 @@
 (defn article
   []
   (let [active-article @(subscribe [:active-article])
+        articles @(subscribe [:articles])
         user @(subscribe [:user])
         profile @(subscribe [:profile])
         comments @(subscribe [:comments])
-        default {:body ""}
-        body (reagent/atom default)]
+        loading @(subscribe [:loading])
+        comment {:body ""}
+        body (reagent/atom comment)]
     [:div.article-page
      [:div.banner
       [:div.container
-       [:h1 (:title article)]
-       [article-meta article]]] ;; defined in Helpers section
+       [:h1 (:title active-article)]
+       [article-meta active-article]]] ;; defined in Helpers section
      [:div.container.page
       [:div.row.article-content
        [:div.col-md-12
-        [:p (:body article)]]]
-      [tags-list (:tagList article)] ;; defined in Helpers section
+        [:p (:body active-article)]]]
+      [tags-list (:tagList active-article)] ;; defined in Helpers section
       [:hr]
       [:div.article-actions
-       [article-meta article]] ;; defined in Helpers section
+       [article-meta active-article]] ;; defined in Helpers section
       [:div.row
        [:div.col-xs-12.col-md-8.offset-md-2
         (if user
@@ -450,7 +452,7 @@
                                      :on-change #(swap! body assoc :body (-> % .-target .-value))}]]
            [:div.card-footer
             [:img.comment-author-img {:src (:image user)}]
-            [:button.btn.btn-sm.btn-primary {:on-click #(post-comment % @body)} "Post Comment"]]]
+            [:button.btn.btn-sm.btn-primary {:class (when (:comments loading) "disabled") :on-click #(post-comment % @body)} "Post Comment"]]]
           [:p
            [:a {:href "#/register"} "Sign in"]
            " or "
@@ -468,7 +470,7 @@
                          " "
                          [:a.comment-author {:href (str "/#/@" (:username author))} (:username author)]
                          [:span.date-posted (format-date createdAt)]
-                         (when (= (:username user) (:username profile))
+                         (when (= (:username user) (:username author))
                            [:span.mod-options {:on-click #(dispatch [:delete-comment id])}
                             [:i.ion-trash-a]])]]))]]]]))
 
