@@ -71,10 +71,10 @@
    (cond
      ;; -- URL @ "/" ----------------------------------------------------------
      ;;
-     (= :home page) {:db (assoc db :active-page page
-                                :dispatch (if (empty? (:user db))    ;; When we open home page and a user
-                                            [:get-articles]          ;; is NOT logged in we display all articles
-                                            [:get-feed-articles]))}  ;; otherwiser we get her/his feed articles
+     (= :home page) {:db (assoc db :active-page page)
+                     :dispatch (if (empty? (:user db))    ;; When we open home page and a user
+                                 [:get-articles]          ;; is NOT logged in we display all articles
+                                 [:get-feed-articles])}   ;; otherwiser we get her/his feed articles
 
      ;; -- URL @ "/login" -----------------------------------------------------
      ;;
@@ -141,7 +141,7 @@
                      (assoc-in [:loading :articles] true)
                      (assoc-in [:filter :offset] (:offset params))        ;; base on paassed param set a filter
                      (assoc-in [:filter :tag] (:tag params))              ;; so that we can easily show and hide
-                     (assoc-in [:filter :author] (:author params))        ;; appropriate views
+                     (assoc-in [:filter :author] (:author params))        ;; appropriate ui components
                      (assoc-in [:filter :favorites] (:favorited params))
                      (assoc-in [:filter :feed] false))}))                 ;; we need to disable filter by feed every time since it's not supported query param
 
@@ -152,6 +152,27 @@
        (assoc-in [:loading :articles] false)
        (assoc :articles-count articles-count
               :articles (index-by :slug articles)))))
+
+;; -- GET Article @ /api/articles/:slug ---------------------------------------
+;;
+(reg-event-fx                   ;; usage (dispatch [:get-article {:slug "slug"}])
+ :get-article                   ;; triggered when a user upserts article
+ (fn [{:keys [db]} [_ params]]  ;; params = {:slug "slug"}
+   {:http-xhrio {:method          :get
+                 :uri             (uri "articles" (:slug params))           ;; evaluates to "api/articles/:slug"
+                 :headers         (auth-header db)                          ;; get and pass user token obtained during login
+                 :response-format (json-response-format {:keywords? true})  ;; json response and all keys to keywords
+                 :on-success      [:get-article-success]                    ;; trigger get-articles-success event
+                 :on-failure      [:api-request-error :get-article]}        ;; trigger api-request-error with :get-articles
+    :db          (-> db
+                     (assoc-in [:loading :article] true))}))
+
+(reg-event-db
+ :get-article-success
+ (fn [db [_ {article :article}]]
+   (-> db
+       (assoc-in [:loading :article] false)
+       (assoc :articles (index-by :slug [article])))))
 
 ;; -- POST/PUT  Article @ /api/articles(/:slug) -------------------------------
 ;;
@@ -172,12 +193,12 @@
 
 (reg-event-fx
  :upsert-article-success
- (fn [{:keys [db]} [_ article]]
-   (js/console.log _)
-   (js/console.log article)
+ (fn [{:keys [db]} [_ {:keys [article]}]]
    {:db (-> db
             (assoc-in [:loading :article] false)
-            (assoc-in [:articles (:slug article)] article))}))
+            (assoc :active-page :article
+                   :active-article (:slug article)))
+    :dispatch [:get-article {:slug (:slug article)}]})) ;; @daniel, how can we dispatch path change?
 
 ;; -- DELETE Article @ /api/articles/:slug ------------------------------------
 ;;

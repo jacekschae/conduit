@@ -39,7 +39,8 @@
          [:i.ion-edit]
          [:span " Edit Article "]]
         " "
-        [:button.btn.btn-outline-danger.btn-sm {:on-click #(dispatch [:delete-article slug])}
+        [:a.btn.btn-outline-danger.btn-sm {:href "/#/"
+                                           :on-click #(dispatch [:delete-article slug])}
          [:i.ion-trash-a]
          [:span " Delete Article "]]]
        [:span
@@ -380,10 +381,6 @@
 
 ;; -- Editor ------------------------------------------------------------------
 ;;
-(defn upsert-article [event content slug]
-  (.preventDefault event)
-  (dispatch [:upsert-article {:article content :slug slug}]))
-
 (defn editor
   []
   (let [{:keys [title description body tagList slug] :as active-article}  @(subscribe [:active-article])
@@ -417,10 +414,11 @@
                                  :default-value tagList
                                  :on-change #(swap! content assoc :tagList (-> % .-target .-value))}]
            [:div.tag-list]]
-          [:button.btn.btn-lg.pull-xs-right.btn-primary {:type "button"
-                                                         :on-click #(upsert-article % @content slug)} (if active-article
-                                                                                                        "Update Article"
-                                                                                                        "Publish Article")]]]]]]]))
+          [:a.btn.btn-lg.btn-primary.pull-xs-right {:href "/#/"
+                                                    :on-click #(dispatch [:upsert-article {:article @content :slug slug}])}
+           (if active-article
+             "Update Article"
+             "Publish Article")]]]]]]]))
 
 ;; -- Article -----------------------------------------------------------------
 ;;
