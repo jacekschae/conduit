@@ -95,7 +95,7 @@
       (if (empty? user)
         [:ul.nav.navbar-nav.pull-xs-right
          [:li.nav-item
-          [:a.nav-link.active {:href "/#/"} "Home"]]
+          [:a.nav-link {:href "/#/"} "Home"]]
          [:li.nav-item
           [:a.nav-link {:href "/#/login"} "Sign in"]]
          [:li.nav-item
@@ -208,7 +208,6 @@
             login-errors (get @errors :login)
             login-loading (get @loading :login)]
         [:div.auth-page
-         (.log js/console login-errors loading)
          [:div.container.page
           [:div.row
            [:div.col-md-6.offset-md-3.col-xs-12
@@ -281,6 +280,8 @@
                                                     :disabled (when register-user-loading)}]]
              [:button.btn.btn-lg.btn-primary.pull-xs-right {:class (when register-user-loading "disabled")} "Sign up"]]]]]]))))
 
+;; -- Profile -----------------------------------------------------------------
+;;
 (defn profile
   []
   (let [profile @(subscribe [:profile])

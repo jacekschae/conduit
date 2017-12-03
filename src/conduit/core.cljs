@@ -16,34 +16,21 @@
 (devtools/install!)       ;; we love https://github.com/binaryage/cljs-devtools
 (enable-console-print!)   ;; so that println writes to `console.log`
 
-
 ;; -- Routes and History ------------------------------------------------------
 ;;
 (defn routes
   []
   (secretary/set-config! :prefix "#")
-  (defroute "/" [] (dispatch [:set-active-page :home]))
-  (defroute "/login" [] (dispatch [:set-active-page :login]))
-  (defroute "/register" [] (dispatch [:set-active-page :register]))
-  (defroute "/settings" [] (dispatch [:set-active-page :settings]))
-  (defroute "/editor" []
-            (do (dispatch [:reset-active-article])
-                (dispatch [:set-active-page :editor])))
-  (defroute "/editor/:slug" [slug]
-            (do (dispatch [:set-active-page :editor])
-                (dispatch [:set-active-article slug])))
+  (defroute "/" [] (dispatch [:set-active-page {:page :home}]))
+  (defroute "/login" [] (dispatch [:set-active-page {:page :login}]))
+  (defroute "/register" [] (dispatch [:set-active-page {:page :register}]))
+  (defroute "/settings" [] (dispatch [:set-active-page {:page :settings}]))
+  (defroute "/editor" [] (dispatch [:set-active-page {:page :editor}]))
+  (defroute "/editor/:slug" [slug] (dispatch [:set-active-page {:page :editor :slug slug}]))
   (defroute "/logout" [] (dispatch [:logout]))
-  (defroute "/article/:slug" [slug]
-            (do (dispatch [:set-active-page :article])
-                (dispatch [:set-active-article slug])))
-  (defroute "/:username/favorites" [username]
-            (do (dispatch [:set-active-page :profile])
-                (dispatch [:get-user-profile {:profile (subs username 1)}]) ;; URL contains @ therefore subs
-                (dispatch [:get-articles {:favorited (subs username 1)}]))) ;; URL contains @ therefore subs
-  (defroute "/:username" [username]
-            (do (dispatch [:set-active-page :profile])
-                (dispatch [:get-user-profile {:profile (subs username 1)}]) ;; URL contains @ therefore subs
-                (dispatch [:get-articles {:author (subs username 1)}])))) ;; URL contains @ therefore subs
+  (defroute "/article/:slug" [slug] (dispatch [:set-active-page {:page :article :slug slug}]))
+  (defroute "/:profile/favorites" [profile] (dispatch [:set-active-page {:page :favorited :favorited (subs profile 1)}]))
+  (defroute "/:profile" [profile] (dispatch [:set-active-page {:page :profile :profile (subs profile 1)}])))
 
 (def history
   (doto (History.)
@@ -69,7 +56,7 @@
 
   ;; Send request to get feed articles and tags so that we can display
   ;; them to the user when the page loads for the first time.
-  (dispatch [:get-feed-articles {:tag nil :author nil :offset 0 :limit 10}])
+  ; (dispatch [:get-articles {:tag nil :author nil :offset 0 :limit 10}])
   (dispatch [:get-tags])
 
   ;; Render the UI into the HTML's <div id="app" /> element

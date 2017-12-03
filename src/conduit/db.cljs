@@ -12,13 +12,12 @@
 ;;
 (def default-db {})  ;; what gets put into app-db by default.
 
-
 ;; -- Local Storage  ----------------------------------------------------------
 ;;
 ;; Part of the conduit challenge is to store a user in LocalStorage, and
 ;; on app startup, reload the user from when the program was last run.
 ;;
-(def ls-key "conduit-user")                       ;; localstore key
+(def ls-key "conduit-user")                      ;; localstore key
 
 (defn user->local-store
   "Puts user into localStorage"
