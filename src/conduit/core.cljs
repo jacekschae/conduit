@@ -58,6 +58,7 @@
   ;; them to the user when the page loads for the first time.
   ; (dispatch [:get-articles {:tag nil :author nil :offset 0 :limit 10}])
   (dispatch [:get-tags])
+  (set! (.-hash js/location) "/")
 
   ;; Render the UI into the HTML's <div id="app" /> element
   ;; The view function `conduit.views/conduit-app` is the
