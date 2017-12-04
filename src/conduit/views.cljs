@@ -384,6 +384,10 @@
 
 ;; -- Editor ------------------------------------------------------------------
 ;;
+(defn upsert-article [event content slug]
+  (.preventDefault event)
+  (dispatch [:upsert-article {:article content :slug slug}]))
+
 (defn editor
   []
   (let [{:keys [title description body tagList slug] :as active-article}  @(subscribe [:active-article])
@@ -417,7 +421,7 @@
                                  :default-value tagList
                                  :on-change #(swap! content assoc :tagList (-> % .-target .-value))}]
            [:div.tag-list]]
-          [:button.btn.btn-lg.btn-primary.pull-xs-right {:on-click #(dispatch [:upsert-article {:article @content :slug slug}])}
+          [:button.btn.btn-lg.btn-primary.pull-xs-right {:on-click #(upsert-article % @content slug)}
            (if active-article
              "Update Article"
              "Publish Article")]]]]]]]))

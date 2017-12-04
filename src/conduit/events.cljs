@@ -1,7 +1,7 @@
 (ns conduit.events
   (:require
    [conduit.db :refer [default-db user->local-store local-store->nil]]
-   [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx trim-v after path debug]]
+   [re-frame.core :refer [reg-event-db reg-event-fx reg-fx inject-cofx trim-v after path debug]]
    [day8.re-frame.http-fx]
    [ajax.core :refer [json-request-format json-response-format]]
    [clojure.string :as str]
@@ -17,22 +17,18 @@
 ;; They are also used to "inject" values into the `coeffects` parameter of
 ;; an event handler, when that handler needs access to certain resources.
 ;;
-;; Part of the Conduit challenge is to store user in local storage.
-;; This interceptor runs `after` an event handler, and it stores the
-;; current user into local storage.
-;; Later, we include this interceptor into the interceptor chain
-;; of all event handlers which modify user. In this way, we ensure that
-;; any change to the user is written to local storage.
-(def ->local-store (after user->local-store))
-
 ;; Each event handler can have its own chain of interceptors. Below we create
 ;; the interceptor chain shared by all event handlers which manipulate user.
 ;; A chain of interceptors is a vector.
 ;; Explanation of `trim-v` is given further below.
 (def user-interceptors [(path :user)
-                        ->local-store                        ;; write user to localstore  (after)
+                        (after user->local-store)            ;; write user to localstore (after)
                         (when ^boolean js/goog.DEBUG debug)  ;; look at the js browser console for debug logs
                         trim-v])                             ;; removes first (event id) element from the event vec
+
+;; I'm removing user after logout from local-storage so that everything is 
+;; spotless and tidy
+(def remove-user-interceptor [(after local-store->nil)])
 
 ;; -- Helpers -----------------------------------------------------------------
 ;;
@@ -52,6 +48,11 @@
 (defn index-by [key coll]
   "Transform a coll to a map with a given key as a lookup value"
   (into {} (map (juxt key identity) coll)))
+
+(reg-fx                               ;; register a new event handler to use with our -fx events
+ :set-url                             ;; this will be provided in a map for -fx events and
+ (fn [{:keys [url]}]                  ;; accept :url as paramter, it should be exactly {:url path}
+   (set! (.-hash js/location) url)))  ;; so that we can set window.location.hash to path
 
 ;; -- Event Handlers ----------------------------------------------------------
 ;;
@@ -198,7 +199,8 @@
             (assoc-in [:loading :article] false)
             (assoc :active-page :article
                    :active-article (:slug article)))
-    :dispatch [:get-article {:slug (:slug article)}]})) ;; @daniel, I couldn't find a way to dispatch path change, how can we do this?
+    :dispatch [:get-article {:slug (:slug article)}]
+    :set-url {:url (str "/articles/" (:slug article))}}))
 
 ;; -- DELETE Article @ /api/articles/:slug ------------------------------------
 ;;
@@ -218,10 +220,11 @@
 (reg-event-fx
  :delete-article-success
  (fn [{:keys [db]} _]
-   {:dispatch [:set-active-page :home]
-    :db (-> db
+   {:db (-> db
             (update-in [:articles] dissoc (:active-article db))
-            (assoc-in [:loading :article] false))}))
+            (assoc-in [:loading :article] false))
+    :dispatch [:set-active-page :home]
+    :set-url {:url "/"}}))
 
 ;; -- GET Feed Articles @ /api/articles/feed ----------------------------------
 ;;
@@ -383,9 +386,9 @@
   ;; So, a path interceptor makes the event handler act more like clojure's `update-in`
  (fn [{user :db} [{props :user}]]
    {:db (merge user props)
-    :dispatch-n [:complete-request :login]
-    [:set-active-page :home]
-    [:get-feed-articles {:tag nil :author nil :offset 0 :limit 10}]}))
+    :dispatch-n (list [:complete-request :login]
+                      [:get-feed-articles {:tag nil :author nil :offset 0 :limit 10}])
+    :set-url {:url "/"}}))
 
 ;; -- POST Registration @ /api/users ------------------------------------------
 ;;
@@ -417,7 +420,8 @@
  ;; So, a path interceptor makes the event handler act more like clojure's `update-in`
  (fn [{user :db} [{props :user}]]
    {:db (merge user props)
-    :dispatch [:complete-request :register-user]}))
+    :dispatch [:complete-request :register-user]
+    :set-url {:url "/"}}))
 
 ;; -- PUT Update User @ /api/user ---------------------------------------------
 ;;
@@ -503,11 +507,10 @@
 ;;
 (reg-event-fx  ;; usage (dispatch [:logout])
  :logout
+ remove-user-interceptor
  (fn [{:keys [db]} [_ _]]
-   {:db       (dissoc db :user)     ;; remove user from db
-    :dispatch (do
-                (local-store->nil)  ;; remove user from localstore
-                [:set-active-page :home])}))
+   {:db      (dissoc db :user)  ;; remove user from db
+    :set-url {:url "/"}}))      ;; head back home after logout
 
 ;; -- Error Handler -----------------------------------------------------------
 ;;

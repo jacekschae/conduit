@@ -1,7 +1,7 @@
 (ns conduit.db
   (:require [cljs.reader]
             [cljs.spec.alpha :as s]
-            [re-frame.core :as re-frame]))
+            [re-frame.core :refer [reg-cofx]]))
 
 ;; -- Default app-db Value  ---------------------------------------------------
 ;;
@@ -44,7 +44,7 @@
 ;;
 ;; We must supply a `sorted-map` but in LocalStore it is stored as a `map`.
 ;;
-(re-frame/reg-cofx
+(reg-cofx
  :local-store-user
  (fn [cofx _]
    (assoc cofx :local-store-user  ;; put the localstore user into the coeffect under :local-store-user

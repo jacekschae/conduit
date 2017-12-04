@@ -19,7 +19,7 @@
 
             :hooks [leiningen.cljsbuild]
 
-            :aliases {"dev" ["do" "clean" ["figwheel"]]} ;; TO-DO is that the right way to do it?
+            :aliases {"dev" ["do" "clean" ["figwheel"]]}
 
             :profiles {:dev  {:cljsbuild
                               {:builds {:client {:compiler {:asset-path           "js"
@@ -28,7 +28,7 @@
                                                             :source-map-timestamp true
                                                             :preloads             [re-frisk.preload]
                                                             :main                 "conduit.core"}
-                                                 :figwheel {:on-jsload "conduit.core/main"}}}}}
+                                                 :figwheel {:on-jsload            "conduit.core/main"}}}}}
 
                        :prod {:cljsbuild
                               {:builds {:client {:compiler {:optimizations :advanced
