@@ -2,7 +2,7 @@
   (:require [reagent.core  :as reagent]
             [re-frame.core :refer [subscribe dispatch]]
             [conduit.subs :as subs]
-            [clojure.string :as str :refer [trim]]))
+            [clojure.string :as str :refer [trim split]]))
 
 ;; -- Helpers -----------------------------------------------------------------
 ;;
@@ -101,29 +101,31 @@
 ;;
 (defn header
   []
-  (let [user @(subscribe [:user])]
+  (let [user @(subscribe [:user])
+        active-page @(subscribe [:active-page])]
     [:nav.navbar.navbar-light
      [:div.container
       [:a.navbar-brand {:href "/#/"} "conduit"]
       (if (empty? user)
         [:ul.nav.navbar-nav.pull-xs-right
          [:li.nav-item
-          [:a.nav-link {:href "/#/"} "Home"]]
+          [:a.nav-link {:href "/#/" :class (when (= active-page :home) "active")} "Home"]]
          [:li.nav-item
-          [:a.nav-link {:href "/#/login"} "Sign in"]]
+          [:a.nav-link {:href "/#/login" :class (when (= active-page :login) "active")} "Sign in"]]
          [:li.nav-item
-          [:a.nav-link {:href "/#/register"} "Sign up"]]]
+          [:a.nav-link {:href "/#/register" :class (when (= active-page :register) "active")} "Sign up"]]]
         [:ul.nav.navbar-nav.pull-xs-right
          [:li.nav-item
-          [:a.nav-link.active {:href "/#/"} "Home"]]
+          [:a.nav-link {:href "/#/" :class (when (= active-page :home) "active")} "Home"]]
          [:li.nav-item
-          [:a.nav-link {:href "/#/editor"}
+          [:a.nav-link {:href "/#/editor" :class (when (= active-page :editor) "active")}
            [:i.ion-compose "New Article"]]]
          [:li.nav-item
-          [:a.nav-link {:href "/#/settings"}
+          [:a.nav-link {:href "/#/settings" :class (when (= active-page :settings) "active")}
            [:i.ion-gear-a "Settings"]]]
          [:li.nav-item
-          [:a.nav-link {:href (str "/#/@" (:username user))} (:username user)]]])]]))
+          [:a.nav-link {:href (str "/#/@" (:username user)) :class (when (= active-page :profile) "active")} (:username user)
+           [:img.user-pic {:src (:image user)}]]]])]]))
 
 ;; -- Footer ------------------------------------------------------------------
 ;;
@@ -386,7 +388,14 @@
 ;;
 (defn upsert-article [event content slug]
   (.preventDefault event)
-  (dispatch [:upsert-article {:article content :slug slug}]))
+  (let [title (trim (:title content))
+        description (trim (:description content))
+        body (trim (:body content))
+        tagList (split (:tagList content) #" ")]
+    (dispatch [:upsert-article {:slug slug :article {:title title
+                                                     :description description
+                                                     :body body
+                                                     :tagList tagList}}])))
 
 (defn editor
   []

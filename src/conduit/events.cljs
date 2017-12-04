@@ -21,13 +21,16 @@
 ;; the interceptor chain shared by all event handlers which manipulate user.
 ;; A chain of interceptors is a vector.
 ;; Explanation of `trim-v` is given further below.
-(def user-interceptors [(path :user)
-                        (after user->local-store)            ;; write user to localstore (after)
-                        (when ^boolean js/goog.DEBUG debug)  ;; look at the js browser console for debug logs
-                        trim-v])                             ;; removes first (event id) element from the event vec
+;;
+(def set-user-interceptor [(path :user)
+                           (after user->local-store)            ;; write user to localstore (after)
+                           (when ^boolean js/goog.DEBUG debug)  ;; look at the js browser console for debug logs
+                           trim-v])                             ;; removes first (event id) element from the event vec
 
-;; I'm removing user after logout from local-storage so that everything is 
-;; spotless and tidy
+;; After logging out we need to clean up local-storage so that when the users
+;; refreshes the browser we are not automatically loged-in and because it's a
+;; good practice to clean-up after yourself.
+;;
 (def remove-user-interceptor [(after local-store->nil)])
 
 ;; -- Helpers -----------------------------------------------------------------
@@ -100,7 +103,8 @@
      ;;
      (= :article page) {:db (assoc db
                                    :active-page page
-                                   :active-article slug)}
+                                   :active-article slug)
+                        :dispatch [:get-article-comments {:slug slug}]}
 
      ;; -- URL @ "/:profile" --------------------------------------------------
      ;;
@@ -376,10 +380,10 @@
  ;; use for all user-modifying event handlers. Looks after
  ;; writing user to LocalStore.
  ;; NOTE: this chain includes `path` and `trim-v`
- user-interceptors
+ set-user-interceptor
 
   ;; The event handler function.
-  ;; The "path" interceptor in `user-interceptors` means 1st parameter is the
+  ;; The "path" interceptor in `set-user-interceptor` means 1st parameter is the
   ;; value at `:user` path within `db`, rather than the full `db`.
   ;; And, further, it means the event handler returns just the value to be
   ;; put into `:user` path, and not the entire `db`.
@@ -410,10 +414,10 @@
  ;; use for all user-modifying event handlers. Looks after
  ;; writing user to LocalStore.
  ;; NOTE: this chain includes `path` and `trim-v`
- user-interceptors
+ set-user-interceptor
 
  ;; The event handler function.
- ;; The "path" interceptor in `user-interceptors` means 1st parameter is the
+ ;; The "path" interceptor in `set-user-interceptor` means 1st parameter is the
  ;; value at `:user` path within `db`, rather than the full `db`.
  ;; And, further, it means the event handler returns just the value to be
  ;; put into `:user` path, and not the entire `db`.
@@ -444,10 +448,10 @@
  ;; use for all user-modifying event handlers. Looks after
  ;; writing user to LocalStore.
  ;; NOTE: this chain includes `path` and `trim-v`
- user-interceptors
+ set-user-interceptor
 
   ;; The event handler function.
-  ;; The "path" interceptor in `user-interceptors` means 1st parameter is the
+  ;; The "path" interceptor in `set-user-interceptor` means 1st parameter is the
   ;; value at `:user` path within `db`, rather than the full `db`.
   ;; And, further, it means the event handler returns just the value to be
   ;; put into `:user` path, and not the entire `db`.

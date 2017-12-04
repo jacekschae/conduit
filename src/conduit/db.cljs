@@ -10,7 +10,7 @@
 ;;   1.  `core.cljs` for  "(dispatch-sync [:initialise-db])"
 ;;   2.  `events.cljs` for the registration of :initialise-db handler
 ;;
-(def default-db {})  ;; what gets put into app-db by default.
+(def default-db {:active-page :home})  ;; what gets put into app-db by default.
 
 ;; -- Local Storage  ----------------------------------------------------------
 ;;
@@ -42,12 +42,12 @@
 ;; That event handler has the interceptor `(inject-cofx :local-store-user)`
 ;; The function registered below will be used to fulfill that request.
 ;;
-;; We must supply a `sorted-map` but in LocalStore it is stored as a `map`.
+;; We must supply a `sorted-map` but in local-store it is stored as a `map`.
 ;;
 (reg-cofx
  :local-store-user
  (fn [cofx _]
-   (assoc cofx :local-store-user  ;; put the localstore user into the coeffect under :local-store-user
+   (assoc cofx :local-store-user  ;; put the local-store user into the coeffect under :local-store-user
           (into (sorted-map)      ;; read in user from localstore, and process into a sorted map
                 (some->> (.getItem js/localStorage ls-key)
                          (cljs.reader/read-string))))))  ;; EDN map -> map
