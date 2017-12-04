@@ -193,12 +193,12 @@
 
 (reg-event-fx
  :upsert-article-success
- (fn [{:keys [db]} [_ {:keys [article]}]]
+ (fn [{:keys [db]} [_ {article :article}]]
    {:db (-> db
             (assoc-in [:loading :article] false)
             (assoc :active-page :article
                    :active-article (:slug article)))
-    :dispatch [:get-article {:slug (:slug article)}]})) ;; @daniel, how can we dispatch path change?
+    :dispatch [:get-article {:slug (:slug article)}]})) ;; @daniel, I couldn't find a way to dispatch path change, how can we do this?
 
 ;; -- DELETE Article @ /api/articles/:slug ------------------------------------
 ;;
@@ -254,7 +254,7 @@
  (fn [{:keys [db]} _]  ;; second parameter is not important, therefore _
    {:db         (assoc-in db [:loading :tags] true)
     :http-xhrio {:method          :get
-                 :uri             (uri "tags")                              ;; evaluates to "api/tags/articles/"
+                 :uri             (uri "tags")                              ;; evaluates to "api/tags"
                  :response-format (json-response-format {:keywords? true})  ;; json response and all keys to keywords
                  :on-success      [:get-tags-success]                       ;; trigger get-tags-success event
                  :on-failure      [:api-request-error :get-tags]}}))        ;; trigger api-request-error with :get-tags
@@ -318,7 +318,7 @@
                   (assoc-in db [:loading :comments] true)
                   (assoc db :active-comment comment-id))
     :http-xhrio {:method          :delete
-                 :uri             (uri "articles" (:active-article db) "comments" comment-id)  ;; evaluates to "api/articles/:slug"
+                 :uri             (uri "articles" (:active-article db) "comments" comment-id)  ;; evaluates to "api/articles/:slug/comments/:comment-id"
                  :headers         (auth-header db)                                             ;; get and pass user token obtained during login
                  :format          (json-request-format)                                        ;; make sure we are doing request format wiht json
                  :response-format (json-response-format {:keywords? true})                     ;; json response and all keys to keywords
@@ -394,7 +394,7 @@
  (fn [{:keys [db]} [_ registration]]  ;; registration = {:username ... :email ... :password ...}
    {:db         (assoc-in db [:loading :register-user] true)
     :http-xhrio {:method          :post
-                 :uri             (uri "users")                             ;; evaluates to "api/users/login"
+                 :uri             (uri "users")                             ;; evaluates to "api/users"
                  :params          {:user registration}                      ;; {:user {:username ... :email ... :password ...}}
                  :format          (json-request-format)                     ;; make sure it's json
                  :response-format (json-response-format {:keywords? true})  ;; json response and all keys to keywords
@@ -426,7 +426,7 @@
  (fn [{:keys [db]} [_ user]]          ;; user = {:img ... :username ... :bio ... :email ... :password ...}
    {:db         (assoc-in db [:loading :update-user] true)
     :http-xhrio {:method          :put
-                 :uri             (uri "user")                              ;; evaluates to "api/users/login"
+                 :uri             (uri "user")                              ;; evaluates to "api/user"
                  :params          {:user user}                              ;; {:user {:img ... :username ... :bio ... :email ... :password ...}}
                  :headers         (auth-header db)                          ;; get and pass user token obtained during login
                  :format          (json-request-format)                     ;; make sure our request is json
@@ -479,8 +479,8 @@
  :toggle-favorite-article     ;; triggered when user clicks favorite/unfavorite button on profile page
  (fn [{:keys [db]} [_ slug]]  ;; slug = :slug
    {:db         (assoc-in db [:loading :toggle-favorite-article] true)
-    :http-xhrio {:method          (if (get-in db [:articles slug :favorited]) :delete :post)  ;; check if article is favorite if yes DELETE, no POST
-                 :uri             (uri "articles" slug "favorite")                            ;; evaluates to "api/profiles/:username/follow"
+    :http-xhrio {:method          (if (get-in db [:articles slug :favorited]) :delete :post)  ;; check if article is aalready favorite: yes DELETE, no POST
+                 :uri             (uri "articles" slug "favorite")                            ;; evaluates to "api/articles/:slug/favorite"
                  :headers         (auth-header db)                                            ;; get and pass user token obtained during login
                  :format          (json-request-format)                                       ;; make sure it's json
                  :response-format (json-response-format {:keywords? true})                    ;; json response and all keys to keywords
@@ -504,9 +504,9 @@
 (reg-event-fx  ;; usage (dispatch [:logout])
  :logout
  (fn [{:keys [db]} [_ _]]
-   {:db       (dissoc db :user)
+   {:db       (dissoc db :user)     ;; remove user from db
     :dispatch (do
-                (local-store->nil)
+                (local-store->nil)  ;; remove user from localstore
                 [:set-active-page :home])}))
 
 ;; -- Error Handler -----------------------------------------------------------

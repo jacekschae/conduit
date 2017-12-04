@@ -189,7 +189,8 @@
            [:p "Loading tags ..."]
            [:div.tag-list
             (for [tag tags]
-              ^{:key tag} [:a.tag-pill.tag-default {:href "" :on-click #(get-articles % {:tag tag :limit 10 :offset 0})} tag])])]]]]]))
+              ^{:key tag} [:a.tag-pill.tag-default {:href ""
+                                                    :on-click #(get-articles % {:tag tag :limit 10 :offset 0})} tag])])]]]]]))
 
 ;; -- Login -------------------------------------------------------------------
 ;;
@@ -358,22 +359,26 @@
            [:input.form-control.form-control-lg {:type "text"
                                                  :placeholder "Your Name"
                                                  :default-value (:username user)
-                                                 :on-change #(swap! user-update assoc :username (-> % .-target .-value))}]]
+                                                 :on-change #(swap! user-update assoc :username (-> % .-target .-value))
+                                                 :disabled (when (:update-user loading))}]]
           [:fieldset.form-group
            [:textarea.form-control.form-control-lg {:rows "8"
                                                     :placeholder "Short bio about you"
                                                     :default-value (:bio user)
-                                                    :on-change #(swap! user-update assoc :bio (-> % .-target .-value))}]]
+                                                    :on-change #(swap! user-update assoc :bio (-> % .-target .-value))
+                                                    :disabled (when (:update-user loading))}]]
           [:fieldset.form-group
            [:input.form-control.form-control-lg {:type "text"
                                                  :placeholder "Email"
                                                  :default-value (:email user)
-                                                 :on-change #(swap! user-update assoc :email (-> % .-target .-value))}]]
+                                                 :on-change #(swap! user-update assoc :email (-> % .-target .-value))
+                                                 :disabled (when (:update-user loading))}]]
           [:fieldset.form-group
            [:input.form-control.form-control-lg {:type "password"
                                                  :placeholder "Password"
                                                  :default-value ""
-                                                 :on-change #(swap! user-update assoc :password (-> % .-target .-value))}]]
+                                                 :on-change #(swap! user-update assoc :password (-> % .-target .-value))
+                                                 :disabled (when (:update-user loading))}]]
           [:button.btn.btn-lg.btn-primary.pull-xs-right {:on-click #(update-user % @user-update)
                                                          :class (when (:update-user loading) "disabled")} "Update Settings"]]]
         [:hr]
@@ -414,8 +419,7 @@
                                  :default-value tagList
                                  :on-change #(swap! content assoc :tagList (-> % .-target .-value))}]
            [:div.tag-list]]
-          [:a.btn.btn-lg.btn-primary.pull-xs-right {:href "/#/"
-                                                    :on-click #(dispatch [:upsert-article {:article @content :slug slug}])}
+          [:button.btn.btn-lg.btn-primary.pull-xs-right {:on-click #(dispatch [:upsert-article {:article @content :slug slug}])}
            (if active-article
              "Update Article"
              "Publish Article")]]]]]]]))
