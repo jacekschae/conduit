@@ -79,6 +79,18 @@
       [:span "Read more ..."]
       [tags-list tagList]]])) ;; defined in Helpers section
 
+(defn articles-list
+  [articles loading-articles]
+  [:div
+   (if loading-articles
+     [:div.article-preview
+      [:p "Loading articles ..."]]
+     (if (empty? articles)
+       [:div.article-preview
+        [:p "No articles are here... yet."]]
+       (for [article articles]
+         ^{:key (:slug article)} [articles-preview article])))])
+
 (defn errors-list
   [errors]
   [:ul.error-messages
@@ -167,14 +179,7 @@
             [:li.nav-item
              [:a.nav-link.active
               [:i.ion-pound] (str " " (:tag filter))]])]]
-        (if (:articles loading)
-          [:div.article-preview
-           [:p "Loading articles ..."]]
-          (if (empty? articles)
-            [:div.article-preview
-             [:p "No articles are here... yet."]]
-            (for [article articles]
-              ^{:key (:slug article)} [articles-preview article])))
+        [articles-list articles (:articles loading)]
         (when-not (or (:articles loading) (< articles-count 10))
           [:ul.pagination
            (for [offset (range (/ articles-count 10))]
@@ -315,14 +320,7 @@
            [:a.nav-link {:href (str "/#/@" (:username profile)) :class (when (:author filter) " active")} "My Articles"]]
           [:li.nav-item
            [:a.nav-link {:href (str "/#/@" (:username profile) "/favorites") :class (when (:favorites filter) "nav-link active")} "Favorited Articles"]]]]
-        (if (empty? articles)
-          [:div.article-preview
-           [:p "No articles are here... yet."]]
-          (for [article articles]
-            ^{:key (:slug article)} [articles-preview article]))
-        (when (:articles loading)
-          [:div.article-preview
-           [:p "Loading articles ..."]])]]]]))
+        [articles-list articles (:articles loading)]]]]]))
 
 ;; -- Settings ----------------------------------------------------------------
 ;;
