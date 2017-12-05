@@ -3,4 +3,5 @@
 /*-init.clj
 /resources/public/js
 .nrepl-port
+.lein-failures
 out

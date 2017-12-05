@@ -14,6 +14,7 @@
             :jvm-opts ["--add-modules" "java.xml.bind"]
 
             :plugins [[lein-cljsbuild "1.1.5"]
+                      [lein-doo "0.1.8"]
                       [lein-figwheel  "0.5.13"]]
 
             :hooks [leiningen.cljsbuild]
@@ -33,7 +34,13 @@
                        :prod {:cljsbuild
                               {:builds {:client {:compiler {:optimizations :advanced
                                                             :elide-asserts true
-                                                            :pretty-print  false}}}}}}
+                                                            :pretty-print  false}}}}}
+                       :test {:cljsbuild
+                              {:builds {:client {:source-paths ["src/conduit" "test"]
+                                                 :compiler {:optimizations :none
+                                                            :main          test.runner
+                                                            :output-to     "resources/public/test"
+                                                            :output-dir    "resources/public/test/out"}}}}}}
             :figwheel {:server-port 3449
                        :repl        true}
 
