@@ -13,7 +13,7 @@
      (->> articles
           (vals)            ;; get values from (:articles db)
           (sort-by :epoch)  ;; sort them by :epoch, which we add when we get articles
-          (reverse)))))      ;; display them in reverse order - latest added is on top
+          (reverse)))))     ;; display them in reverse order - latest added is on top
 
 (reg-sub
  :articles-count  ;; usage: (subscribe [:articles])
