@@ -172,7 +172,7 @@
             [:li.nav-item
              [:a.nav-link {:href ""
                            :class (when (:feed filter) "active")
-                           :on-click #(get-feed-articles % {:tag nil :author nil :offset 0 :limit 10})} "Your Feed"]])
+                           :on-click #(get-feed-articles % {:offset 0 :limit 10})} "Your Feed"]])
           [:li.nav-item
            [:a.nav-link {:href ""
                          :class (when-not (or (:tag filter) (:feed filter)) "active")

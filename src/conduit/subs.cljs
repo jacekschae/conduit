@@ -1,5 +1,5 @@
 (ns conduit.subs
-  (:require [re-frame.core :refer [reg-sub subscribe]]))
+  (:require [re-frame.core :refer [reg-sub subscribe]])) ;
 
 (reg-sub
  :active-page           ;; usage: (subscribe [:showing])
@@ -9,7 +9,7 @@
 (reg-sub
  :articles  ;; usage: (subscribe [:articles])
  (fn [db _]
-   (sort-by :createdAt (vals (:articles db)))))
+   (reverse (sort-by :epoch (vals (:articles db))))))
 
 (reg-sub
  :articles-count  ;; usage: (subscribe [:articles])

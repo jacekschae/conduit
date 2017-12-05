@@ -5,6 +5,7 @@
    [day8.re-frame.http-fx]
    [ajax.core :refer [json-request-format json-response-format]]
    [clojure.string :as str]
+   [cljs-time.coerce :as coerce]
    [conduit.db :as db]))
 
 ;; -- Interceptors --------------------------------------------------------------
@@ -48,9 +49,14 @@
       [:Authorization (str "Token " token)]
       nil)))
 
+(defn add-epoch [coll]
+  "Takes :createdAt from coll and adds :epoch timestamp"
+  (map (fn [item] (assoc item :epoch (coerce/to-long (:createdAt item)))) coll))
+
 (defn index-by [key coll]
   "Transform a coll to a map with a given key as a lookup value"
-  (into {} (map (juxt key identity) coll)))
+  ;; (into {} (map (fn [[k v]] (assoc v :epoch (js/Date.now (:createdAt v)))) (:articles db)))))
+  (into {} (map (juxt key identity) (add-epoch coll))))
 
 (reg-fx                               ;; register a new event handler to use with our -fx events
  :set-url                             ;; this will be provided in a map for -fx events and
@@ -244,7 +250,11 @@
                  :on-failure      [:api-request-error :get-feed-articles]}  ;; trigger api-request-error with :get-feed-articles
     :db          (-> db
                      (assoc-in [:loading :articles] true)
-                     (assoc-in [:filter :feed] true))}))  ;; we need to enable filter by feed every time since it's not supported query param
+                     (assoc-in [:filter :offset] (:offset params))        ;; base on paassed param set a filter
+                     (assoc-in [:filter :tag] nil)                        ;; so that we can easily show and hide
+                     (assoc-in [:filter :author] nil)                     ;; appropriate ui components
+                     (assoc-in [:filter :favorites] nil)
+                     (assoc-in [:filter :feed] true))}))                  ;; we need to enable filter by feed every time since it's not supported query param
 
 (reg-event-db
  :get-feed-articles-success

@@ -9,6 +9,7 @@
                            [binaryage/devtools "0.9.4"]
                            [secretary "1.2.3"]
                            [bidi "2.1.2"]
+                           [com.andrewmcveigh/cljs-time "0.5.2"]
                            [kibu/pushy "0.3.8"]
                            [re-frisk "0.5.2"]]
 
