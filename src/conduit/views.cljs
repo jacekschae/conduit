@@ -27,19 +27,19 @@
         user @(subscribe [:user])
         profile @(subscribe [:profile])]
     [:div.article-meta
-     [:a {:href (str "/#/@" (:username author))}
+     [:a {:href (str "#/@" (:username author))}
       [:img {:src (:image author)}]]
      " "
      [:div.info
-      [:a.author {:href (str "/#/@" (:username author))} (:username author)]
+      [:a.author {:href (str "#/@" (:username author))} (:username author)]
       [:span.date (format-date created-at)]]
      (if (= (:username user) (:username author))
        [:span
-        [:a.btn.btn-sm.btn-outline-secondary {:href (str "/#/editor/" slug)}
+        [:a.btn.btn-sm.btn-outline-secondary {:href (str "#/editor/" slug)}
          [:i.ion-edit]
          [:span " Edit Article "]]
         " "
-        [:a.btn.btn-outline-danger.btn-sm {:href "/#/"
+        [:a.btn.btn-outline-danger.btn-sm {:href "#/"
                                            :on-click #(dispatch [:delete-article slug])}
          [:i.ion-trash-a]
          [:span " Delete Article "]]]
@@ -62,10 +62,10 @@
   (let [loading @(subscribe [:loading])]
     [:div.article-preview
      [:div.article-meta
-      [:a {:href (str "/#/@" (:username author))}
+      [:a {:href (str "#/@" (:username author))}
        [:img {:src (:image author)}]]
       [:div.info
-       [:a.author {:href (str "/#/@" (:username author))} (:username author)]
+       [:a.author {:href (str "#/@" (:username author))} (:username author)]
        [:span.date (format-date createdAt)]]
       [:button.btn.btn-primary.btn-sm.pull-xs-right {:on-click #(dispatch [:toggle-favorite-article slug])
                                                      :class (cond
@@ -73,7 +73,7 @@
                                                               (:toggle-favorite-article loading) "disabled")}
        [:i.ion-heart " "]
        [:span favoritesCount]]]
-     [:a.preview-link {:href (str "/#/article/" slug)}
+     [:a.preview-link {:href (str "#/article/" slug)}
       [:h1 title]
       [:p description]
       [:span "Read more ..."]
@@ -105,26 +105,26 @@
         active-page @(subscribe [:active-page])]
     [:nav.navbar.navbar-light
      [:div.container
-      [:a.navbar-brand {:href "/#/"} "conduit"]
+      [:a.navbar-brand {:href "#/"} "conduit"]
       (if (empty? user)
         [:ul.nav.navbar-nav.pull-xs-right
          [:li.nav-item
-          [:a.nav-link {:href "/#/" :class (when (= active-page :home) "active")} "Home"]]
+          [:a.nav-link {:href "#/" :class (when (= active-page :home) "active")} "Home"]]
          [:li.nav-item
-          [:a.nav-link {:href "/#/login" :class (when (= active-page :login) "active")} "Sign in"]]
+          [:a.nav-link {:href "#/login" :class (when (= active-page :login) "active")} "Sign in"]]
          [:li.nav-item
-          [:a.nav-link {:href "/#/register" :class (when (= active-page :register) "active")} "Sign up"]]]
+          [:a.nav-link {:href "#/register" :class (when (= active-page :register) "active")} "Sign up"]]]
         [:ul.nav.navbar-nav.pull-xs-right
          [:li.nav-item
-          [:a.nav-link {:href "/#/" :class (when (= active-page :home) "active")} "Home"]]
+          [:a.nav-link {:href "#/" :class (when (= active-page :home) "active")} "Home"]]
          [:li.nav-item
-          [:a.nav-link {:href "/#/editor" :class (when (= active-page :editor) "active")}
+          [:a.nav-link {:href "#/editor" :class (when (= active-page :editor) "active")}
            [:i.ion-compose "New Article"]]]
          [:li.nav-item
-          [:a.nav-link {:href "/#/settings" :class (when (= active-page :settings) "active")}
+          [:a.nav-link {:href "#/settings" :class (when (= active-page :settings) "active")}
            [:i.ion-gear-a "Settings"]]]
          [:li.nav-item
-          [:a.nav-link {:href (str "/#/@" (:username user)) :class (when (= active-page :profile) "active")} (:username user)
+          [:a.nav-link {:href (str "#/@" (:username user)) :class (when (= active-page :profile) "active")} (:username user)
            [:img.user-pic {:src (:image user)}]]]])]]))
 
 ;; -- Footer ------------------------------------------------------------------
@@ -133,7 +133,7 @@
   []
   [:footer
    [:div.container
-    [:a.logo-font {:href "/#/"} "conduit"]
+    [:a.logo-font {:href "#/"} "conduit"]
     [:span.attribution
      "An interactive learning project from "
      [:a {:href "https://thinkster.io"} "Thinkster"]
@@ -222,7 +222,7 @@
            [:div.col-md-6.offset-md-3.col-xs-12
             [:h1.text-xs-center "Sign in"]
             [:p.text-xs-center
-             [:a {:href "/#/register"} "Need an account?"]]
+             [:a {:href "#/register"} "Need an account?"]]
             (when login-errors
               [errors-list login-errors])
             [:form {:on-submit #(login-user % @credentials)}
@@ -265,7 +265,7 @@
            [:div.col-md-6.offset-md-3.col-xs-12
             [:h1.text-xs-center "Sign up"]
             [:p.text-xs-center
-             [:a {:href "/#/login"} "Have an account?"]]
+             [:a {:href "#/login"} "Have an account?"]]
             (when register-user-errors
               [errors-list register-user-errors])
             [:form {:on-submit #(register-user % @registration)}
@@ -307,7 +307,7 @@
          [:h4 (:username profile)]
          [:p (:bio profile)]
          (if (= (:username user) (:username profile))
-           [:a.btn.btn-sm.btn-outline-secondary.action-btn {:href "/#/settings"}
+           [:a.btn.btn-sm.btn-outline-secondary.action-btn {:href "#/settings"}
             [:i.ion-gear-a] " Edit Profile Settings"]
            [:button.btn.btn-sm.action-btn.btn-outline-secondary {:on-click #(dispatch [:toggle-follow-user (:username profile)])
                                                                  :class (when (:toggle-follow-user loading) "disabled")}
@@ -319,9 +319,9 @@
         [:div.articles-toggle
          [:ul.nav.nav-pills.outline-active
           [:li.nav-item
-           [:a.nav-link {:href (str "/#/@" (:username profile)) :class (when (:author filter) " active")} "My Articles"]]
+           [:a.nav-link {:href (str "#/@" (:username profile)) :class (when (:author filter) " active")} "My Articles"]]
           [:li.nav-item
-           [:a.nav-link {:href (str "/#/@" (:username profile) "/favorites") :class (when (:favorites filter) "nav-link active")} "Favorited Articles"]]]]
+           [:a.nav-link {:href (str "#/@" (:username profile) "/favorites") :class (when (:favorites filter) "nav-link active")} "Favorited Articles"]]]]
         [articles-list articles (:articles loading)]]]]]))
 
 ;; -- Settings ----------------------------------------------------------------
@@ -509,10 +509,10 @@
                               [:div.card-block
                                [:p.card-text body]]
                               [:div.card-footer
-                               [:a.comment-author {:href (str "/#/@" (:username author))}
+                               [:a.comment-author {:href (str "#/@" (:username author))}
                                 [:img.comment-author-img {:src (:image author)}]]
                                " "
-                               [:a.comment-author {:href (str "/#/@" (:username author))} (:username author)]
+                               [:a.comment-author {:href (str "#/@" (:username author))} (:username author)]
                                [:span.date-posted (format-date createdAt)]
                                (when (= (:username user) (:username author))
                                  [:span.mod-options {:on-click #(dispatch [:delete-comment id])}
