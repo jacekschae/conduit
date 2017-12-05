@@ -14,14 +14,14 @@ return cljs.core.List.EMPTY;
 }))], null));
 re_frame.loggers.console = (function re_frame$loggers$console(var_args){
 var args__8944__auto__ = [];
-var len__8937__auto___18619 = arguments.length;
-var i__8938__auto___18620 = (0);
+var len__8937__auto___15741 = arguments.length;
+var i__8938__auto___15742 = (0);
 while(true){
-if((i__8938__auto___18620 < len__8937__auto___18619)){
-args__8944__auto__.push((arguments[i__8938__auto___18620]));
+if((i__8938__auto___15742 < len__8937__auto___15741)){
+args__8944__auto__.push((arguments[i__8938__auto___15742]));
 
-var G__18621 = (i__8938__auto___18620 + (1));
-i__8938__auto___18620 = G__18621;
+var G__15743 = (i__8938__auto___15742 + (1));
+i__8938__auto___15742 = G__15743;
 continue;
 } else {
 }
@@ -34,17 +34,17 @@ return re_frame.loggers.console.cljs$core$IFn$_invoke$arity$variadic((arguments[
 
 re_frame.loggers.console.cljs$core$IFn$_invoke$arity$variadic = (function (level,args){
 
-return cljs.core.apply.cljs$core$IFn$_invoke$arity$2((function (){var G__18618 = cljs.core.deref(re_frame.loggers.loggers);
-return (level.cljs$core$IFn$_invoke$arity$1 ? level.cljs$core$IFn$_invoke$arity$1(G__18618) : level.call(null,G__18618));
+return cljs.core.apply.cljs$core$IFn$_invoke$arity$2((function (){var G__15740 = cljs.core.deref(re_frame.loggers.loggers);
+return (level.cljs$core$IFn$_invoke$arity$1 ? level.cljs$core$IFn$_invoke$arity$1(G__15740) : level.call(null,G__15740));
 })(),args);
 });
 
 re_frame.loggers.console.cljs$lang$maxFixedArity = (1);
 
-re_frame.loggers.console.cljs$lang$applyTo = (function (seq18616){
-var G__18617 = cljs.core.first(seq18616);
-var seq18616__$1 = cljs.core.next(seq18616);
-return re_frame.loggers.console.cljs$core$IFn$_invoke$arity$variadic(G__18617,seq18616__$1);
+re_frame.loggers.console.cljs$lang$applyTo = (function (seq15738){
+var G__15739 = cljs.core.first(seq15738);
+var seq15738__$1 = cljs.core.next(seq15738);
+return re_frame.loggers.console.cljs$core$IFn$_invoke$arity$variadic(G__15739,seq15738__$1);
 });
 
 /**

@@ -4,3 +4,4 @@
 /resources/public/js
 .nrepl-port
 out
+*.DS_Store
