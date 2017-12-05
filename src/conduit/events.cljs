@@ -5,7 +5,7 @@
    [day8.re-frame.http-fx]
    [ajax.core :refer [json-request-format json-response-format]]
    [clojure.string :as str]
-   [cljs-time.coerce :as coerce]
+   [cljs-time.coerce :refer [to-long]]
    [conduit.db :as db]))
 
 ;; -- Interceptors --------------------------------------------------------------
@@ -23,13 +23,12 @@
 ;; A chain of interceptors is a vector.
 ;; Explanation of `trim-v` is given further below.
 ;;
-(def set-user-interceptor [(path :user)
-                           (after user->local-store)            ;; write user to localstore (after)
-                           (when ^boolean js/goog.DEBUG debug)  ;; look at the js browser console for debug logs
-                           trim-v])                             ;; removes first (event id) element from the event vec
+(def set-user-interceptor [(path :user)               ;; `:user` path within `db`, rather than the full `db`.
+                           (after user->local-store)  ;; write user to localstore (after)
+                           trim-v])                   ;; removes first (event id) element from the event vec
 
-;; After logging out we need to clean up local-storage so that when the users
-;; refreshes the browser we are not automatically loged-in and because it's a
+;; After logging out clean up local-storage so that when a users refreshes
+;; the browser she/he is not automatically loged-in, and because it's a
 ;; good practice to clean-up after yourself.
 ;;
 (def remove-user-interceptor [(after local-store->nil)])
@@ -49,18 +48,17 @@
       [:Authorization (str "Token " token)]
       nil)))
 
-(defn add-epoch [coll]
-  "Takes :createdAt from coll and adds :epoch timestamp"
-  (map (fn [item] (assoc item :epoch (coerce/to-long (:createdAt item)))) coll))
+(defn add-epoch [date coll]
+  "Takes date identifier and adds :epoch (cljs-time.coerce/to-long) timestamp to coll"
+  (map (fn [item] (assoc item :epoch (to-long (date item)))) coll))
 
 (defn index-by [key coll]
   "Transform a coll to a map with a given key as a lookup value"
-  ;; (into {} (map (fn [[k v]] (assoc v :epoch (js/Date.now (:createdAt v)))) (:articles db)))))
-  (into {} (map (juxt key identity) (add-epoch coll))))
+  (into {} (map (juxt key identity) coll)))
 
 (reg-fx                               ;; register a new event handler to use with our -fx events
  :set-url                             ;; this will be provided in a map for -fx events and
- (fn [{:keys [url]}]                  ;; accept :url as paramter, it should be exactly {:url path}
+ (fn [{:keys [url]}]                  ;; accept :url as paramter, something like this: {:url path}
    (set! (.-hash js/location) url)))  ;; so that we can set window.location.hash to path
 
 ;; -- Event Handlers ----------------------------------------------------------
@@ -76,15 +74,16 @@
    {:db (assoc default-db :user local-store-user)}))  ;; what it returns becomes the new application state
 
 (reg-event-fx      ;; usage: (dispatch [:set-active-page :home])
- :set-active-page  ;; triggered when the user clicks on a link
+ :set-active-page  ;; triggered when the user clicks on a link that redirects to a another page
  (fn [{:keys [db]} [_ {:keys [page slug profile favorited]}]]  ;; destructure 2nd parameter to obtain keys
    (cond
      ;; -- URL @ "/" ----------------------------------------------------------
      ;;
      (= :home page) {:db (assoc db :active-page page)
-                     :dispatch (if (empty? (:user db))    ;; When we open home page and a user
-                                 [:get-articles]          ;; is NOT logged in we display all articles
-                                 [:get-feed-articles])}   ;; otherwiser we get her/his feed articles
+                     :dispatch-n  (list (if (empty? (:user db))  ;; dispatch more than one event. When a user
+                                          [:get-articles]        ;; is NOT logged in we display all articles
+                                          [:get-feed-articles])  ;; otherwiser we get her/his feed articles
+                                        [:get-tags])}            ;; we also can't forget to get tags
 
      ;; -- URL @ "/login" -----------------------------------------------------
      ;;
@@ -100,46 +99,46 @@
 
      ;; -- URL @ "/editor" ----------------------------------------------------
      ;;
-     (= :editor page) {:db (assoc db :active-page page)
+     (= :editor page) {:db       (assoc db :active-page page)
                        :dispatch (if slug                      ;; When we click article to edit we need
                                    [:set-active-article slug]  ;; to set it active or if we want to write
                                    [:reset-active-article])}   ;; a new article we reset
 
      ;; -- URL @ "/article/:slug" ---------------------------------------------
      ;;
-     (= :article page) {:db (assoc db
-                                   :active-page page
-                                   :active-article slug)
+     (= :article page) {:db       (assoc db
+                                         :active-page page
+                                         :active-article slug)
                         :dispatch [:get-article-comments {:slug slug}]}
 
      ;; -- URL @ "/:profile" --------------------------------------------------
      ;;
-     (= :profile page) {:db (assoc db
-                                   :active-page page
-                                   :active-article slug)
-                        :dispatch-n (list [:get-user-profile {:profile profile}] ;; for dispatching multiple events
-                                          [:get-articles {:author profile}])}    ;; we can use handy :dispatch-n
+     (= :profile page) {:db         (assoc db
+                                           :active-page page
+                                           :active-article slug)
+                        :dispatch-n (list [:get-user-profile {:profile profile}]  ;; again for dispatching multiple
+                                          [:get-articles {:author profile}])}     ;; events we can use :dispatch-n
      ;; -- URL @ "/:profile/favorites" ----------------------------------------
      ;;
-     (= :favorited page) {:db (assoc db :active-page :profile)
-                          :dispatch [:get-articles {:favorited favorited}]})))
+     (= :favorited page) {:db       (assoc db :active-page :profile)            ;; even though we are at :favorited we still
+                          :dispatch [:get-articles {:favorited favorited}]})))  ;; display :profile with :favorited articles
 
-(reg-event-db              ;; usage: (dispatch [:reset-active-article])
- :reset-active-article     ;; triggered when the user enters new-article path
- (fn [db [_ _]]            ;; destructure 2nd parameter to obtain active-page
+(reg-event-db                     ;; usage: (dispatch [:reset-active-article])
+ :reset-active-article            ;; triggered when the user enters new-article i.e. editor without slug
+ (fn [db _]                       ;; 1st paramter in -db events is db, 2nd paramter not important therefore _
    (dissoc db :active-article)))  ;; compute and return the new state
 
 (reg-event-fx  ;; usage: (dispatch [:set-active-article slug])
  :set-active-article
- (fn [{:keys [db]} [_ slug]]
-   {:db         (assoc db :active-article slug)
-    :dispatch-n (list [:get-article-comments {:slug slug}]
+ (fn [{:keys [db]} [_ slug]]  ;; 1st parameter in -fx events is no longer just db. It is a map which contains a :db key.
+   {:db         (assoc db :active-article slug)             ;; The handler is returning a map which describes two side-effects:
+    :dispatch-n (list [:get-article-comments {:slug slug}]  ;; changne to app-state :db and future event in this case :dispatch-n
                       [:get-user-profile {:profile (get-in db [:articles slug :author :username])}])}))
 
 ;; -- GET Articles @ /api/articles --------------------------------------------
 ;;
 (reg-event-fx                   ;; usage (dispatch [:get-articles {:limit 10 :tag "tag-name" ...}])
- :get-articles                  ;; triggered when the home page is loaded
+ :get-articles                  ;; triggered every time user request articles with differetn params
  (fn [{:keys [db]} [_ params]]  ;; params = {:limit 10 :tag "tag-name" ...}
    {:http-xhrio {:method          :get
                  :uri             (uri "articles")                          ;; evaluates to "api/articles/"
@@ -150,7 +149,7 @@
                  :on-failure      [:api-request-error :get-articles]}       ;; trigger api-request-error with :get-articles
     :db          (-> db
                      (assoc-in [:loading :articles] true)
-                     (assoc-in [:filter :offset] (:offset params))        ;; base on paassed param set a filter
+                     (assoc-in [:filter :offset] (:offset params))        ;; base on paassed params set a filter
                      (assoc-in [:filter :tag] (:tag params))              ;; so that we can easily show and hide
                      (assoc-in [:filter :author] (:author params))        ;; appropriate ui components
                      (assoc-in [:filter :favorites] (:favorited params))
@@ -160,23 +159,22 @@
  :get-articles-success
  (fn [db [_ {articles :articles, articles-count :articlesCount}]]
    (-> db
-       (assoc-in [:loading :articles] false)
-       (assoc :articles-count articles-count
-              :articles (index-by :slug articles)))))
+       (assoc-in [:loading :articles] false)  ;; turn off loading flag for this event
+       (assoc :articles-count articles-count  ;; change app-state by adding articles-count
+              :articles (index-by :slug (add-epoch :createdAt articles))))))  ;; and articles, to which we add-epoch for sorting and index-by slug
 
 ;; -- GET Article @ /api/articles/:slug ---------------------------------------
 ;;
 (reg-event-fx                   ;; usage (dispatch [:get-article {:slug "slug"}])
- :get-article                   ;; triggered when a user upserts article
+ :get-article                   ;; triggered when a user upserts article i.e. is redirected to article page after saving an article
  (fn [{:keys [db]} [_ params]]  ;; params = {:slug "slug"}
    {:http-xhrio {:method          :get
                  :uri             (uri "articles" (:slug params))           ;; evaluates to "api/articles/:slug"
                  :headers         (auth-header db)                          ;; get and pass user token obtained during login
                  :response-format (json-response-format {:keywords? true})  ;; json response and all keys to keywords
-                 :on-success      [:get-article-success]                    ;; trigger get-articles-success event
+                 :on-success      [:get-article-success]                    ;; trigger get-article-success event
                  :on-failure      [:api-request-error :get-article]}        ;; trigger api-request-error with :get-articles
-    :db          (-> db
-                     (assoc-in [:loading :article] true))}))
+    :db          (assoc-in db [:loading :article] true)}))
 
 (reg-event-db
  :get-article-success
@@ -188,7 +186,7 @@
 ;; -- POST/PUT  Article @ /api/articles(/:slug) -------------------------------
 ;;
 (reg-event-fx                   ;; usage (dispatch [:upsert-article article])
- :upsert-article                ;; triggered when user creates a new article updates or updates existing article
+ :upsert-article                ;; when we update or insert (upsert) we are sending the same shape of information
  (fn [{:keys [db]} [_ params]]  ;; params = {:slug "article-slug" :article {:body "article body"} }
    {:db         (assoc-in db [:loading :article] true)
     :http-xhrio {:method          (if (:slug params) :put :post)            ;; when we get a slug we'll update (:put) otherwise insert (:post)
@@ -199,7 +197,7 @@
                  :params          (:article params)
                  :format          (json-request-format)                     ;; make sure we are doing request format wiht json
                  :response-format (json-response-format {:keywords? true})  ;; json response and all keys to keywords
-                 :on-success      [:upsert-article-success]                 ;; trigger get-articles-success
+                 :on-success      [:upsert-article-success]                 ;; trigger upsert-article-success event
                  :on-failure      [:api-request-error :upsert-article]}}))  ;; trigger api-request-error with :upsert-article
 
 (reg-event-fx
@@ -209,8 +207,8 @@
             (assoc-in [:loading :article] false)
             (assoc :active-page :article
                    :active-article (:slug article)))
-    :dispatch [:get-article {:slug (:slug article)}]
-    :set-url {:url (str "/articles/" (:slug article))}}))
+    :dispatch [:get-article {:slug (:slug article)}]       ;; when the users clicks save we fetch the new version from the server
+    :set-url {:url (str "/articles/" (:slug article))}}))  ;; after successful upsert i.e. no errors from the server we set url to /articles/:slug
 
 ;; -- DELETE Article @ /api/articles/:slug ------------------------------------
 ;;
@@ -239,8 +237,8 @@
 ;; -- GET Feed Articles @ /api/articles/feed ----------------------------------
 ;;
 (reg-event-fx                   ;; usage (dispatch [:get-feed-articles {:limit 10 :offset 0 ...}])
- :get-feed-articles             ;; triggered when the Your Feed tab is loaded
- (fn [{:keys [db]} [_ params]]  ;; second parameter is not important, therefore _
+ :get-feed-articles             ;; triggered when Your Feed tab is loaded
+ (fn [{:keys [db]} [_ params]]  ;; params = {:offset 0 :limit 10}
    {:http-xhrio {:method          :get
                  :uri             (uri "articles" "feed")                   ;; evaluates to "api/articles/feed"
                  :params          params                                    ;; include params in the request
@@ -250,11 +248,11 @@
                  :on-failure      [:api-request-error :get-feed-articles]}  ;; trigger api-request-error with :get-feed-articles
     :db          (-> db
                      (assoc-in [:loading :articles] true)
-                     (assoc-in [:filter :offset] (:offset params))        ;; base on paassed param set a filter
-                     (assoc-in [:filter :tag] nil)                        ;; so that we can easily show and hide
-                     (assoc-in [:filter :author] nil)                     ;; appropriate ui components
-                     (assoc-in [:filter :favorites] nil)
-                     (assoc-in [:filter :feed] true))}))                  ;; we need to enable filter by feed every time since it's not supported query param
+                     (assoc-in [:filter :offset] (:offset params))
+                     (assoc-in [:filter :tag] nil)                          ;; with feed-articles we turn off almost all
+                     (assoc-in [:filter :author] nil)                       ;; filters to make sure everythinig on the
+                     (assoc-in [:filter :favorites] nil)                    ;; client is displayed correctly.
+                     (assoc-in [:filter :feed] true))}))                    ;; This is the only one we need
 
 (reg-event-db
  :get-feed-articles-success
@@ -266,7 +264,7 @@
 
 ;; -- GET Tags @ /api/tags ----------------------------------------------------
 ;;
-(reg-event-fx          ;; usage (dispatch [:get-articles])
+(reg-event-fx          ;; usage (dispatch [:get-tags])
  :get-tags             ;; triggered when the home page is loaded
  (fn [{:keys [db]} _]  ;; second parameter is not important, therefore _
    {:db         (assoc-in db [:loading :tags] true)
@@ -293,7 +291,7 @@
                  :uri             (uri "articles" (:slug params) "comments")      ;; evaluates to "api/articles/:slug/comments"
                  :headers         (auth-header db)                                ;; get and pass user token obtained during login
                  :response-format (json-response-format {:keywords? true})        ;; json response and all keys to keywords
-                 :on-success      [:get-article-comments-success]                 ;; trigger get-articles-success
+                 :on-success      [:get-article-comments-success]                 ;; trigger get-article-comments-success
                  :on-failure      [:api-request-error :get-article-comments]}}))  ;; trigger api-request-error with :get-article-comments
 
 (reg-event-db
@@ -301,12 +299,12 @@
  (fn [db [_ {comments :comments}]]
    (-> db
        (assoc-in [:loading :comments] false)
-       (assoc :comments (index-by :id comments)))))
+       (assoc :comments (index-by :id comments))))) ;; another index-by, this time by id
 
 ;; -- POST Comments @ /api/articles/:slug/comments ----------------------------
 ;;
 (reg-event-fx                   ;; usage (dispatch [:post-comment comment])
- :post-comment                  ;; triggered when a person submits a comment
+ :post-comment                  ;; triggered when a user submits a comment
  (fn [{:keys [db]} [_ body]]    ;; body = {:body "body" }
    {:db         (assoc-in db [:loading :comments] true)
     :http-xhrio {:method          :post
@@ -346,9 +344,9 @@
  :delete-comment-success
  (fn [db _]
    (-> db
-       (update-in [:comments] dissoc (:active-comment db))
-       (dissoc :active-comment)
-       (assoc-in [:loading :comment] false))))
+       (update-in [:comments] dissoc (:active-comment db)) ;; we could do another fetch of comments
+       (dissoc :active-comment)                            ;; but instead we just remove it from app-db
+       (assoc-in [:loading :comment] false))))             ;; which gives us much snappier ui
 
 ;; -- GET Profile @ /api/profiles/:username -----------------------------------
 ;;
@@ -388,16 +386,16 @@
  :login-success
  ;; The standard set of interceptors, defined above, which we
  ;; use for all user-modifying event handlers. Looks after
- ;; writing user to LocalStore.
+ ;; writing user to localStorage.
  ;; NOTE: this chain includes `path` and `trim-v`
  set-user-interceptor
 
-  ;; The event handler function.
-  ;; The "path" interceptor in `set-user-interceptor` means 1st parameter is the
-  ;; value at `:user` path within `db`, rather than the full `db`.
-  ;; And, further, it means the event handler returns just the value to be
-  ;; put into `:user` path, and not the entire `db`.
-  ;; So, a path interceptor makes the event handler act more like clojure's `update-in`
+ ;; The event handler function.
+ ;; The "path" interceptor in `set-user-interceptor` means 1st parameter is the
+ ;; value at `:user` path within `db`, rather than the full `db`.
+ ;; And, further, it means the event handler returns just the value to be
+ ;; put into `:user` path, and not the entire `db`.
+ ;; So, a path interceptor makes the event handler act more like clojure's `update-in`
  (fn [{user :db} [{props :user}]]
    {:db (merge user props)
     :dispatch-n (list [:complete-request :login]
@@ -439,7 +437,7 @@
 
 ;; -- PUT Update User @ /api/user ---------------------------------------------
 ;;
-(reg-event-fx                         ;; usage (dispatch [:register-user user])
+(reg-event-fx                         ;; usage (dispatch [:update-user user])
  :update-user                         ;; triggered when a users updates settgins
  (fn [{:keys [db]} [_ user]]          ;; user = {:img ... :username ... :bio ... :email ... :password ...}
    {:db         (assoc-in db [:loading :update-user] true)
@@ -460,12 +458,12 @@
  ;; NOTE: this chain includes `path` and `trim-v`
  set-user-interceptor
 
-  ;; The event handler function.
-  ;; The "path" interceptor in `set-user-interceptor` means 1st parameter is the
-  ;; value at `:user` path within `db`, rather than the full `db`.
-  ;; And, further, it means the event handler returns just the value to be
-  ;; put into `:user` path, and not the entire `db`.
-  ;; So, a path interceptor makes the event handler act more like clojure's `update-in`
+ ;; The event handler function.
+ ;; The "path" interceptor in `set-user-interceptor` means 1st parameter is the
+ ;; value at `:user` path within `db`, rather than the full `db`.
+ ;; And, further, it means the event handler returns just the value to be
+ ;; put into `:user` path, and not the entire `db`.
+ ;; So, a path interceptor makes the event handler act more like clojure's `update-in`
  (fn [{user :db} [{props :user}]]
    {:db (merge user props)
     :dispatch [:complete-request :update-user]}))
@@ -481,7 +479,7 @@
                  :headers         (auth-header db)                                      ;; get and pass user token obtained during login
                  :format          (json-request-format)                                 ;; make sure it's json
                  :response-format (json-response-format {:keywords? true})              ;; json response and all keys to keywords
-                 :on-success      [:toggle-follow-user-success]                         ;; trigger follow-user-success
+                 :on-success      [:toggle-follow-user-success]                         ;; trigger toggle-follow-user-success
                  :on-failure      [:api-request-error :login]}}))                       ;; trigger api-request-error with :update-user-success
 
 (reg-event-db  ;; usage: (dispatch [:toggle-follow-user-success])
@@ -497,12 +495,12 @@
  :toggle-favorite-article     ;; triggered when user clicks favorite/unfavorite button on profile page
  (fn [{:keys [db]} [_ slug]]  ;; slug = :slug
    {:db         (assoc-in db [:loading :toggle-favorite-article] true)
-    :http-xhrio {:method          (if (get-in db [:articles slug :favorited]) :delete :post)  ;; check if article is aalready favorite: yes DELETE, no POST
+    :http-xhrio {:method          (if (get-in db [:articles slug :favorited]) :delete :post)  ;; check if article is already favorite: yes DELETE, no POST
                  :uri             (uri "articles" slug "favorite")                            ;; evaluates to "api/articles/:slug/favorite"
                  :headers         (auth-header db)                                            ;; get and pass user token obtained during login
                  :format          (json-request-format)                                       ;; make sure it's json
                  :response-format (json-response-format {:keywords? true})                    ;; json response and all keys to keywords
-                 :on-success      [:toggle-favorite-article-success]                          ;; trigger follow-user-success
+                 :on-success      [:toggle-favorite-article-success]                          ;; trigger toggle-favorite-article-success
                  :on-failure      [:api-request-error :login]}}))                             ;; trigger api-request-error with :toggle-favorite-article
 
 (reg-event-db  ;; usage: (dispatch [:toggle-favorite-article-success])
@@ -521,20 +519,25 @@
 ;;
 (reg-event-fx  ;; usage (dispatch [:logout])
  :logout
+ ;; This interceptor, defined above, makes sure
+ ;; that we clean up localStorage after logging-out
+ ;; the user.
  remove-user-interceptor
- (fn [{:keys [db]} [_ _]]
+ ;; The event handler function removes the user from
+ ;; app-state = :db and sets the url to "/".
+ (fn [{:keys [db]} _]
    {:db      (dissoc db :user)  ;; remove user from db
     :set-url {:url "/"}}))      ;; head back home after logout
 
-;; -- Error Handler -----------------------------------------------------------
+;; -- Request Handlers -----------------------------------------------------------
 ;;
 (reg-event-db
- :complete-request
- (fn [db [_ request-type]]
+ :complete-request         ;; when we complete a request we need to clean up
+ (fn [db [_ request-type]] ;; few things so that our ui is nice and tidy
    (assoc-in db [:loading request-type] false)))
 
 (reg-event-fx
- :api-request-error
- (fn [{:keys [db]} [_ request-type response]]
-   {:db (assoc-in db [:errors request-type] (get-in response [:response :errors]))
-    :dispatch [:complete-request request-type]}))
+ :api-request-error  ;; triggered when we get request-error from the server
+ (fn [{:keys [db]} [_ request-type response]]  ;; destructure to obtain request-type and response
+   {:db (assoc-in db [:errors request-type] (get-in response [:response :errors]))  ;; save in db so taht ew can
+    :dispatch [:complete-request request-type]}))                                   ;; display it to the user

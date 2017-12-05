@@ -399,41 +399,50 @@
 
 (defn editor
   []
-  (let [{:keys [title description body tagList slug] :as active-article}  @(subscribe [:active-article])
-        default {:title title :description description :body body :tagList tagList}
-        content (reagent/atom default)]
-    [:div.editor-page
-     [:div.container.page
-      [:div.row
-       [:div.col-md-10.offset-md-1.col-xs-12
-        [:form
-         [:fieldset
-          [:fieldset.form-group
-           [:input.form-control.form-control-lg {:type "text"
-                                                 :placeholder "Article Title"
-                                                 :default-value title
-                                                 :on-change #(swap! content assoc :title (-> % .-target .-value))}]]
-
-          [:fieldset.form-group
-           [:input.form-control {:type "text"
-                                 :placeholder "What's this article about?"
-                                 :default-value description
-                                 :on-change #(swap! content assoc :description (-> % .-target .-value))}]]
-          [:fieldset.form-group
-           [:textarea.form-control {:rows "8"
-                                    :placeholder "Write your article (in markdown)"
-                                    :default-value body
-                                    :on-change #(swap! content assoc :body (-> % .-target .-value))}]]
-          [:fieldset.form-group
-           [:input.form-control {:type "text"
-                                 :placeholder "Enter tags"
-                                 :default-value tagList
-                                 :on-change #(swap! content assoc :tagList (-> % .-target .-value))}]
-           [:div.tag-list]]
-          [:button.btn.btn-lg.btn-primary.pull-xs-right {:on-click #(upsert-article % @content slug)}
-           (if active-article
-             "Update Article"
-             "Publish Article")]]]]]]]))
+  (let [default {:title "" :description "" :body "" :tagList ""}
+        content (reagent/atom default)
+        errors (subscribe [:errors])
+        active-article (subscribe [:active-article])]
+    (fn []
+      (let [title (or (get @active-article :title) "")
+            description (or (get @active-article :description) "")
+            body (or (get @active-article :body) "")
+            tagList (or (get @active-article :tagList) "")
+            slug (get @active-article :slug)
+            article-errors (get @errors :upsert-article)]
+        [:div.editor-page
+         [:div.container.page
+          [:div.row
+           [:div.col-md-10.offset-md-1.col-xs-12
+            (when article-errors
+              [errors-list article-errors])
+            [:form
+             [:fieldset
+              [:fieldset.form-group
+               [:input.form-control.form-control-lg {:type "text"
+                                                     :placeholder "Article Title"
+                                                     :default-value title
+                                                     :on-change #(swap! content assoc :title (-> % .-target .-value))}]]
+              [:fieldset.form-group
+               [:input.form-control {:type "text"
+                                     :placeholder "What's this article about?"
+                                     :default-value description
+                                     :on-change #(swap! content assoc :description (-> % .-target .-value))}]]
+              [:fieldset.form-group
+               [:textarea.form-control {:rows "8"
+                                        :placeholder "Write your article (in markdown)"
+                                        :default-value body
+                                        :on-change #(swap! content assoc :body (-> % .-target .-value))}]]
+              [:fieldset.form-group
+               [:input.form-control {:type "text"
+                                     :placeholder "Enter tags"
+                                     :default-value tagList
+                                     :on-change #(swap! content assoc :tagList (-> % .-target .-value))}]
+               [:div.tag-list]]
+              [:button.btn.btn-lg.btn-primary.pull-xs-right {:on-click #(upsert-article % @content slug)}
+               (if @active-article
+                 "Update Article"
+                 "Publish Article")]]]]]]]))))
 
 ;; -- Article -----------------------------------------------------------------
 ;;

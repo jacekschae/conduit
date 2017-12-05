@@ -14,19 +14,17 @@
 
 ;; -- Local Storage  ----------------------------------------------------------
 ;;
-;; Part of the conduit challenge is to store a user in LocalStorage, and
+;; Part of the conduit challenge is to store a user in localStorage, and
 ;; on app startup, reload the user from when the program was last run.
 ;;
-(def ls-key "conduit-user")                      ;; localstore key
+(def ls-key "conduit-user")  ;; localstore key
 
 (defn user->local-store
   "Puts user into localStorage"
   [user]
   (.setItem js/localStorage ls-key (str user)))  ;; sorted-map written as an EDN map
 
-;; When we logout we should remove the user from local-storage so that when the
-;; application is refreshed it doesn't the find the information about the user
-;; in the local-store.
+;; Removes user information from localStorge when a user logs out.
 ;;
 (defn local-store->nil
   "Removes user from localStorage"
@@ -36,13 +34,13 @@
 ;; -- cofx Registrations  -----------------------------------------------------
 ;;
 ;; Use `reg-cofx` to register a "coeffect handler" which will inject the user
-;; stored in localstore.
+;; stored in localStorge.
 ;;
 ;; To see it used, look in `events.cljs` at the event handler for `:initialise-db`.
 ;; That event handler has the interceptor `(inject-cofx :local-store-user)`
 ;; The function registered below will be used to fulfill that request.
 ;;
-;; We must supply a `sorted-map` but in local-store it is stored as a `map`.
+;; We must supply a `sorted-map` but in localStorage it is stored as a `map`.
 ;;
 (reg-cofx
  :local-store-user

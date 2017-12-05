@@ -20,8 +20,8 @@
 ;;
 (defn routes
   []
-  (set! (.-hash js/location) "/")
-  (secretary/set-config! :prefix "#")
+  (set! (.-hash js/location) "/")      ;; on app startup set location to "/"
+  (secretary/set-config! :prefix "#")  ;; and don't forget about "#" prefix
   (defroute "/" [] (dispatch [:set-active-page {:page :home}]))
   (defroute "/login" [] (dispatch [:set-active-page {:page :login}]))
   (defroute "/register" [] (dispatch [:set-active-page {:page :register}]))
@@ -54,11 +54,6 @@
 
   ;; Hookup the router and history that we configured above.
   (routes)
-
-  ;; Send request to get feed articles and tags so that we can display
-  ;; them to the user when the page loads for the first time.
-  ; (dispatch [:get-articles {:tag nil :author nil :offset 0 :limit 10}])
-  (dispatch [:get-tags])
 
   ;; Render the UI into the HTML's <div id="app" /> element
   ;; The view function `conduit.views/conduit-app` is the
