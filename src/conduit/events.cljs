@@ -206,6 +206,7 @@
  (fn [{:keys [db]} [_ {article :article}]]
    {:db (-> db
             (assoc-in [:loading :article] false)
+            (dissoc :comments)  ;; clean up any comments that we might have in db
             (assoc :active-page :article
                    :active-article (:slug article)))
     :dispatch [:get-article {:slug (:slug article)}]       ;; when the users clicks save we fetch the new version from the server

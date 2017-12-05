@@ -9,10 +9,11 @@
 (reg-sub
  :articles  ;; usage: (subscribe [:articles])
  (fn [db _]
-   (->> (:articles db)
-        (vals)            ;; get values from (:articles db)
-        (sort-by :epoch)  ;; sort them by :epoch, which we add when we get articles
-        (reverse))))      ;; display them in reverse order - latest added is on top
+   (let [articles (:articles db)]
+     (->> articles
+          (vals)            ;; get values from (:articles db)
+          (sort-by :epoch)  ;; sort them by :epoch, which we add when we get articles
+          (reverse)))))      ;; display them in reverse order - latest added is on top
 
 (reg-sub
  :articles-count  ;; usage: (subscribe [:articles])
@@ -33,10 +34,11 @@
 (reg-sub
  :comments  ;; usage: (subscribe [:comments])
  (fn [db _]
-   (->> (:comments db)
-        (vals)
-        (sort-by :epoch)
-        (reverse))))
+   (let [comments (:comments db)]
+     (->> comments
+          (vals)
+          (sort-by :epoch)
+          (reverse)))))
 
 (reg-sub
  :profile  ;; usage: (subscribe [:profile])

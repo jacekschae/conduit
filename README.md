@@ -1,37 +1,52 @@
-# conduit
+# ![RealWorld Example App](https://cloud.githubusercontent.com/assets/556934/25448178/3e7dc5c0-2a7d-11e7-8069-06da5169dae6.png)
 
-A [re-frame](https://github.com/Day8/re-frame) application designed to ... well, that part is up to you.
+> ### [ClojureScript](https://clojurescript.org/) and [re-frame](https://github.com/Day8/re-frame) codebase containing real world examples (CRUD, auth, advanced patterns, etc) that adheres to the [RealWorld](https://github.com/gothinkster/realworld-example-apps) spec and API.
 
-## Development Mode
+### [Demo](https://jacekschae.github.io/conduit) &nbsp;&nbsp;&nbsp;&nbsp; [RealWorld](https://github.com/gothinkster/realworld)
 
-### Start Cider from Emacs:
+This codebase was created to demonstrate a fully fledged fullstack application built with
+[ClojureScript](https://clojurescript.org/) and [re-frame](https://github.com/Day8/re-frame) including CRUD operations,
+authentication, routing, pagination, and more.
 
-Put this in your Emacs config file:
+For more information on how this works with other frontends/backends, head over to the
+[RealWorld](https://github.com/gothinkster/realworld) repo.
 
-```
-(setq cider-cljs-lein-repl
-	"(do (require 'figwheel-sidecar.repl-api)
-         (figwheel-sidecar.repl-api/start-figwheel!)
-         (figwheel-sidecar.repl-api/cljs-repl))")
-```
+## Setup And Run
 
-Navigate to a clojurescript file and start a figwheel REPL with `cider-jack-in-clojurescript` or (`C-c M-J`)
+1. Install [Leiningen](http://leiningen.org/) (plus Java).
 
-### Run application:
+2. Get the re-frame repo
 
-```
-lein dev
-```
+   ```
+   git clone https://github.com/jacekschae/conduit
+   ```
 
-Figwheel will automatically push cljs changes to the browser.
+3. cd to the right example directory
 
-Wait a bit, then browse to [http://localhost:3449](http://localhost:3449).
+   ```
+   cd conduit
+   ```
 
-## Production Build
+4. Clean build
 
+   ```
+   lein dev
+   ```
 
-To compile clojurescript to javascript:
+5. Run You'll have to wait for step 4 to do its compile, and then:
+   ```
+   open http://localhost:3449
+   ```
 
-```
-lein build
-```
+## Compile an optimised version
+
+1. Compile
+
+   ```
+   lein prod
+   ```
+
+2. Open the following in your browser
+   ```
+   resources/public/index.html
+   ```
