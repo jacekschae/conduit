@@ -314,14 +314,15 @@
                  :format          (json-request-format)                             ;; make sure we are doing request format wiht json
                  :response-format (json-response-format {:keywords? true})          ;; json response and all keys to keywords
                  :on-success      [:post-comment-success]                           ;; trigger get-articles-success
-                 :on-failure      [:api-request-error :post-comment]}}))            ;; trigger api-request-error with :post-comment
+                 :on-failure      [:api-request-error :comments]}}))                ;; trigger api-request-error with :comments
 
 (reg-event-fx
  :post-comment-success
  (fn [{:keys [db]} [_ comment]]
    {:db (-> db
             (assoc-in [:loading :comments] false)
-            (assoc-in [:articles (:active-article db) :comments] comment))
+            (assoc-in [:articles (:active-article db) :comments] comment)
+            (update-in [:errors] dissoc :comments)) ;; clean up errors, if any
     :dispatch [:get-article-comments {:slug (:active-article db)}]}))
 
 ;; -- DELETE Comments @ /api/articles/:slug/comments/:comment-id ----------------------

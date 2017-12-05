@@ -448,68 +448,75 @@
 ;;
 (defn post-comment [event comment default]
   (.preventDefault event)
-  (let [body (trim (:body @comment))]
-    (reset! comment default)
-    (dispatch [:post-comment {:body body}])))
+  (let [body (get @comment :body)]
+    (dispatch [:post-comment {:body body}])
+    (reset! comment default)))
 
 (defn article
   []
   (let [default {:body ""}
         comment (reagent/atom default)
+        errors (subscribe [:errors])
+        loading (subscribe [:loading])
         active-article @(subscribe [:active-article])
         articles @(subscribe [:articles])
         user @(subscribe [:user])
         profile @(subscribe [:profile])
-        comments @(subscribe [:comments])
-        loading @(subscribe [:loading])]
-    [:div.article-page
-     [:div.banner
-      [:div.container
-       [:h1 (:title active-article)]
-       [article-meta active-article]]] ;; defined in Helpers section
-     [:div.container.page
-      [:div.row.article-content
-       [:div.col-md-12
-        [:p (:body active-article)]]]
-      [tags-list (:tagList active-article)] ;; defined in Helpers section
-      [:hr]
-      [:div.article-actions
-       [article-meta active-article]] ;; defined in Helpers section
-      [:div.row
-       [:div.col-xs-12.col-md-8.offset-md-2
-        (if user
-          [:form.card.comment-form
-           [:div.card-block
-            [:textarea.form-control {:placeholder "Write a comment..."
-                                     :rows "3"
-                                     :on-change #(swap! comment assoc :body (-> % .-target .-value))}]]
-           [:div.card-footer
-            [:img.comment-author-img {:src (:image user)}]
-            [:button.btn.btn-sm.btn-primary {:class (when (:comments loading) "disabled")
-                                             :on-click #(post-comment % comment default)} "Post Comment"]]]
-          [:p
-           [:a {:href "#/register"} "Sign in"]
-           " or "
-           [:a {:href "#/login"} "Sign in"]
-           " to add comments on this article."])
-        (if (:comments loading)
-          [:div
-           [:p "Loading comments ..."]]
-          (if (empty? comments)
-            [:div]
-            (for [{:keys [id createdAt body author]} comments]
-              ^{:key id} [:div.card
-                          [:div.card-block
-                           [:p.card-text body]]
-                          [:div.card-footer
-                           [:a.comment-author {:href (str "/#/@" (:username author))}
-                            [:img.comment-author-img {:src (:image author)}]]
-                           " "
-                           [:a.comment-author {:href (str "/#/@" (:username author))} (:username author)]
-                           [:span.date-posted (format-date createdAt)]
-                           (when (= (:username user) (:username author))
-                             [:span.mod-options {:on-click #(dispatch [:delete-comment id])}
-                              [:i.ion-trash-a]])]])))]]]]))
+        comments (subscribe [:comments])]
+    (fn []
+      (let [comments-errors (get @errors :comments)
+            comments-loading (get @loading :comments)]
+        [:div.article-page
+         [:div.banner
+          [:div.container
+           [:h1 (:title active-article)]
+           [article-meta active-article]]] ;; defined in Helpers section
+         [:div.container.page
+          [:div.row.article-content
+           [:div.col-md-12
+            [:p (:body active-article)]]]
+          [tags-list (:tagList active-article)] ;; defined in Helpers section
+          [:hr]
+          [:div.article-actions
+           [article-meta active-article]] ;; defined in Helpers section
+          [:div.row
+           [:div.col-xs-12.col-md-8.offset-md-2
+            (when comments-errors
+              [errors-list comments-errors])
+            (if user
+              [:form.card.comment-form
+               [:div.card-block
+                [:textarea.form-control {:placeholder "Write a comment..."
+                                         :rows "3"
+                                         :value (:body @comment)
+                                         :on-change #(swap! comment assoc :body (-> % .-target .-value))}]]
+               [:div.card-footer
+                [:img.comment-author-img {:src (:image user)}]
+                [:button.btn.btn-sm.btn-primary {:class (when comments-loading "disabled")
+                                                 :on-click #(post-comment % comment default)} "Post Comment"]]]
+              [:p
+               [:a {:href "#/register"} "Sign in"]
+               " or "
+               [:a {:href "#/login"} "Sign in"]
+               " to add comments on this article."])
+            (if comments-loading
+              [:div
+               [:p "Loading comments ..."]]
+              (if (empty? @comments)
+                [:div]
+                (for [{:keys [id createdAt body author]} @comments]
+                  ^{:key id} [:div.card
+                              [:div.card-block
+                               [:p.card-text body]]
+                              [:div.card-footer
+                               [:a.comment-author {:href (str "/#/@" (:username author))}
+                                [:img.comment-author-img {:src (:image author)}]]
+                               " "
+                               [:a.comment-author {:href (str "/#/@" (:username author))} (:username author)]
+                               [:span.date-posted (format-date createdAt)]
+                               (when (= (:username user) (:username author))
+                                 [:span.mod-options {:on-click #(dispatch [:delete-comment id])}
+                                  [:i.ion-trash-a]])]])))]]]]))))
 
 (defn- pages [page-name]
   (case page-name
