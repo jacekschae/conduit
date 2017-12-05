@@ -54,7 +54,7 @@
 
 (defn index-by [key coll]
   "Transform a coll to a map with a given key as a lookup value"
-  (into {} (map (juxt key identity) coll)))
+  (into {} (map (juxt key identity) (add-epoch :createdAt coll))))
 
 (reg-fx                               ;; register a new event handler to use with our -fx events
  :set-url                             ;; this will be provided in a map for -fx events and
@@ -109,7 +109,8 @@
      (= :article page) {:db       (assoc db
                                          :active-page page
                                          :active-article slug)
-                        :dispatch [:get-article-comments {:slug slug}]}
+                        :dispatch-n (list [:get-article-comments {:slug slug}]
+                                          [:get-user-profile {:profile (get-in db [:articles slug :author :username])}])}
 
      ;; -- URL @ "/:profile" --------------------------------------------------
      ;;
@@ -161,7 +162,7 @@
    (-> db
        (assoc-in [:loading :articles] false)  ;; turn off loading flag for this event
        (assoc :articles-count articles-count  ;; change app-state by adding articles-count
-              :articles (index-by :slug (add-epoch :createdAt articles))))))  ;; and articles, to which we add-epoch for sorting and index-by slug
+              :articles (index-by :slug articles)))))  ;; and articles, which we index-by slug
 
 ;; -- GET Article @ /api/articles/:slug ---------------------------------------
 ;;

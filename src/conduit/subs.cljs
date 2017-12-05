@@ -33,7 +33,10 @@
 (reg-sub
  :comments  ;; usage: (subscribe [:comments])
  (fn [db _]
-   (vals (:comments db))))
+   (->> (:comments db)
+        (vals)
+        (sort-by :epoch)
+        (reverse))))
 
 (reg-sub
  :profile  ;; usage: (subscribe [:profile])

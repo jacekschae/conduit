@@ -458,13 +458,13 @@
         comment (reagent/atom default)
         errors (subscribe [:errors])
         loading (subscribe [:loading])
-        active-article @(subscribe [:active-article])
         articles @(subscribe [:articles])
         user @(subscribe [:user])
         profile @(subscribe [:profile])
         comments (subscribe [:comments])]
     (fn []
-      (let [comments-errors (get @errors :comments)
+      (let [active-article @(subscribe [:active-article])
+            comments-errors (get @errors :comments)
             comments-loading (get @loading :comments)]
         [:div.article-page
          [:div.banner
@@ -482,7 +482,7 @@
           [:div.row
            [:div.col-xs-12.col-md-8.offset-md-2
             (when comments-errors
-              [errors-list comments-errors])
+              [errors-list comments-errors]) ;; defined in Helpers section
             (if user
               [:form.card.comment-form
                [:div.card-block
