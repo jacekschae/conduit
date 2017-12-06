@@ -542,5 +542,5 @@
 (reg-event-fx
  :api-request-error  ;; triggered when we get request-error from the server
  (fn [{:keys [db]} [_ request-type response]]  ;; destructure to obtain request-type and response
-   {:db (assoc-in db [:errors request-type] (get-in response [:response :errors]))  ;; save in db so taht ew can
+   {:db (assoc-in db [:errors request-type] (get-in response [:response :errors]))  ;; save in db so that we can
     :dispatch [:complete-request request-type]}))                                   ;; display it to the user
