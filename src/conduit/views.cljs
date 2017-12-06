@@ -43,19 +43,20 @@
                                            :on-click #(dispatch [:delete-article slug])}
          [:i.ion-trash-a]
          [:span " Delete Article "]]]
-       [:span
-        [:button.btn.btn-sm.action-btn.btn-outline-secondary {:on-click #(dispatch [:toggle-follow-user (:username profile)])
-                                                              :class (when (:toggle-follow-user loading) "disabled")}
-         [:i {:class (if (:following profile) "ion-minus-round" "ion-plus-round")}]
-         [:span (if (:following profile) (str " Unfollow " (:username profile)) (str " Follow " (:username profile)))]]
-        " "
-        [:button.btn.btn-sm.btn-primary {:on-click #(dispatch [:toggle-favorite-article slug])
-                                         :class (cond
-                                                  (not favorited) "btn-outline-primary"
-                                                  (:toggle-favorite-article loading) "disabled")}
-         [:i.ion-heart]
-         [:span (if favorited " Unfavorite Post " " Favorite Post ")]
-         [:span.counter "(" favorites-count ")"]]])]))
+       (when-not (empty? user)
+         [:span
+          [:button.btn.btn-sm.action-btn.btn-outline-secondary {:on-click #(dispatch [:toggle-follow-user (:username profile)])
+                                                                :class (when (:toggle-follow-user loading) "disabled")}
+           [:i {:class (if (:following profile) "ion-minus-round" "ion-plus-round")}]
+           [:span (if (:following profile) (str " Unfollow " (:username profile)) (str " Follow " (:username profile)))]]
+          " "
+          [:button.btn.btn-sm.btn-primary {:on-click #(dispatch [:toggle-favorite-article slug])
+                                           :class (cond
+                                                    (not favorited) "btn-outline-primary"
+                                                    (:toggle-favorite-article loading) "disabled")}
+           [:i.ion-heart]
+           [:span (if favorited " Unfavorite Post " " Favorite Post ")]
+           [:span.counter "(" favorites-count ")"]]]))]))
 
 (defn articles-preview
   [{:keys [description slug createdAt title author favoritesCount favorited tagList]}]
@@ -483,7 +484,7 @@
            [:div.col-xs-12.col-md-8.offset-md-2
             (when comments-errors
               [errors-list comments-errors]) ;; defined in Helpers section
-            (if user
+            (if-not (empty? user)
               [:form.card.comment-form
                [:div.card-block
                 [:textarea.form-control {:placeholder "Write a comment..."
