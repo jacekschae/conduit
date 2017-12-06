@@ -12,13 +12,8 @@ function setOfCachedUrls(e) {
     })
 }
 var precacheConfig = [
-    ['/index.html', 'cab2aa407a4e4df733953e4e8aad92f7'],
-    ['/js/client.js', '302476b8b379a677f648aa1e48918ebd'],
-    ['https:://demo.productionready.io/main.css', 'a2595ebcedc2c0f70756d2fdf1f13029'],
-    [
-      'https:://fonts.googleapis.com/css?family=Titillium+Web:700|Source+Serif+Pro:400,700|Merriweather+Sans:400,700|Source+Sans+Pro:400,300,600,700,300italic,400italic,600italic,700italic',
-      '5d5d9eefa31e5e13a6610d9fa7a283bb'
-    ]
+    ['../index.html', 'cab2aa407a4e4df733953e4e8aad92f7'],
+    ['./client.js', '302476b8b379a677f648aa1e48918ebd']
   ],
   cacheName = 'sw-precache-v3-sw-precache-webpack-plugin-' + (self.registration ? self.registration.scope : ''),
   ignoreUrlParametersMatching = [/^utm_/],
