@@ -11,6 +11,8 @@ authentication, routing, pagination, and more.
 For more information on how this works with other frontends/backends, head over to the
 [RealWorld](https://github.com/gothinkster/realworld) repo.
 
+> ### Application structure/style heavily inspired by [todomvc](https://github.com/Day8/re-frame/tree/master/examples/todomvc)
+
 ## Setup And Run
 
 1. Install [Leiningen](http://leiningen.org/) (plus Java).
