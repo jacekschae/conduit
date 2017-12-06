@@ -258,9 +258,6 @@
       "true" true
       "false" false
       "/" '/
-      "NaN" js/Number.NaN
-      "-Infinity" js/Number.NEGATIVE_INFINITY
-      ("Infinity" "+Infinity") js/Number.POSITIVE_INFINITY
 
       (or (when-let [p (parse-symbol token)]
             (symbol (p 0) (p 1)))
@@ -326,6 +323,16 @@
           (err/throw-ns-map-no-map rdr token)))
       (err/throw-bad-ns rdr token))))
 
+(defn- read-symbolic-value
+  [rdr _ opts]
+  (let [sym (read rdr true nil opts)]
+    (case sym
+
+      NaN js/Number.NaN
+      -Inf js/Number.NEGATIVE_INFINITY
+      Inf js/Number.POSITIVE_INFINITY
+
+      (err/reader-error rdr (str "Invalid token: ##" sym)))))
 
 (defn- macros [ch]
   (case ch
@@ -351,6 +358,7 @@
     \! read-comment
     \_ read-discard
     \: read-namespaced-map
+    \# read-symbolic-value
     nil))
 
 (defn- read-tagged [rdr initch opts]

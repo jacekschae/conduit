@@ -1,0 +1,1 @@
+{"version":3,"file":"\/Users\/jacek\/Projects\/conduit\/resources\/public\/js\/devtools\/version.js","sources":["version.cljs?rel=1512565255536"],"lineCount":9,"mappings":";AAAA;;AAGA,AAAKA,mCAAgB;AAErB,uCAAA,vCAAMC;AAAN,AACED","names":["devtools.version\/current-version","devtools.version\/get-current-version"]}

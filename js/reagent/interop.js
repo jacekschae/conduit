@@ -1,4 +1,5 @@
-// Compiled by ClojureScript 1.9.908 {:static-fns true, :optimize-constants true, :elide-asserts true}
+// Compiled by ClojureScript 1.9.946 {}
 goog.provide('reagent.interop');
 goog.require('cljs.core');
-goog.require('cljs.core.constants');
+
+//# sourceMappingURL=interop.js.map?rel=1512565258920
