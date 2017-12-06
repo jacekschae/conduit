@@ -14,11 +14,12 @@ function setOfCachedUrls(e) {
 var precacheConfig = [
     ['../index.html', 'cab2aa407a4e4df733953e4e8aad92f7'],
     ['./client.js', '302476b8b379a677f648aa1e48918ebd'],
-    ['https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css', 'Bs8oRc3Ra7oBxMT2YdrF2YhKbhqLgfUv'][
-      ('https://fonts.googleapis.com/css?family=Titillium+Web:700|Source+Serif+Pro:400,700|Merriweather+Sans:400,700|Source+Sans+Pro:400,300,600,700,300italic,400italic,600italic,700italic',
-      'hKHpp2uf28bmt6EP3AJRDVCWXQLynEHB')
+    ['https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css', 'Bs8oRc3Ra7oBxMT2YdrF2YhKbhqLgfUv'],
+    [
+      'https://fonts.googleapis.com/css?family=Titillium+Web:700|Source+Serif+Pro:400,700|Merriweather+Sans:400,700|Source+Sans+Pro:400,300,600,700,300italic,400italic,600italic,700italic',
+      'hKHpp2uf28bmt6EP3AJRDVCWXQLynEHB'
     ],
-    [('https://demo.productionready.io/main.css', '3b2JE8ccrqjczVJFqffcFRX79itHVZtN')]
+    ['https://demo.productionready.io/main.css', '3b2JE8ccrqjczVJFqffcFRX79itHVZtN']
   ],
   cacheName = 'sw-precache-v3-sw-precache-webpack-plugin-' + (self.registration ? self.registration.scope : ''),
   ignoreUrlParametersMatching = [/^utm_/],
