@@ -1,21 +1,21 @@
 (defproject conduit "0.1.0-SNAPSHOT"
             :dependencies [[org.clojure/clojure "1.8.0"]
-                           [org.clojure/clojurescript "1.9.908"]
+                           [org.clojure/clojurescript "1.9.946"]
                            [reagent "0.7.0"]
                            [re-frame "0.10.2"]
                            [cljs-ajax "0.5.8"]
                            [day8.re-frame/http-fx "0.1.4"]
                            [secretary "1.2.3"]
                            [com.andrewmcveigh/cljs-time "0.5.2"]
-                           [binaryage/devtools "0.9.4"]
+                           [binaryage/devtools "0.9.8"]
                            [proto-repl "0.3.1"]
-                           [re-frisk "0.5.2"]]
+                           [re-frisk "0.5.3"]]
 
             :jvm-opts ["--add-modules" "java.xml.bind"]
 
-            :plugins [[lein-cljsbuild "1.1.5"]
+            :plugins [[lein-cljsbuild "1.1.7"]
                       [lein-doo "0.1.8"]
-                      [lein-figwheel  "0.5.13"]]
+                      [lein-figwheel  "0.5.14"]]
 
             :hooks [leiningen.cljsbuild]
 
