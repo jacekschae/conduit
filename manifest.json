@@ -1,6 +1,7 @@
 {
   "short_name": "Conduit",
   "name": "Conduit with ClojureScript and re-frame",
+  "start_url": "./index.html",
   "icons": [
     {
       "src": "favicon.ico",
@@ -33,7 +34,6 @@
       "type": "image/png"
     }
   ],
-  "start_url": "./index.html",
   "display": "standalone",
   "theme_color": "#000000",
   "background_color": "#ffffff"
