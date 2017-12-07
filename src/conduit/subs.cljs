@@ -1,5 +1,5 @@
 (ns conduit.subs
-  (:require [re-frame.core :refer [reg-sub subscribe]])) ;
+  (:require [re-frame.core :refer [reg-sub subscribe]]))
 
 (defn reverse-cmp [a b] ;; https://clojure.org/guides/comparators
   "Sort numbers in decreasing order, i.e.: calls compare with the arguments in the opposite order"

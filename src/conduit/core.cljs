@@ -6,7 +6,8 @@
             [secretary.core :as secretary]
             [conduit.events]
             [conduit.subs]
-            [conduit.views])
+            [conduit.views]
+            [devtools.core :as devtools])
   (:import [goog History]
            [goog.history EventType]))
 
