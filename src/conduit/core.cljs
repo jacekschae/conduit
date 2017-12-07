@@ -6,8 +6,7 @@
             [secretary.core :as secretary]
             [conduit.events]
             [conduit.subs]
-            [conduit.views]
-            [devtools.core :as devtools])
+            [conduit.views])
   (:import [goog History]
            [goog.history EventType]))
 
@@ -15,6 +14,19 @@
 ;;
 (devtools/install!)       ;; we love https://github.com/binaryage/cljs-devtools
 (enable-console-print!)   ;; so that println writes to `console.log`
+
+;; -- Service Worker ----------------------------------------------------------
+;;
+(defn is-service-worker-supported?
+  []
+  (exists? js/navigator.serviceWorker))
+
+(defn register-service-worker
+  [path-to-sw]
+  (when (is-service-worker-supported?)
+    (-> js/navigator
+        .-serviceWorker
+        (.register path-to-sw))))
 
 ;; -- Routes and History ------------------------------------------------------
 ;;
@@ -59,4 +71,7 @@
   ;; The view function `conduit.views/conduit-app` is the
   ;; root view for the entire UI.
   (reagent/render [conduit.views/conduit-app]
-    (.getElementById js/document "app")))
+    (.getElementById js/document "app"))
+
+  ;; Register Service Worker defined at the top
+  (register-service-worker "js/service-worker.js"))
