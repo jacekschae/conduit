@@ -1,1 +1,0 @@
-{"version":3,"file":"\/Users\/jacek\/Projects\/conduit\/resources\/public\/js\/devtools\/context.js","sources":["context.cljs?rel=1512565254960"],"lineCount":11,"mappings":";AAAA;;AAGA,4BAAA,5BAAgBA;AAAhB,AACEC;;AAEF,+BAAA,\/BAAgBC;AAAhB,AACE,OAAW,AAACF","names":["devtools.context\/get-root","goog\/global","devtools.context\/get-console"]}
