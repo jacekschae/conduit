@@ -209,14 +209,12 @@
 (defn login
   []
   (let [default {:email "" :password ""}
-        credentials (reagent/atom default)
-        loading (subscribe [:loading])
-        errors (subscribe [:errors])]
+        credentials (reagent/atom default)]
     (fn []
       (let [email (get @credentials :email)
             password (get @credentials :password)
-            login-errors (get @errors :login)
-            login-loading (get @loading :login)]
+            errors @(subscribe [:errors])
+            loading @(subscribe [:loading])]
         [:div.auth-page
          [:div.container.page
           [:div.row
@@ -224,23 +222,23 @@
             [:h1.text-xs-center "Sign in"]
             [:p.text-xs-center
              [:a {:href "#/register"} "Need an account?"]]
-            (when login-errors
-              [errors-list login-errors])
+            (when (:login errors)
+              [errors-list (:login errors)])
             [:form {:on-submit #(login-user % @credentials)}
              [:fieldset.form-group
               [:input.form-control.form-control-lg {:type "text"
                                                     :placeholder "Email"
                                                     :value email
                                                     :on-change #(swap! credentials assoc :email (-> % .-target .-value))
-                                                    :disabled (when login-loading)}]]
+                                                    :disabled (when (:login loading))}]]
 
              [:fieldset.form-group
               [:input.form-control.form-control-lg {:type "password"
                                                     :placeholder "Password"
                                                     :value password
                                                     :on-change #(swap! credentials assoc :password (-> % .-target .-value))
-                                                    :disabled (when login-loading)}]]
-             [:button.btn.btn-lg.btn-primary.pull-xs-right {:class (when login-loading "disabled")} "Sign in"]]]]]]))))
+                                                    :disabled (when (:login loading))}]]
+             [:button.btn.btn-lg.btn-primary.pull-xs-right {:class (when (:login loading) "disabled")} "Sign in"]]]]]]))))
 
 ;; -- Register ----------------------------------------------------------------
 ;;
@@ -251,15 +249,13 @@
 (defn register
   []
   (let [default {:username "" :email "" :password ""}
-        registration (reagent/atom default)
-        loading (subscribe [:loading])
-        errors (subscribe [:errors])]
+        registration (reagent/atom default)]
     (fn []
       (let [username (get @registration :username)
             email (get @registration :email)
             password (get @registration :password)
-            register-user-errors (get @errors :register-user)
-            register-user-loading (get @loading :register-user)]
+            loading @(subscribe [:loading])
+            errors @(subscribe [:errors])]
         [:div.auth-page
          [:div.container.page
           [:div.row
@@ -267,28 +263,28 @@
             [:h1.text-xs-center "Sign up"]
             [:p.text-xs-center
              [:a {:href "#/login"} "Have an account?"]]
-            (when register-user-errors
-              [errors-list register-user-errors])
+            (when (:register-user errors)
+              [errors-list (:register-user errors)])
             [:form {:on-submit #(register-user % @registration)}
              [:fieldset.form-group
               [:input.form-control.form-control-lg {:type "text"
                                                     :placeholder "Your Name"
                                                     :value username
                                                     :on-change #(swap! registration assoc :username (-> % .-target .-value))
-                                                    :disabled (when register-user-loading)}]]
+                                                    :disabled (when (:register-user loading))}]]
              [:fieldset.form-group
               [:input.form-control.form-control-lg {:type "text"
                                                     :placeholder "Email"
                                                     :value email
                                                     :on-change #(swap! registration assoc :email (-> % .-target .-value))
-                                                    :disabled (when register-user-loading)}]]
+                                                    :disabled (when (:register-user loading))}]]
              [:fieldset.form-group
               [:input.form-control.form-control-lg {:type "password"
                                                     :placeholder "Password"
                                                     :value password
                                                     :on-change #(swap! registration assoc :password (-> % .-target .-value))
-                                                    :disabled (when register-user-loading)}]]
-             [:button.btn.btn-lg.btn-primary.pull-xs-right {:class (when register-user-loading "disabled")} "Sign up"]]]]]]))))
+                                                    :disabled (when (:register-user loading))}]]
+             [:button.btn.btn-lg.btn-primary.pull-xs-right {:class (when (:register-user loading) "disabled")} "Sign up"]]]]]]))))
 
 ;; -- Profile -----------------------------------------------------------------
 ;;
@@ -337,9 +333,6 @@
 
 (defn settings
   []
-  (let [{:keys [title description body tagList slug] :as active-article}  @(subscribe [:active-article])
-        default {:title title :description description :body body :tagList tagList}
-        content (reagent/atom default)])
   (let [{:keys [bio email image username] :as user} @(subscribe [:user])
         default {:bio bio :email email :image image :username username}
         loading @(subscribe [:loading])
@@ -389,9 +382,9 @@
 ;;
 (defn upsert-article [event content slug]
   (.preventDefault event)
-  (let [title (trim (:title content))
-        description (trim (:description content))
-        body (trim (:body content))
+  (let [title (trim (or (:title content) ""))
+        description (trim (or  (:description content) ""))
+        body (trim (or (:body content) ""))
         tagList (split (:tagList content) #" ")]
     (dispatch [:upsert-article {:slug slug :article {:title title
                                                      :description description
@@ -400,23 +393,17 @@
 
 (defn editor
   []
-  (let [default {:title "" :description "" :body "" :tagList ""}
-        content (reagent/atom default)
-        errors (subscribe [:errors])
-        active-article (subscribe [:active-article])]
+  (let [{:keys [title description body tagList slug] :as active-article} @(subscribe [:active-article])
+        default {:title title :description description :body body :tagList tagList}
+        content (reagent/atom default)]
     (fn []
-      (let [title (or (get @active-article :title) "")
-            description (or (get @active-article :description) "")
-            body (or (get @active-article :body) "")
-            tagList (or (get @active-article :tagList) "")
-            slug (get @active-article :slug)
-            article-errors (get @errors :upsert-article)]
+      (let [errors @(subscribe [:errors])]
         [:div.editor-page
          [:div.container.page
           [:div.row
            [:div.col-md-10.offset-md-1.col-xs-12
-            (when article-errors
-              [errors-list article-errors])
+            (when (:upsert-article errors)
+              [errors-list (:upsert-article errors)])
             [:form
              [:fieldset
               [:fieldset.form-group
@@ -441,7 +428,7 @@
                                      :on-change #(swap! content assoc :tagList (-> % .-target .-value))}]
                [:div.tag-list]]
               [:button.btn.btn-lg.btn-primary.pull-xs-right {:on-click #(upsert-article % @content slug)}
-               (if @active-article
+               (if active-article
                  "Update Article"
                  "Publish Article")]]]]]]]))))
 
@@ -456,17 +443,13 @@
 (defn article
   []
   (let [default {:body ""}
-        comment (reagent/atom default)
-        errors (subscribe [:errors])
-        loading (subscribe [:loading])
-        articles @(subscribe [:articles])
-        user @(subscribe [:user])
-        profile @(subscribe [:profile])
-        comments (subscribe [:comments])]
+        comment (reagent/atom default)]
     (fn []
       (let [active-article @(subscribe [:active-article])
-            comments-errors (get @errors :comments)
-            comments-loading (get @loading :comments)]
+            user @(subscribe [:user])
+            comments @(subscribe [:comments])
+            errors @(subscribe [:errors])
+            loading @(subscribe [:loading])]
         [:div.article-page
          [:div.banner
           [:div.container
@@ -482,8 +465,8 @@
            [article-meta active-article]] ;; defined in Helpers section
           [:div.row
            [:div.col-xs-12.col-md-8.offset-md-2
-            (when comments-errors
-              [errors-list comments-errors]) ;; defined in Helpers section
+            (when (:comments errors)
+              [errors-list (:comments errors)]) ;; defined in Helpers section
             (if-not (empty? user)
               [:form.card.comment-form
                [:div.card-block
@@ -493,19 +476,19 @@
                                          :on-change #(swap! comment assoc :body (-> % .-target .-value))}]]
                [:div.card-footer
                 [:img.comment-author-img {:src (:image user)}]
-                [:button.btn.btn-sm.btn-primary {:class (when comments-loading "disabled")
+                [:button.btn.btn-sm.btn-primary {:class (when (:comments loading) "disabled")
                                                  :on-click #(post-comment % comment default)} "Post Comment"]]]
               [:p
-               [:a {:href "#/register"} "Sign in"]
+               [:a {:href "#/register"} "Sign up"]
                " or "
                [:a {:href "#/login"} "Sign in"]
                " to add comments on this article."])
-            (if comments-loading
+            (if (:comments loading)
               [:div
                [:p "Loading comments ..."]]
-              (if (empty? @comments)
+              (if (empty? comments)
                 [:div]
-                (for [{:keys [id createdAt body author]} @comments]
+                (for [{:keys [id createdAt body author]} comments]
                   ^{:key id} [:div.card
                               [:div.card-block
                                [:p.card-text body]]
@@ -519,7 +502,7 @@
                                  [:span.mod-options {:on-click #(dispatch [:delete-comment id])}
                                   [:i.ion-trash-a]])]])))]]]]))))
 
-(defn- pages [page-name]
+(defn pages [page-name]
   (case page-name
     :home [home]
     :login [login]

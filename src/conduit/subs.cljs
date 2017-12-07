@@ -1,6 +1,10 @@
 (ns conduit.subs
   (:require [re-frame.core :refer [reg-sub subscribe]])) ;
 
+(defn reverse-cmp [a b] ;; https://clojure.org/guides/comparators
+  "Sort numbers in decreasing order, i.e.: calls compare with the arguments in the opposite order"
+  (compare b a))
+
 (reg-sub
  :active-page           ;; usage: (subscribe [:showing])
  (fn [db _]             ;; db is the (map) value stored in the app-db atom
@@ -11,9 +15,8 @@
  (fn [db _]
    (let [articles (:articles db)]
      (->> articles
-          (vals)            ;; get values from (:articles db)
-          (sort-by :epoch)  ;; sort them by :epoch, which we add when we get articles
-          (reverse)))))     ;; display them in reverse order - latest added is on top
+          (vals)                            ;; get values from (:articles db)
+          (sort-by :epoch reverse-cmp)))))  ;; sort-by epoch in reverse order
 
 (reg-sub
  :articles-count  ;; usage: (subscribe [:articles])
@@ -37,8 +40,7 @@
    (let [comments (:comments db)]
      (->> comments
           (vals)
-          (sort-by :epoch)
-          (reverse)))))
+          (sort-by :epoch reverse-cmp)))))
 
 (reg-sub
  :profile  ;; usage: (subscribe [:profile])
