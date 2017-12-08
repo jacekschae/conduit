@@ -42,10 +42,26 @@ For more information on how this works with other frontends/backends, head over 
 
 ## Compile an optimised version
 
+Build with Java 9
+
 1. Compile
 
    ```
    lein prod
+   ```
+
+   If you end up with Exception
+
+   ```
+   <Exception details>
+   ...
+   Caused by: java.lang.ClassNotFoundException: javax.xml.bind.DatatypeConverter
+   ```
+
+   You should upgrade your Java to version 9. For more info check [How to upgrade your Clojure and ClojureScript projects to use Java 9](https://www.deps.co/blog/how-to-upgrade-your-clojure-projects-to-use-java-9/)
+
+   ```
+
    ```
 
 2. Open the following in your browser
