@@ -60,10 +60,6 @@ Build with Java 9
 
    You should upgrade your Java to version 9. For more info check [How to upgrade your Clojure and ClojureScript projects to use Java 9](https://www.deps.co/blog/how-to-upgrade-your-clojure-projects-to-use-java-9/)
 
-   ```
-
-   ```
-
 2. Open the following in your browser
    ```
    resources/public/index.html

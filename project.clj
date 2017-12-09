@@ -1,9 +1,9 @@
 (defproject conduit "0.1.0-SNAPSHOT"
-            :dependencies [[org.clojure/clojure "1.8.0"]
+            :dependencies [[org.clojure/clojure "1.9.0"]
                            [org.clojure/clojurescript "1.9.946"]
                            [reagent "0.7.0"]
                            [re-frame "0.10.2"]
-                           [cljs-ajax "0.5.8"]
+                           [cljs-ajax "0.7.3"]
                            [day8.re-frame/http-fx "0.1.4"]
                            [secretary "1.2.3"]
                            [com.andrewmcveigh/cljs-time "0.5.2"]
