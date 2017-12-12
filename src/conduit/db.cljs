@@ -1,6 +1,5 @@
 (ns conduit.db
   (:require [cljs.reader]
-            [cljs.spec.alpha :as s]
             [re-frame.core :refer [reg-cofx]]))
 
 ;; -- Default app-db Value  ---------------------------------------------------

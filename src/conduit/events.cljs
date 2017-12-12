@@ -2,11 +2,10 @@
   (:require
    [conduit.db :refer [default-db set-user-ls remove-user-ls]]
    [re-frame.core :refer [reg-event-db reg-event-fx reg-fx inject-cofx trim-v after path debug]]
-   [day8.re-frame.http-fx]
+   [day8.re-frame.http-fx] ;; even if we don't use this require its existence will cause the :http-xhrio effect handler to self-register with re-frame
    [ajax.core :refer [json-request-format json-response-format]]
    [clojure.string :as str]
-   [cljs-time.coerce :refer [to-long]]
-   [conduit.db :as db]))
+   [cljs-time.coerce :refer [to-long]]))
 
 ;; -- Interceptors --------------------------------------------------------------
 ;; Every event handler can be "wrapped" in a chain of interceptors. Each of these
@@ -70,7 +69,7 @@
  [(inject-cofx :local-store-user)]  ;; gets user from localstore, and puts into coeffects arg
 
  ;; the event handler (function) being registered
- (fn  [{:keys [db local-store-user]} _]               ;; take 2 vals from coeffects. Ignore event vector itself.
+ (fn  [{:keys [local-store-user]} _]               ;; take 2 vals from coeffects. Ignore event vector itself.
    {:db (assoc default-db :user local-store-user)}))  ;; what it returns becomes the new application state
 
 (reg-event-fx      ;; usage: (dispatch [:set-active-page :home])

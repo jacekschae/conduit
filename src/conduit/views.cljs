@@ -1,7 +1,6 @@
 (ns conduit.views
   (:require [reagent.core  :as reagent]
             [re-frame.core :refer [subscribe dispatch]]
-            [conduit.subs :as subs]
             [clojure.string :as str :refer [trim split]]))
 
 ;; -- Helpers -----------------------------------------------------------------
@@ -19,7 +18,6 @@
 (defn article-meta
   [{author          :author
     created-at      :createdAt
-    likes           :likes
     favorites-count :favoritesCount
     favorited       :favorited
     slug            :slug}]
@@ -177,7 +175,7 @@
           [:li.nav-item
            [:a.nav-link {:href ""
                          :class (when-not (or (:tag filter) (:feed filter)) "active")
-                         :on-click #(get-articles % {:tag nil :offset 0 :limit 10})} "Global Feed"]] ;; first argument: % is browser event, second: nil to remove filter by tags
+                         :on-click #(get-articles % {:offset 0 :limit 10})} "Global Feed"]] ;; first argument: % is browser event, second: map of filter params
           (when (:tag filter)
             [:li.nav-item
              [:a.nav-link.active

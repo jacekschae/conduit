@@ -4,9 +4,9 @@
             [reagent.core :as reagent]
             [re-frame.core :refer [dispatch dispatch-sync]]
             [secretary.core :as secretary]
-            [conduit.events]
-            [conduit.subs]
-            [conduit.views]
+            [conduit.events] ;; These three are only
+            [conduit.subs]   ;; required to make the compiler 
+            [conduit.views]  ;; load them
             [devtools.core :as devtools])
   (:import [goog History]
            [goog.history EventType]))
@@ -20,7 +20,9 @@
 ;;
 (defn is-service-worker-supported?
   []
-  (exists? js/navigator.serviceWorker))
+  (and
+   (exists? js/navigator.serviceWorker)
+   (= js/location.protocol "https:")))
 
 (defn register-service-worker
   [path-to-sw]
