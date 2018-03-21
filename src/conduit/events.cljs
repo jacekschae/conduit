@@ -72,7 +72,7 @@
  (fn  [{:keys [local-store-user]} _]               ;; take 2 vals from coeffects. Ignore event vector itself.
    {:db (assoc default-db :user local-store-user)}))  ;; what it returns becomes the new application state
 
-(reg-event-fx      ;; usage: (dispatch [:set-active-page :home])
+(reg-event-fx      ;; usage: (dispatch [:set-active-page {:page :home})
  :set-active-page  ;; triggered when the user clicks on a link that redirects to a another page
  (fn [{:keys [db]} [_ {:keys [page slug profile favorited]}]]  ;; destructure 2nd parameter to obtain keys
    (let [set-page (assoc db :active-page page)]
@@ -223,7 +223,7 @@
    {:db (-> db
             (update-in [:articles] dissoc (:active-article db))
             (assoc-in [:loading :article] false))
-    :dispatch [:set-active-page :home]
+    :dispatch [:set-active-page {:page :home}]
     :set-hash {:hash "/"}}))
 
 ;; -- GET Feed Articles @ /api/articles/feed ----------------------------------

@@ -11,3 +11,4 @@ out
 /target
 /public/js
 /.shadow-cljs
+yarn.lock

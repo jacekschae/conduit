@@ -1,19 +1,15 @@
 (ns conduit.core
   (:require-macros [secretary.core :refer [defroute]])
-  (:require [goog.events :as events]
+  (:import goog.History)
+  (:require [secretary.core :as secretary]
+            [goog.events :as gevents]
+            [goog.history.EventType :as EventType]
+            [re-frame.core :refer [dispatch dispatch-sync clear-subscription-cache!]]
             [reagent.core :as reagent]
-            [re-frame.core :refer [dispatch dispatch-sync]]
-            [secretary.core :as secretary]
             [conduit.events] ;; These three are only
             [conduit.subs]   ;; required to make the compiler
-            [conduit.views])  ;; load them
-  (:import [goog History]
-           [goog.history EventType]))
-
-;; -- Debugging aids ----------------------------------------------------------
-;;
-; (devtools/install!)       ;; we love https://github.com/binaryage/cljs-devtools
-(enable-console-print!)   ;; so that println writes to `console.log`
+            [conduit.routes :as routes]
+            [conduit.views]))  ;; load them
 
 ;; -- Service Worker ----------------------------------------------------------
 ;;
@@ -30,28 +26,10 @@
         .-serviceWorker
         (.register path-to-sw))))
 
-;; -- Routes and History ------------------------------------------------------
-;;
-(defn routes
-  []
-  (set! (.-hash js/location) "/")      ;; on app startup set location to "/"
-  (secretary/set-config! :prefix "#")  ;; and don't forget about "#" prefix
-  (defroute "/" [] (dispatch [:set-active-page {:page :home}]))
-  (defroute "/login" [] (dispatch [:set-active-page {:page :login}]))
-  (defroute "/register" [] (dispatch [:set-active-page {:page :register}]))
-  (defroute "/settings" [] (dispatch [:set-active-page {:page :settings}]))
-  (defroute "/editor" [] (dispatch [:set-active-page {:page :editor}]))
-  (defroute "/editor/:slug" [slug] (dispatch [:set-active-page {:page :editor :slug slug}]))
-  (defroute "/logout" [] (dispatch [:logout]))
-  (defroute "/article/:slug" [slug] (dispatch [:set-active-page {:page :article :slug slug}]))
-  (defroute "/:profile/favorites" [profile] (dispatch [:set-active-page {:page :favorited :favorited (subs profile 1)}]))
-  (defroute "/:profile" [profile] (dispatch [:set-active-page {:page :profile :profile (subs profile 1)}])))
-
-(def history
-  (doto (History.)
-    (events/listen EventType.NAVIGATE
-                   (fn [event] (secretary/dispatch! (.-token event))))
-    (.setEnabled true)))
+(defn mount-root []
+  (clear-subscription-cache!)
+  (reagent/render [conduit.views/conduit-app]
+    (.getElementById js/document "app")))
 
 ;; -- Entry Point -------------------------------------------------------------
 ;; Within ../../resources/public/index.html you'll see this code:
@@ -60,20 +38,19 @@
 ;;
 (defn ^:export main
   []
+  ;; Hookup the router.
+  (routes/app-routes)
+
   ;; Put an initial value into app-db.
   ;; The event handler for `:initialise-db` can be found in `events.cljs`
   ;; Using the sync version of dispatch means that value is in
   ;; place before we go onto the next step.
   (dispatch-sync [:initialise-db])
 
-  ;; Hookup the router and history that we configured above.
-  (routes)
-
   ;; Render the UI into the HTML's <div id="app" /> element
   ;; The view function `conduit.views/conduit-app` is the
   ;; root view for the entire UI.
-  (reagent/render [conduit.views/conduit-app]
-    (.getElementById js/document "app"))
+  (mount-root))
 
   ;; Register Service Worker defined at the top
-  (register-service-worker "js/service-worker.js"))
+  ; (register-service-worker "js/service-worker.js"))
