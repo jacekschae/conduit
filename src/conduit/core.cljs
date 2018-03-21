@@ -8,7 +8,6 @@
             [reagent.core :as reagent]
             [conduit.events] ;; These three are only
             [conduit.subs]   ;; required to make the compiler
-            [conduit.routes :as routes]
             [conduit.views]))  ;; load them
 
 ;; -- Service Worker ----------------------------------------------------------
@@ -26,10 +25,32 @@
         .-serviceWorker
         (.register path-to-sw))))
 
-(defn mount-root []
-  (clear-subscription-cache!)
-  (reagent/render [conduit.views/conduit-app]
-    (.getElementById js/document "app")))
+;; -- Routes and Navigation ---------------------------------------------------
+;;
+(defn hook-browser-navigation! []
+  (doto (History.)
+    (gevents/listen
+     EventType/NAVIGATE
+     (fn [event]
+       (secretary/dispatch! (.-token event))))
+    (.setEnabled true)))
+
+(defn routes
+  []
+  (let [slug nil
+        profile nil]
+    (secretary/set-config! :prefix "#")
+    (defroute "/" [] (dispatch [:set-active-page {:page :home}]))
+    (defroute "/login" [] (dispatch [:set-active-page {:page :login}]))
+    (defroute "/register" [] (dispatch [:set-active-page {:page :register}]))
+    (defroute "/settings" [] (dispatch [:set-active-page {:page :settings}]))
+    (defroute "/editor" [] (dispatch [:set-active-page {:page :editor}]))
+    (defroute "/editor/:slug" [slug] (dispatch [:set-active-page {:page :editor :slug slug}]))
+    (defroute "/logout" [] (dispatch [:logout]))
+    (defroute "/article/:slug" [slug] (dispatch [:set-active-page {:page :article :slug slug}]))
+    (defroute "/:profile/favorites" [profile] (dispatch [:set-active-page {:page :favorited :favorited (subs profile 1)}]))
+    (defroute "/:profile" [profile] (dispatch [:set-active-page {:page :profile :profile (subs profile 1)}]))
+    (hook-browser-navigation!)))
 
 ;; -- Entry Point -------------------------------------------------------------
 ;; Within ../../resources/public/index.html you'll see this code:
@@ -39,7 +60,7 @@
 (defn ^:export main
   []
   ;; Hookup the router.
-  (routes/app-routes)
+  (routes)
 
   ;; Put an initial value into app-db.
   ;; The event handler for `:initialise-db` can be found in `events.cljs`
@@ -50,7 +71,8 @@
   ;; Render the UI into the HTML's <div id="app" /> element
   ;; The view function `conduit.views/conduit-app` is the
   ;; root view for the entire UI.
-  (mount-root))
+  (reagent/render [conduit.views/conduit-app]
+    (.getElementById js/document "app")))
 
   ;; Register Service Worker defined at the top
   ; (register-service-worker "js/service-worker.js"))
