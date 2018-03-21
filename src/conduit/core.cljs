@@ -5,15 +5,14 @@
             [re-frame.core :refer [dispatch dispatch-sync]]
             [secretary.core :as secretary]
             [conduit.events] ;; These three are only
-            [conduit.subs]   ;; required to make the compiler 
-            [conduit.views]  ;; load them
-            [devtools.core :as devtools])
+            [conduit.subs]   ;; required to make the compiler
+            [conduit.views])  ;; load them
   (:import [goog History]
            [goog.history EventType]))
 
 ;; -- Debugging aids ----------------------------------------------------------
 ;;
-(devtools/install!)       ;; we love https://github.com/binaryage/cljs-devtools
+; (devtools/install!)       ;; we love https://github.com/binaryage/cljs-devtools
 (enable-console-print!)   ;; so that println writes to `console.log`
 
 ;; -- Service Worker ----------------------------------------------------------

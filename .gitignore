@@ -7,3 +7,7 @@
 .lein-failures
 out
 .DS_Store
+/node_modules
+/target
+/public/js
+/.shadow-cljs

@@ -1,0 +1,30 @@
+{:source-paths ["src"]
+
+ :jvm-opts ["--add-modules" "java.xml.bind"]
+
+ :dependencies [[binaryage/devtools "0.9.9"]
+                [proto-repl "0.3.1"]
+                [cljs-ajax "0.7.3"]
+                [reagent "0.8.0-alpha2"]
+                [re-frame "0.10.5"]
+                [day8.re-frame/http-fx "0.1.5"]
+                [secretary "1.2.3"]
+                [com.andrewmcveigh/cljs-time "0.5.2"]
+                [re-frisk "0.5.3"]]
+
+ :nrepl        {:port 3333}
+
+ :builds
+ {:app {:target :browser
+        :output-dir "resources/public/js"
+        :asset-path "/js"
+
+        :modules
+        {:main
+         {:entries [conduit.core]}}
+
+        :devtools
+        {:after-load  conduit.core/main
+         :http-root   "resources/public"
+         :http-port   3000
+         :preloads    [shadow.cljs.devtools.client.hud]}}}}
