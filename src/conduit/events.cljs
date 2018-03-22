@@ -55,11 +55,6 @@
   "Transform a coll to a map with a given key as a lookup value"
   (into {} (map (juxt key identity) (add-epoch :createdAt coll))))
 
-(reg-fx                                ;; register a new event handler to use with our -fx events
- :set-hash                             ;; this will be provided in a map for -fx events and
- (fn [{:keys [hash]}]                  ;; accept :hash as paramter, something like this: {:hash path}
-   (set! (.-hash js/location) hash)))  ;; so that we can set window.location.hash to path
-
 ;; -- Event Handlers ----------------------------------------------------------
 ;;
 (reg-event-fx    ;; usage: (dispatch [:initialise-db])
@@ -80,8 +75,8 @@
        ;; -- URL @ "/" --------------------------------------------------------
        :home {:db set-page
               :dispatch-n  (list (if (empty? (:user db))  ;; dispatch more than one event. When a user
-                                   [:get-articles]        ;; is NOT logged in we display all articles
-                                   [:get-feed-articles])  ;; otherwiser we get her/his feed articles
+                                   [:get-articles {:limit 10}]        ;; is NOT logged in we display all articles
+                                   [:get-feed-articles {:limit 10}])  ;; otherwiser we get her/his feed articles
                                  [:get-tags])}            ;; we also can't forget to get tags
 
        ;; -- URL @ "/login" | "/register" | "/settings" -----------------------
@@ -199,8 +194,8 @@
             (assoc :active-page :article
                    :active-article (:slug article)))
     :dispatch-n (list [:get-article {:slug (:slug article)}]             ;; when the users clicks save we fetch the new version
-                      [:get-article-comments {:slug (:slug article)}])   ;; of the article and comments from the server
-    :set-hash {:hash (str "/articles/" (:slug article))}}))  ;; after successful upsert i.e. no errors from the server we set url to /articles/:slug
+                      [:get-article-comments {:slug (:slug article)}]    ;; of the article and comments from the server
+                      [:set-active-page {:page :article :slug (:slug article)}])}))
 
 ;; -- DELETE Article @ /api/articles/:slug ------------------------------------
 ;;
@@ -223,8 +218,7 @@
    {:db (-> db
             (update-in [:articles] dissoc (:active-article db))
             (assoc-in [:loading :article] false))
-    :dispatch [:set-active-page {:page :home}]
-    :set-hash {:hash "/"}}))
+    :dispatch [:set-active-page {:page :home}]}))
 
 ;; -- GET Feed Articles @ /api/articles/feed ----------------------------------
 ;;
@@ -392,8 +386,8 @@
  (fn [{user :db} [{props :user}]]
    {:db (merge user props)
     :dispatch-n (list [:complete-request :login]
-                      [:get-feed-articles {:tag nil :author nil :offset 0 :limit 10}])
-    :set-hash {:hash "/"}}))
+                      [:get-feed-articles {:tag nil :author nil :offset 0 :limit 10}]
+                      [:set-active-page {:page :home}])}))
 
 ;; -- POST Registration @ /api/users ------------------------------------------
 ;;
@@ -425,8 +419,8 @@
  ;; So, a path interceptor makes the event handler act more like clojure's `update-in`
  (fn [{user :db} [{props :user}]]
    {:db (merge user props)
-    :dispatch [:complete-request :register-user]
-    :set-hash {:hash "/"}}))
+    :dispatch-n (list [:complete-request :register-user]
+                      [:set-active-page {:page :home}])}))
 
 ;; -- PUT Update User @ /api/user ---------------------------------------------
 ;;
@@ -520,7 +514,7 @@
  ;; app-state = :db and sets the url to "/".
  (fn [{:keys [db]} _]
    {:db      (dissoc db :user)  ;; remove user from db
-    :set-hash {:hash "/"}}))      ;; head back home after logout
+    :dispatch [:set-active-page {:page :home}]}))
 
 ;; -- Request Handlers -----------------------------------------------------------
 ;;

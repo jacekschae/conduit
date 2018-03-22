@@ -185,7 +185,9 @@
           [:ul.pagination
            (for [offset (range (/ articles-count 10))]
              ^{:key offset} [:li.page-item {:class (when (= (* offset 10) (:offset filter)) "active")
-                                            :on-click #(get-articles % {:offset (* offset 10) :tag (:tag filter) :limit 10})}
+                                            :on-click #(get-articles % (if (:tag filter)
+                                                                         {:offset (* offset 10) :tag (:tag filter) :limit 10}
+                                                                         {:offset (* offset 10) :limit 10}))}
                              [:a.page-link {:href ""} (+ 1 offset)]])])]
 
        [:div.col-md-3

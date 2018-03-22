@@ -27,4 +27,5 @@
         {:after-load  conduit.core/main
          :http-root   "resources/public"
          :http-port   3000
-         :preloads    [shadow.cljs.devtools.client.hud]}}}}
+         :preloads    [shadow.cljs.devtools.client.hud
+                       re-frisk.preload devtools.preload]}}}}
