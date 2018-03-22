@@ -1,7 +1,7 @@
 /*.log
 /target
 /*-init.clj
-/resources/public/js
+/resources
 .nrepl-port
 .lein-failures
 out
