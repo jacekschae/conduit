@@ -15,52 +15,26 @@ For more information on how this works with other frontends/backends, head over 
 
 ## Setup And Run
 
-1. Install [Leiningen](http://leiningen.org/) (plus Java).
+`shadow-cljs` is a build tool for ClojureScript.
 
-2. Get the re-frame repo
+``` shell
+npm install -g shadow-cljs
 
-   ```
-   git clone https://github.com/jacekschae/conduit
-   ```
+# or with yarn
 
-3. cd to the right example directory
+yarn global add shadow-cljs
+```
 
-   ```
-   cd conduit
-   ```
+`git clone` this repo and `cd` into the repo, then:
 
-4. Clean build
+``` shell
+yarn install
 
-   ```
-   lein dev
-   ```
+yarn dev
+```
 
-5. Run You'll have to wait for step 4 to do its compile, and then:
-   ```
-   open http://localhost:3449
-   ```
+## Compile an optimized version
 
-## Compile an optimised version
-
-Build with Java 9
-
-1. Compile
-
-   ```
-   lein prod
-   ```
-
-   If you end up with Exception
-
-   ```
-   <Exception details>
-   ...
-   Caused by: java.lang.ClassNotFoundException: javax.xml.bind.DatatypeConverter
-   ```
-
-   You should upgrade your Java to version 9. For more info check [How to upgrade your Clojure and ClojureScript projects to use Java 9](https://www.deps.co/blog/how-to-upgrade-your-clojure-projects-to-use-java-9/)
-
-2. Open the following in your browser
-   ```
-   resources/public/index.html
-   ```
+``` shell
+yarn release
+```
