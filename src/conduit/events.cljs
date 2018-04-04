@@ -5,6 +5,7 @@
    [day8.re-frame.http-fx] ;; even if we don't use this require its existence will cause the :http-xhrio effect handler to self-register with re-frame
    [ajax.core :refer [json-request-format json-response-format]]
    [clojure.string :as str]
+   [day8.re-frame.tracing :refer-macros [fn-traced]]
    [cljs-time.coerce :refer [to-long]]))
 
 ;; -- Interceptors --------------------------------------------------------------
@@ -64,12 +65,12 @@
  [(inject-cofx :local-store-user)]  ;; gets user from localstore, and puts into coeffects arg
 
  ;; the event handler (function) being registered
- (fn  [{:keys [local-store-user]} _]               ;; take 2 vals from coeffects. Ignore event vector itself.
+ (fn-traced  [{:keys [local-store-user]} _]               ;; take 2 vals from coeffects. Ignore event vector itself.
    {:db (assoc default-db :user local-store-user)}))  ;; what it returns becomes the new application state
 
 (reg-event-fx      ;; usage: (dispatch [:set-active-page {:page :home})
  :set-active-page  ;; triggered when the user clicks on a link that redirects to a another page
- (fn [{:keys [db]} [_ {:keys [page slug profile favorited]}]]  ;; destructure 2nd parameter to obtain keys
+ (fn-traced [{:keys [db]} [_ {:keys [page slug profile favorited]}]]  ;; destructure 2nd parameter to obtain keys
    (let [set-page (assoc db :active-page page)]
      (case page
        ;; -- URL @ "/" --------------------------------------------------------
@@ -109,12 +110,12 @@
 
 (reg-event-db                     ;; usage: (dispatch [:reset-active-article])
  :reset-active-article            ;; triggered when the user enters new-article i.e. editor without slug
- (fn [db _]                       ;; 1st paramter in -db events is db, 2nd paramter not important therefore _
+ (fn-traced [db _]                       ;; 1st paramter in -db events is db, 2nd paramter not important therefore _
    (dissoc db :active-article)))  ;; compute and return the new state
 
 (reg-event-fx  ;; usage: (dispatch [:set-active-article slug])
  :set-active-article
- (fn [{:keys [db]} [_ slug]]  ;; 1st parameter in -fx events is no longer just db. It is a map which contains a :db key.
+ (fn-traced [{:keys [db]} [_ slug]]  ;; 1st parameter in -fx events is no longer just db. It is a map which contains a :db key.
    {:db         (assoc db :active-article slug)             ;; The handler is returning a map which describes two side-effects:
     :dispatch-n (list [:get-article-comments {:slug slug}]  ;; changne to app-state :db and future event in this case :dispatch-n
                       [:get-user-profile {:profile (get-in db [:articles slug :author :username])}])}))
@@ -123,7 +124,7 @@
 ;;
 (reg-event-fx                   ;; usage (dispatch [:get-articles {:limit 10 :tag "tag-name" ...}])
  :get-articles                  ;; triggered every time user request articles with differetn params
- (fn [{:keys [db]} [_ params]]  ;; params = {:limit 10 :tag "tag-name" ...}
+ (fn-traced [{:keys [db]} [_ params]]  ;; params = {:limit 10 :tag "tag-name" ...}
    {:http-xhrio {:method          :get
                  :uri             (endpoint "articles")                     ;; evaluates to "api/articles/"
                  :params          params                                    ;; include params in the request
@@ -141,7 +142,7 @@
 
 (reg-event-db
  :get-articles-success
- (fn [db [_ {articles :articles, articles-count :articlesCount}]]
+ (fn-traced [db [_ {articles :articles, articles-count :articlesCount}]]
    (-> db
        (assoc-in [:loading :articles] false)  ;; turn off loading flag for this event
        (assoc :articles-count articles-count  ;; change app-state by adding articles-count
@@ -151,7 +152,7 @@
 ;;
 (reg-event-fx                   ;; usage (dispatch [:get-article {:slug "slug"}])
  :get-article                   ;; triggered when a user upserts article i.e. is redirected to article page after saving an article
- (fn [{:keys [db]} [_ params]]  ;; params = {:slug "slug"}
+ (fn-traced [{:keys [db]} [_ params]]  ;; params = {:slug "slug"}
    {:http-xhrio {:method          :get
                  :uri             (endpoint "articles" (:slug params))      ;; evaluates to "api/articles/:slug"
                  :headers         (auth-header db)                          ;; get and pass user token obtained during login
@@ -162,7 +163,7 @@
 
 (reg-event-db
  :get-article-success
- (fn [db [_ {article :article}]]
+ (fn-traced [db [_ {article :article}]]
    (-> db
        (assoc-in [:loading :article] false)
        (assoc :articles (index-by :slug [article])))))
@@ -171,7 +172,7 @@
 ;;
 (reg-event-fx                   ;; usage (dispatch [:upsert-article article])
  :upsert-article                ;; when we update or insert (upsert) we are sending the same shape of information
- (fn [{:keys [db]} [_ params]]  ;; params = {:slug "article-slug" :article {:body "article body"} }
+ (fn-traced [{:keys [db]} [_ params]]  ;; params = {:slug "article-slug" :article {:body "article body"} }
    {:db         (assoc-in db [:loading :article] true)
     :http-xhrio {:method          (if (:slug params) :put :post)             ;; when we get a slug we'll update (:put) otherwise insert (:post)
                  :uri             (if (:slug params)                         ;; Same logic as above but we go with different
@@ -186,7 +187,7 @@
 
 (reg-event-fx
  :upsert-article-success
- (fn [{:keys [db]} [_ {article :article}]]
+ (fn-traced [{:keys [db]} [_ {article :article}]]
    {:db (-> db
             (assoc-in [:loading :article] false)
             (dissoc :comments)  ;; clean up any comments that we might have in db
@@ -201,7 +202,7 @@
 ;;
 (reg-event-fx                 ;; usage (dispatch [:delete-article slug])
  :delete-article              ;; triggered when a user deletes an article
- (fn [{:keys [db]} [_ slug]]  ;; slug = {:slug "article-slug"}
+ (fn-traced [{:keys [db]} [_ slug]]  ;; slug = {:slug "article-slug"}
    {:db         (assoc-in db [:loading :article] true)
     :http-xhrio {:method          :delete
                  :uri             (endpoint "articles" slug)                ;; evaluates to "api/articles/:slug"
@@ -214,7 +215,7 @@
 
 (reg-event-fx
  :delete-article-success
- (fn [{:keys [db]} _]
+ (fn-traced [{:keys [db]} _]
    {:db (-> db
             (update-in [:articles] dissoc (:active-article db))
             (assoc-in [:loading :article] false))
@@ -224,7 +225,7 @@
 ;;
 (reg-event-fx                   ;; usage (dispatch [:get-feed-articles {:limit 10 :offset 0 ...}])
  :get-feed-articles             ;; triggered when Your Feed tab is loaded
- (fn [{:keys [db]} [_ params]]  ;; params = {:offset 0 :limit 10}
+ (fn-traced [{:keys [db]} [_ params]]  ;; params = {:offset 0 :limit 10}
    {:http-xhrio {:method          :get
                  :uri             (endpoint "articles" "feed")              ;; evaluates to "api/articles/feed"
                  :params          params                                    ;; include params in the request
@@ -242,7 +243,7 @@
 
 (reg-event-db
  :get-feed-articles-success
- (fn [db [_ {articles :articles, articles-count :articlesCount}]]
+ (fn-traced [db [_ {articles :articles, articles-count :articlesCount}]]
    (-> db
        (assoc-in [:loading :articles] false)
        (assoc :articles-count articles-count
@@ -252,7 +253,7 @@
 ;;
 (reg-event-fx          ;; usage (dispatch [:get-tags])
  :get-tags             ;; triggered when the home page is loaded
- (fn [{:keys [db]} _]  ;; second parameter is not important, therefore _
+ (fn-traced [{:keys [db]} _]  ;; second parameter is not important, therefore _
    {:db         (assoc-in db [:loading :tags] true)
     :http-xhrio {:method          :get
                  :uri             (endpoint "tags")                         ;; evaluates to "api/tags"
@@ -262,7 +263,7 @@
 
 (reg-event-db
  :get-tags-success
- (fn [db [_ {tags :tags}]]
+ (fn-traced [db [_ {tags :tags}]]
    (-> db
        (assoc-in [:loading :tags] false)
        (assoc :tags tags))))
@@ -271,7 +272,7 @@
 ;;
 (reg-event-fx                   ;; usage (dispatch [:get-article-comments {:slug "article-slug"}])
  :get-article-comments          ;; triggered when the article page is loaded
- (fn [{:keys [db]} [_ params]]  ;; params = {:slug "article-slug"}
+ (fn-traced [{:keys [db]} [_ params]]  ;; params = {:slug "article-slug"}
    {:db         (assoc-in db [:loading :comments] true)
     :http-xhrio {:method          :get
                  :uri             (endpoint "articles" (:slug params) "comments")  ;; evaluates to "api/articles/:slug/comments"
@@ -282,7 +283,7 @@
 
 (reg-event-db
  :get-article-comments-success
- (fn [db [_ {comments :comments}]]
+ (fn-traced [db [_ {comments :comments}]]
    (-> db
        (assoc-in [:loading :comments] false)
        (assoc :comments (index-by :id comments))))) ;; another index-by, this time by id
@@ -291,7 +292,7 @@
 ;;
 (reg-event-fx                   ;; usage (dispatch [:post-comment comment])
  :post-comment                  ;; triggered when a user submits a comment
- (fn [{:keys [db]} [_ body]]    ;; body = {:body "body" }
+ (fn-traced [{:keys [db]} [_ body]]    ;; body = {:body "body" }
    {:db         (assoc-in db [:loading :comments] true)
     :http-xhrio {:method          :post
                  :uri             (endpoint "articles" (:active-article db) "comments")  ;; evaluates to "api/articles/:slug/comments"
@@ -304,7 +305,7 @@
 
 (reg-event-fx
  :post-comment-success
- (fn [{:keys [db]} [_ comment]]
+ (fn-traced [{:keys [db]} [_ comment]]
    {:db (-> db
             (assoc-in [:loading :comments] false)
             (assoc-in [:articles (:active-article db) :comments] comment)
@@ -315,7 +316,7 @@
 ;;
 (reg-event-fx                       ;; usage (dispatch [:delete-comment comment-id])
  :delete-comment                    ;; triggered when a user deletes an article
- (fn [{:keys [db]} [_ comment-id]]  ;; comment-id = 1234
+ (fn-traced [{:keys [db]} [_ comment-id]]  ;; comment-id = 1234
    {:db         (do
                   (assoc-in db [:loading :comments] true)
                   (assoc db :active-comment comment-id))
@@ -329,7 +330,7 @@
 
 (reg-event-db
  :delete-comment-success
- (fn [db _]
+ (fn-traced [db _]
    (-> db
        (update-in [:comments] dissoc (:active-comment db)) ;; we could do another fetch of comments
        (dissoc :active-comment)                            ;; but instead we just remove it from app-db
@@ -339,7 +340,7 @@
 ;;
 (reg-event-fx       ;; usage (dispatch [:get-user-profile {:profile "profile"}])
  :get-user-profile  ;; triggered when the profile page is loaded
- (fn [{:keys [db]} [_ params]]  ;; params = {:profile "profile"}
+ (fn-traced [{:keys [db]} [_ params]]  ;; params = {:profile "profile"}
    {:db         (assoc-in db [:loading :profile] true)
     :http-xhrio {:method          :get
                  :uri             (endpoint "profiles" (:profile params))     ;; evaluates to "api/profiles/:profile"
@@ -350,7 +351,7 @@
 
 (reg-event-db
  :get-user-profile-success
- (fn [db [_ {profile :profile}]]
+ (fn-traced [db [_ {profile :profile}]]
    (-> db
        (assoc-in [:loading :profile] false)
        (assoc :profile profile))))
@@ -359,7 +360,7 @@
 ;;
 (reg-event-fx                        ;; usage (dispatch [:login user])
  :login                              ;; triggered when a users submits login form
- (fn [{:keys [db]} [_ credentials]]  ;; credentials = {:email ... :password ...}
+ (fn-traced [{:keys [db]} [_ credentials]]  ;; credentials = {:email ... :password ...}
    {:db         (assoc-in db [:loading :login] true)
     :http-xhrio {:method          :post
                  :uri             (endpoint "users" "login")                ;; evaluates to "api/users/login"
@@ -383,7 +384,7 @@
  ;; And, further, it means the event handler returns just the value to be
  ;; put into `:user` path, and not the entire `db`.
  ;; So, a path interceptor makes the event handler act more like clojure's `update-in`
- (fn [{user :db} [{props :user}]]
+ (fn-traced [{user :db} [{props :user}]]
    {:db (merge user props)
     :dispatch-n (list [:complete-request :login]
                       [:get-feed-articles {:tag nil :author nil :offset 0 :limit 10}]
@@ -393,7 +394,7 @@
 ;;
 (reg-event-fx                         ;; usage (dispatch [:register-user registration])
  :register-user                       ;; triggered when a users submits registration form
- (fn [{:keys [db]} [_ registration]]  ;; registration = {:username ... :email ... :password ...}
+ (fn-traced [{:keys [db]} [_ registration]]  ;; registration = {:username ... :email ... :password ...}
    {:db         (assoc-in db [:loading :register-user] true)
     :http-xhrio {:method          :post
                  :uri             (endpoint "users")                        ;; evaluates to "api/users"
@@ -417,7 +418,7 @@
  ;; And, further, it means the event handler returns just the value to be
  ;; put into `:user` path, and not the entire `db`.
  ;; So, a path interceptor makes the event handler act more like clojure's `update-in`
- (fn [{user :db} [{props :user}]]
+ (fn-traced [{user :db} [{props :user}]]
    {:db (merge user props)
     :dispatch-n (list [:complete-request :register-user]
                       [:set-active-page {:page :home}])}))
@@ -426,7 +427,7 @@
 ;;
 (reg-event-fx                         ;; usage (dispatch [:update-user user])
  :update-user                         ;; triggered when a users updates settgins
- (fn [{:keys [db]} [_ user]]          ;; user = {:img ... :username ... :bio ... :email ... :password ...}
+ (fn-traced [{:keys [db]} [_ user]]          ;; user = {:img ... :username ... :bio ... :email ... :password ...}
    {:db         (assoc-in db [:loading :update-user] true)
     :http-xhrio {:method          :put
                  :uri             (endpoint "user")                         ;; evaluates to "api/user"
@@ -451,7 +452,7 @@
  ;; And, further, it means the event handler returns just the value to be
  ;; put into `:user` path, and not the entire `db`.
  ;; So, a path interceptor makes the event handler act more like clojure's `update-in`
- (fn [{user :db} [{props :user}]]
+ (fn-traced [{user :db} [{props :user}]]
    {:db (merge user props)
     :dispatch [:complete-request :update-user]}))
 
@@ -459,7 +460,7 @@
 ;;
 (reg-event-fx                     ;; usage (dispatch [:toggle-follow-user username])
  :toggle-follow-user              ;; triggered when user clicks follow/unfollow button on profile page
- (fn [{:keys [db]} [_ username]]  ;; username = :username
+ (fn-traced [{:keys [db]} [_ username]]  ;; username = :username
    {:db         (assoc-in db [:loading :toggle-follow-user] true)
     :http-xhrio {:method          (if (get-in db [:profile :following]) :delete :post)  ;; check if we follow if yes DELETE, no POST
                  :uri             (endpoint "profiles" username "follow")               ;; evaluates to "api/profiles/:username/follow"
@@ -471,7 +472,7 @@
 
 (reg-event-db  ;; usage: (dispatch [:toggle-follow-user-success])
  :toggle-follow-user-success
- (fn [db [_ {profile :profile}]]
+ (fn-traced [db [_ {profile :profile}]]
    (-> db
        (assoc-in [:loading :toggle-follow-user] false)
        (assoc-in [:profile :following] (:following profile)))))
@@ -480,7 +481,7 @@
 ;;
 (reg-event-fx                 ;; usage (dispatch [:toggle-favorite-article slug])
  :toggle-favorite-article     ;; triggered when user clicks favorite/unfavorite button on profile page
- (fn [{:keys [db]} [_ slug]]  ;; slug = :slug
+ (fn-traced [{:keys [db]} [_ slug]]  ;; slug = :slug
    {:db         (assoc-in db [:loading :toggle-favorite-article] true)
     :http-xhrio {:method          (if (get-in db [:articles slug :favorited]) :delete :post)  ;; check if article is already favorite: yes DELETE, no POST
                  :uri             (endpoint "articles" slug "favorite")                       ;; evaluates to "api/articles/:slug/favorite"
@@ -492,7 +493,7 @@
 
 (reg-event-db  ;; usage: (dispatch [:toggle-favorite-article-success])
  :toggle-favorite-article-success
- (fn [db [_ {article :article}]]
+ (fn-traced [db [_ {article :article}]]
    (let [slug (:slug article)
          favorited (:favorited article)]
      (-> db
@@ -512,7 +513,7 @@
  remove-user-interceptor
  ;; The event handler function removes the user from
  ;; app-state = :db and sets the url to "/".
- (fn [{:keys [db]} _]
+ (fn-traced [{:keys [db]} _]
    {:db      (dissoc db :user)  ;; remove user from db
     :dispatch [:set-active-page {:page :home}]}))
 
@@ -520,11 +521,11 @@
 ;;
 (reg-event-db
  :complete-request         ;; when we complete a request we need to clean up
- (fn [db [_ request-type]] ;; few things so that our ui is nice and tidy
+ (fn-traced [db [_ request-type]] ;; few things so that our ui is nice and tidy
    (assoc-in db [:loading request-type] false)))
 
 (reg-event-fx
  :api-request-error  ;; triggered when we get request-error from the server
- (fn [{:keys [db]} [_ request-type response]]  ;; destructure to obtain request-type and response
+ (fn-traced [{:keys [db]} [_ request-type response]]  ;; destructure to obtain request-type and response
    {:db (assoc-in db [:errors request-type] (get-in response [:response :errors]))  ;; save in db so that we can
     :dispatch [:complete-request request-type]}))                                   ;; display it to the user
