@@ -14,20 +14,24 @@ For more information on how this works with other frontends/backends, head over 
 > ### Application structure/style heavily inspired by [todomvc](https://github.com/Day8/re-frame/tree/master/examples/todomvc)
 
 ## Setup And Run
-`git clone https://github.com/jacekschae/conduit.git && cd conduit`, then:
 
-### Install dependencies
-``` shell
+#### Copy repository
+```shell
+git clone https://github.com/jacekschae/conduit.git && cd conduit
+```
+
+#### Install dependencies
+```shell
 yarn install || npm install
 ```
 
-### Run dev server
-``` shell
+#### Run dev server
+```shell
 yarn dev || npm run dev
 ```
 
-### Compile an optimized version
+#### Compile an optimized version
 
-``` shell
+```shell
 yarn release || npm run release
 ```
