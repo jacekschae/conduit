@@ -14,27 +14,20 @@ For more information on how this works with other frontends/backends, head over 
 > ### Application structure/style heavily inspired by [todomvc](https://github.com/Day8/re-frame/tree/master/examples/todomvc)
 
 ## Setup And Run
-
-`shadow-cljs` is a build tool for ClojureScript.
-
-``` shell
-npm install -g shadow-cljs
-
-# or with yarn
-
-yarn global add shadow-cljs
-```
-
 `git clone https://github.com/jacekschae/conduit.git && cd conduit`, then:
 
+### Install dependencies
 ``` shell
-yarn install
-
-yarn dev
+yarn install || npm install
 ```
 
-## Compile an optimized version
+### Run dev server
+``` shell
+yarn dev || npm run dev
+```
+
+### Compile an optimized version
 
 ``` shell
-yarn release
+yarn release || npm run release
 ```
