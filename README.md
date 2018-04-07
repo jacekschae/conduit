@@ -25,7 +25,7 @@ npm install -g shadow-cljs
 yarn global add shadow-cljs
 ```
 
-`git clone` this repo and `cd` into the repo, then:
+`git clone https://github.com/jacekschae/conduit.git && cd conduit`, then:
 
 ``` shell
 yarn install
