@@ -15,26 +15,23 @@ For more information on how this works with other frontends/backends, head over 
 
 ## Setup And Run
 
-`shadow-cljs` is a build tool for ClojureScript.
-
-``` shell
-npm install -g shadow-cljs
-
-# or with yarn
-
-yarn global add shadow-cljs
+#### Copy repository
+```shell
+git clone https://github.com/jacekschae/conduit.git && cd conduit
 ```
 
-`git clone` this repo and `cd` into the repo, then:
-
-``` shell
-yarn install
-
-yarn dev
+#### Install dependencies
+```shell
+yarn install || npm install
 ```
 
-## Compile an optimized version
+#### Run dev server
+```shell
+yarn dev || npm run dev
+```
 
-``` shell
-yarn release
+#### Compile an optimized version
+
+```shell
+yarn release || npm run release
 ```
