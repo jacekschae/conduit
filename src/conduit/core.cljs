@@ -27,7 +27,7 @@
 
 ;; -- Routes and Navigation ---------------------------------------------------
 ;;
-(defn hook-browser-navigation! []
+(defonce history
   (doto (History.)
     (gevents/listen
      EventType/NAVIGATE
@@ -49,8 +49,7 @@
     (defroute "/logout" [] (dispatch [:logout]))
     (defroute "/article/:slug" [slug] (dispatch [:set-active-page {:page :article :slug slug}]))
     (defroute "/:profile/favorites" [profile] (dispatch [:set-active-page {:page :favorited :favorited (subs profile 1)}]))
-    (defroute "/:profile" [profile] (dispatch [:set-active-page {:page :profile :profile (subs profile 1)}]))
-    (hook-browser-navigation!)))
+    (defroute "/:profile" [profile] (dispatch [:set-active-page {:page :profile :profile (subs profile 1)}]))))
 
 ;; -- Entry Point -------------------------------------------------------------
 ;; Within ../../resources/public/index.html you'll see this code:
