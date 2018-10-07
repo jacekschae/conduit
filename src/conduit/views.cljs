@@ -314,7 +314,6 @@
           [:li.nav-item
            [:a.nav-link {:href (url-for :profile :user-id username) :class (when author " active")} "My Articles"]]
           [:li.nav-item
-           (js/console.log favorites)
            [:a.nav-link {:href (url-for :favorited :user-id username) :class (when favorites "active")} "Favorited Articles"]]]]
         [articles-list articles (:articles loading)]]]]]))
 

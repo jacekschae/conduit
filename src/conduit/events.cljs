@@ -77,7 +77,6 @@
 (reg-event-fx                                                                ;; usage: (dispatch [:set-active-page {:page :home})
  :set-active-page                                                            ;; triggered when the user clicks on a link that redirects to a another page
  (fn-traced [{:keys [db]} [_ {:keys [page slug profile favorited user-id]}]] ;; destructure 2nd parameter to obtain keys
-            (js/console.log "set-active-page" favorited)
             (let [set-page (assoc db :active-page page)]
               (case page
                 ;; -- URL @ "/" --------------------------------------------------------
