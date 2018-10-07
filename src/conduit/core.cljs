@@ -1,55 +1,10 @@
 (ns conduit.core
-  (:require-macros [secretary.core :refer [defroute]])
-  (:import goog.History)
-  (:require [secretary.core :as secretary]
-            [goog.events :as gevents]
-            [goog.history.EventType :as EventType]
-            [re-frame.core :refer [dispatch dispatch-sync clear-subscription-cache!]]
+  (:require [re-frame.core :refer [dispatch dispatch-sync clear-subscription-cache!]]
             [reagent.core :as reagent]
-            [conduit.events] ;; These three are only
-            [conduit.subs]   ;; required to make the compiler
-            [conduit.views]))  ;; load them
-
-;; -- Service Worker ----------------------------------------------------------
-;;
-(defn is-service-worker-supported?
-  []
-  (and
-   (exists? js/navigator.serviceWorker)
-   (= js/location.protocol "https:")))
-
-(defn register-service-worker
-  [path-to-sw]
-  (when (is-service-worker-supported?)
-    (-> js/navigator
-        .-serviceWorker
-        (.register path-to-sw))))
-
-;; -- Routes and Navigation ---------------------------------------------------
-;;
-(defonce history
-  (doto (History.)
-    (gevents/listen
-     EventType/NAVIGATE
-     (fn [event]
-       (secretary/dispatch! (.-token event))))
-    (.setEnabled true)))
-
-(defn routes
-  []
-  (let [slug nil
-        profile nil]
-    (secretary/set-config! :prefix "#")
-    (defroute "/" [] (dispatch [:set-active-page {:page :home}]))
-    (defroute "/login" [] (dispatch [:set-active-page {:page :login}]))
-    (defroute "/register" [] (dispatch [:set-active-page {:page :register}]))
-    (defroute "/settings" [] (dispatch [:set-active-page {:page :settings}]))
-    (defroute "/editor" [] (dispatch [:set-active-page {:page :editor}]))
-    (defroute "/editor/:slug" [slug] (dispatch [:set-active-page {:page :editor :slug slug}]))
-    (defroute "/logout" [] (dispatch [:logout]))
-    (defroute "/article/:slug" [slug] (dispatch [:set-active-page {:page :article :slug slug}]))
-    (defroute "/:profile/favorites" [profile] (dispatch [:set-active-page {:page :favorited :favorited (subs profile 1)}]))
-    (defroute "/:profile" [profile] (dispatch [:set-active-page {:page :profile :profile (subs profile 1)}]))))
+            [conduit.router :as router]
+            [conduit.events]  ;; These three are only
+            [conduit.subs]    ;; required to make the compiler
+            [conduit.views])) ;; load them
 
 ;; -- Entry Point -------------------------------------------------------------
 ;; Within ../../resources/public/index.html you'll see this code:
@@ -58,8 +13,9 @@
 ;;
 (defn ^:export main
   []
-  ;; Hookup the router.
-  (routes)
+  ;; Routre config can be fount within `./router.cljs`. Here we are just hooking
+  ;; up the router on start
+  (router/start!)
 
   ;; Put an initial value into app-db.
   ;; The event handler for `:initialise-db` can be found in `events.cljs`
@@ -72,6 +28,3 @@
   ;; root view for the entire UI.
   (reagent/render [conduit.views/conduit-app]
     (.getElementById js/document "app")))
-
-  ;; Register Service Worker defined at the top
-  ; (register-service-worker "js/service-worker.js"))

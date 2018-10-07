@@ -1,5 +1,6 @@
 (ns conduit.views
   (:require [reagent.core  :as reagent]
+            [conduit.router :refer [url-for set-token!]]
             [re-frame.core :refer [subscribe dispatch]]
             [clojure.string :as str :refer [trim split]]))
 
@@ -13,40 +14,36 @@
   [tags-list]
   [:ul.tag-list
    (for [tag tags-list]
-     ^{:key tag} [:li.tag-default.tag-pill.tag-outline tag])])
+     [:li.tag-default.tag-pill.tag-outline {:key tag} tag])])
 
 (defn article-meta
-  [{author          :author
-    created-at      :createdAt
-    favorites-count :favoritesCount
-    favorited       :favorited
-    slug            :slug}]
-  (let [loading @(subscribe [:loading])
-        user @(subscribe [:user])
-        profile @(subscribe [:profile])]
+  [{:keys [author createdAt favoritesCount favorited slug] :or {slug "" author {:username ""}}}]
+  (let [loading  @(subscribe [:loading])
+        user     @(subscribe [:user])
+        profile  @(subscribe [:profile])
+        username (:username author)]
     [:div.article-meta
-     [:a {:href (str "#/@" (:username author))}
-      [:img {:src (:image author)}]]
-     " "
+     [:a {:href (url-for :profile :user-id username)}
+      [:img {:src (:image author)}] " "]
      [:div.info
-      [:a.author {:href (str "#/@" (:username author))} (:username author)]
-      [:span.date (format-date created-at)]]
-     (if (= (:username user) (:username author))
+      [:a.author {:href (url-for :profile :user-id username)} username]
+      [:span.date (format-date createdAt)]]
+     (if (= (:username user) username)
        [:span
-        [:a.btn.btn-sm.btn-outline-secondary {:href (str "#/editor/" slug)}
+        [:a.btn.btn-sm.btn-outline-secondary {:href (url-for :editor :slug slug)}
          [:i.ion-edit]
          [:span " Edit Article "]]
         " "
-        [:a.btn.btn-outline-danger.btn-sm {:href "#/"
+        [:a.btn.btn-outline-danger.btn-sm {:href (url-for :home)
                                            :on-click #(dispatch [:delete-article slug])}
          [:i.ion-trash-a]
          [:span " Delete Article "]]]
        (when-not (empty? user)
          [:span
-          [:button.btn.btn-sm.action-btn.btn-outline-secondary {:on-click #(dispatch [:toggle-follow-user (:username profile)])
+          [:button.btn.btn-sm.action-btn.btn-outline-secondary {:on-click #(dispatch [:toggle-follow-user username])
                                                                 :class (when (:toggle-follow-user loading) "disabled")}
            [:i {:class (if (:following profile) "ion-minus-round" "ion-plus-round")}]
-           [:span (if (:following profile) (str " Unfollow " (:username profile)) (str " Follow " (:username profile)))]]
+           [:span (if (:following profile) (str " Unfollow " username) (str " Follow " username))]]
           " "
           [:button.btn.btn-sm.btn-primary {:on-click #(dispatch [:toggle-favorite-article slug])
                                            :class (cond
@@ -54,25 +51,28 @@
                                                     (:toggle-favorite-article loading) "disabled")}
            [:i.ion-heart]
            [:span (if favorited " Unfavorite Post " " Favorite Post ")]
-           [:span.counter "(" favorites-count ")"]]]))]))
+           [:span.counter "(" favoritesCount ")"]]]))]))
 
 (defn articles-preview
-  [{:keys [description slug createdAt title author favoritesCount favorited tagList]}]
-  (let [loading @(subscribe [:loading])]
+  [{:keys [description slug createdAt title author favoritesCount favorited tagList] :or {slug "" author {:username ""}}}]
+  (let [loading  @(subscribe [:loading])
+        user     @(subscribe [:user])
+        username (:username author)]
     [:div.article-preview
      [:div.article-meta
-      [:a {:href (str "#/@" (:username author))}
+      [:a {:href (url-for :profile :user-id username)}
        [:img {:src (:image author)}]]
       [:div.info
-       [:a.author {:href (str "#/@" (:username author))} (:username author)]
+       [:a.author {:href (url-for :profile :user-id username)} username]
        [:span.date (format-date createdAt)]]
-      [:button.btn.btn-primary.btn-sm.pull-xs-right {:on-click #(dispatch [:toggle-favorite-article slug])
-                                                     :class (cond
-                                                              (not favorited) "btn-outline-primary"
-                                                              (:toggle-favorite-article loading) "disabled")}
-       [:i.ion-heart " "]
-       [:span favoritesCount]]]
-     [:a.preview-link {:href (str "#/article/" slug)}
+      (when-not (empty? user)
+        [:button.btn.btn-primary.btn-sm.pull-xs-right {:on-click #(dispatch [:toggle-favorite-article slug])
+                                                       :class (cond
+                                                                (not favorited) "btn-outline-primary"
+                                                                (:toggle-favorite-article loading) "disabled")}
+         [:i.ion-heart " "]
+         [:span favoritesCount]])]
+     [:a.preview-link {:href (url-for :article :slug slug)}
       [:h1 title]
       [:p description]
       [:span "Read more ..."]
@@ -100,30 +100,30 @@
 ;;
 (defn header
   []
-  (let [user @(subscribe [:user])
+  (let [user        @(subscribe [:user])
         active-page @(subscribe [:active-page])]
     [:nav.navbar.navbar-light
      [:div.container
-      [:a.navbar-brand {:href "#/"} "conduit"]
+      [:a.navbar-brand {:href (url-for :home)} "conduit"]
       (if (empty? user)
         [:ul.nav.navbar-nav.pull-xs-right
          [:li.nav-item
-          [:a.nav-link {:href "#/" :class (when (= active-page :home) "active")} "Home"]]
+          [:a.nav-link {:href (url-for :home) :class (when (= active-page :home) "active")} "Home"]]
          [:li.nav-item
-          [:a.nav-link {:href "#/login" :class (when (= active-page :login) "active")} "Sign in"]]
+          [:a.nav-link {:href (url-for :login) :class (when (= active-page :login) "active")} "Sign in"]]
          [:li.nav-item
-          [:a.nav-link {:href "#/register" :class (when (= active-page :register) "active")} "Sign up"]]]
+          [:a.nav-link {:href (url-for :register) :class (when (= active-page :register) "active")} "Sign up"]]]
         [:ul.nav.navbar-nav.pull-xs-right
          [:li.nav-item
-          [:a.nav-link {:href "#/" :class (when (= active-page :home) "active")} "Home"]]
+          [:a.nav-link {:href (url-for :home) :class (when (= active-page :home) "active")} "Home"]]
          [:li.nav-item
-          [:a.nav-link {:href "#/editor" :class (when (= active-page :editor) "active")}
+          [:a.nav-link {:href (url-for :editor :slug "new") :class (when (= active-page :editor) "active")}
            [:i.ion-compose "New Article"]]]
          [:li.nav-item
-          [:a.nav-link {:href "#/settings" :class (when (= active-page :settings) "active")}
+          [:a.nav-link {:href (url-for :settings) :class (when (= active-page :settings) "active")}
            [:i.ion-gear-a "Settings"]]]
          [:li.nav-item
-          [:a.nav-link {:href (str "#/@" (:username user)) :class (when (= active-page :profile) "active")} (:username user)
+          [:a.nav-link {:href (url-for :profile :user-id (:username user)) :class (when (= active-page :profile) "active")} (:username user)
            [:img.user-pic {:src (:image user)}]]]])]]))
 
 ;; -- Footer ------------------------------------------------------------------
@@ -132,7 +132,7 @@
   []
   [:footer
    [:div.container
-    [:a.logo-font {:href "#/"} "conduit"]
+    [:a.logo-font {:href (url-for :home)} "conduit"]
     [:span.attribution
      "An interactive learning project from "
      [:a {:href "https://thinkster.io"} "Thinkster"]
@@ -150,12 +150,12 @@
 
 (defn home
   []
-  (let [filter @(subscribe [:filter])
-        tags @(subscribe [:tags])
-        loading @(subscribe [:loading])
-        articles @(subscribe [:articles])
+  (let [filter         @(subscribe [:filter])
+        tags           @(subscribe [:tags])
+        loading        @(subscribe [:loading])
+        articles       @(subscribe [:articles])
         articles-count @(subscribe [:articles-count])
-        user @(subscribe [:user])]
+        user           @(subscribe [:user])]
     [:div.home-page
      (when (empty? user)
        [:div.banner
@@ -169,11 +169,11 @@
          [:ul.nav.nav-pills.outline-active
           (when-not (empty? user)
             [:li.nav-item
-             [:a.nav-link {:href ""
+             [:a.nav-link {:href (url-for :home)
                            :class (when (:feed filter) "active")
                            :on-click #(get-feed-articles % {:offset 0 :limit 10})} "Your Feed"]])
           [:li.nav-item
-           [:a.nav-link {:href ""
+           [:a.nav-link {:href (url-for :home)
                          :class (when-not (or (:tag filter) (:feed filter)) "active")
                          :on-click #(get-articles % {:offset 0 :limit 10})} "Global Feed"]] ;; first argument: % is browser event, second: map of filter params
           (when (:tag filter)
@@ -188,8 +188,7 @@
                                             :on-click #(get-articles % (if (:tag filter)
                                                                          {:offset (* offset 10) :tag (:tag filter) :limit 10}
                                                                          {:offset (* offset 10) :limit 10}))}
-                             [:a.page-link {:href ""} (+ 1 offset)]])])]
-
+                             [:a.page-link {:href (url-for :home)} (+ 1 offset)]])])]
        [:div.col-md-3
         [:div.sidebar
          [:p "Popular Tags"]
@@ -197,7 +196,7 @@
            [:p "Loading tags ..."]
            [:div.tag-list
             (for [tag tags]
-              ^{:key tag} [:a.tag-pill.tag-default {:href ""
+              ^{:key tag} [:a.tag-pill.tag-default {:href (url-for :home)
                                                     :on-click #(get-articles % {:tag tag :limit 10 :offset 0})} tag])])]]]]]))
 
 ;; -- Login -------------------------------------------------------------------
@@ -211,17 +210,16 @@
   (let [default {:email "" :password ""}
         credentials (reagent/atom default)]
     (fn []
-      (let [email (get @credentials :email)
-            password (get @credentials :password)
-            errors @(subscribe [:errors])
-            loading @(subscribe [:loading])]
+      (let [{:keys [email password]} @credentials
+            loading  @(subscribe [:loading])
+            errors   @(subscribe [:errors])]
         [:div.auth-page
          [:div.container.page
           [:div.row
            [:div.col-md-6.offset-md-3.col-xs-12
             [:h1.text-xs-center "Sign in"]
             [:p.text-xs-center
-             [:a {:href "#/register"} "Need an account?"]]
+             [:a {:href (url-for :register)} "Need an account?"]]
             (when (:login errors)
               [errors-list (:login errors)])
             [:form {:on-submit #(login-user % @credentials)}
@@ -251,18 +249,16 @@
   (let [default {:username "" :email "" :password ""}
         registration (reagent/atom default)]
     (fn []
-      (let [username (get @registration :username)
-            email (get @registration :email)
-            password (get @registration :password)
-            loading @(subscribe [:loading])
-            errors @(subscribe [:errors])]
+      (let [{:keys [username email password]} @registration
+            loading  @(subscribe [:loading])
+            errors   @(subscribe [:errors])]
         [:div.auth-page
          [:div.container.page
           [:div.row
            [:div.col-md-6.offset-md-3.col-xs-12
             [:h1.text-xs-center "Sign up"]
             [:p.text-xs-center
-             [:a {:href "#/login"} "Have an account?"]]
+             [:a {:href (url-for :login)} "Have an account?"]]
             (when (:register-user errors)
               [errors-list (:register-user errors)])
             [:form {:on-submit #(register-user % @registration)}
@@ -290,35 +286,36 @@
 ;;
 (defn profile
   []
-  (let [profile @(subscribe [:profile])
-        filter @(subscribe [:filter])
-        loading @(subscribe [:loading])
+  (let [{:keys [image username bio following] :or {username ""}} @(subscribe [:profile])
+        {:keys [author favorites]} @(subscribe [:filter])
+        loading  @(subscribe [:loading])
         articles @(subscribe [:articles])
-        user @(subscribe [:user])]
+        user     @(subscribe [:user])]
     [:div.profile-page
      [:div.user-info
       [:div.container
        [:div.row
         [:div.col-xs-12.col-md-10.offset-md-1
-         [:img.user-img {:src (:image profile)}]
-         [:h4 (:username profile)]
-         [:p (:bio profile)]
-         (if (= (:username user) (:username profile))
-           [:a.btn.btn-sm.btn-outline-secondary.action-btn {:href "#/settings"}
+         [:img.user-img {:src image}]
+         [:h4 username]
+         [:p bio]
+         (if (= (:username user) username)
+           [:a.btn.btn-sm.btn-outline-secondary.action-btn {:href (url-for :settings)}
             [:i.ion-gear-a] " Edit Profile Settings"]
-           [:button.btn.btn-sm.action-btn.btn-outline-secondary {:on-click #(dispatch [:toggle-follow-user (:username profile)])
+           [:button.btn.btn-sm.action-btn.btn-outline-secondary {:on-click #(dispatch [:toggle-follow-user username])
                                                                  :class (when (:toggle-follow-user loading) "disabled")}
-            [:i {:class (if (:following profile) "ion-minus-round" "ion-plus-round")}]
-            [:span (if (:following profile) (str " Unfollow " (:username profile)) (str " Follow " (:username profile)))]])]]]]
+            [:i {:class (if following "ion-minus-round" "ion-plus-round")}]
+            [:span (if following (str " Unfollow " username) (str " Follow " username))]])]]]]
      [:div.container
-      [:row
+      [:div.row
        [:div.col-xs-12.col-md-10.offset-md-1
         [:div.articles-toggle
          [:ul.nav.nav-pills.outline-active
           [:li.nav-item
-           [:a.nav-link {:href (str "#/@" (:username profile)) :class (when (:author filter) " active")} "My Articles"]]
+           [:a.nav-link {:href (url-for :profile :user-id username) :class (when author " active")} "My Articles"]]
           [:li.nav-item
-           [:a.nav-link {:href (str "#/@" (:username profile) "/favorites") :class (when (:favorites filter) "nav-link active")} "Favorited Articles"]]]]
+           (js/console.log favorites)
+           [:a.nav-link {:href (url-for :favorited :user-id username) :class (when favorites "active")} "Favorited Articles"]]]]
         [articles-list articles (:articles loading)]]]]]))
 
 ;; -- Settings ----------------------------------------------------------------
@@ -334,8 +331,8 @@
 (defn settings
   []
   (let [{:keys [bio email image username] :as user} @(subscribe [:user])
-        default {:bio bio :email email :image image :username username}
-        loading @(subscribe [:loading])
+        default     {:bio bio :email email :image image :username username}
+        loading     @(subscribe [:loading])
         user-update (reagent/atom default)]
     [:div.settings-page
      [:div.container.page
@@ -382,14 +379,11 @@
 ;;
 (defn upsert-article [event content slug]
   (.preventDefault event)
-  (let [title (trim (or (:title content) ""))
-        description (trim (or  (:description content) ""))
-        body (trim (or (:body content) ""))
-        tagList (split (:tagList content) #" ")]
-    (dispatch [:upsert-article {:slug slug :article {:title title
-                                                     :description description
-                                                     :body body
-                                                     :tagList tagList}}])))
+  (dispatch [:upsert-article {:slug slug 
+                              :article {:title (trim (or (:title content) ""))
+                                                          :description (trim (or  (:description content) ""))
+                                                          :body (trim (or (:body content) ""))
+                                                          :tagList (split (:tagList content) #" ")}}]))
 
 (defn editor
   []
@@ -446,10 +440,10 @@
         comment (reagent/atom default)]
     (fn []
       (let [active-article @(subscribe [:active-article])
-            user @(subscribe [:user])
-            comments @(subscribe [:comments])
-            errors @(subscribe [:errors])
-            loading @(subscribe [:loading])]
+            user           @(subscribe [:user])
+            comments       @(subscribe [:comments])
+            errors         @(subscribe [:errors])
+            loading        @(subscribe [:loading])]
         [:div.article-page
          [:div.banner
           [:div.container
@@ -479,9 +473,9 @@
                 [:button.btn.btn-sm.btn-primary {:class (when (:comments loading) "disabled")
                                                  :on-click #(post-comment % comment default)} "Post Comment"]]]
               [:p
-               [:a {:href "#/register"} "Sign up"]
+               [:a {:href (url-for :register)} "Sign up"]
                " or "
-               [:a {:href "#/login"} "Sign in"]
+               [:a {:href (url-for :login)} "Sign in"]
                " to add comments on this article."])
             (if (:comments loading)
               [:div
@@ -493,10 +487,10 @@
                               [:div.card-block
                                [:p.card-text body]]
                               [:div.card-footer
-                               [:a.comment-author {:href (str "#/@" (:username author))}
+                               [:a.comment-author {:href (url-for :profile :user-id (:username author))}
                                 [:img.comment-author-img {:src (:image author)}]]
                                " "
-                               [:a.comment-author {:href (str "#/@" (:username author))} (:username author)]
+                               [:a.comment-author {:href (url-for :profile :user-id (:username author))} (:username author)]
                                [:span.date-posted (format-date createdAt)]
                                (when (= (:username user) (:username author))
                                  [:span.mod-options {:on-click #(dispatch [:delete-comment id])}
@@ -504,13 +498,13 @@
 
 (defn pages [page-name]
   (case page-name
-    :home [home]
-    :login [login]
+    :home     [home]
+    :login    [login]
     :register [register]
-    :profile [profile]
+    :profile  [profile]
     :settings [settings]
-    :editor [editor]
-    :article [article]
+    :editor   [editor]
+    :article  [article]
     [home]))
 
 (defn conduit-app

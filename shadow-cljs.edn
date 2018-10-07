@@ -1,8 +1,10 @@
 {:source-paths ["src"]
 
- :dependencies [[cljs-ajax "0.7.3"]
-                [reagent "0.8.0"]
-                [re-frame "0.10.5"]
+ :dependencies [[bidi "2.1.4"]
+                [kibu/pushy "0.3.8"]
+                [cljs-ajax "0.7.3"]
+                [reagent "0.8.1"]
+                [re-frame "0.10.6"]
                 [day8.re-frame/http-fx "0.1.6"]
                 [secretary "1.2.3"]
                 [com.andrewmcveigh/cljs-time "0.5.2"]
