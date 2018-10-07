@@ -8,8 +8,8 @@
 
 ;; -- Entry Point -------------------------------------------------------------
 ;; Within ../../resources/public/index.html you'll see this code:
-;; window.onload = function() { conduit.core.main() }
-;; So this is the entry function that kicks off the app once the HTML is loaded.
+;; window.onload = function() { conduit.core.main() } this is the entry 
+;; function that kicks off the app once the HTML is loaded.
 ;;
 (defn ^:export main
   []
