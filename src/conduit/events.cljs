@@ -29,7 +29,7 @@
                            trim-v])            ;; removes first (event id) element from the event vec
 
 ;; After logging out clean up local-storage so that when a users refreshes
-;; the browser she/he is not automatically loged-in, and because it's a
+;; the browser she/he is not automatically logged-in, and because it's a
 ;; good practice to clean-up after yourself.
 ;;
 (def remove-user-interceptor [(after remove-user-ls)])
