@@ -2,7 +2,7 @@
 
 > ### [ClojureScript](https://clojurescript.org/) and [re-frame](https://github.com/Day8/re-frame) codebase containing real world examples (CRUD, auth, advanced patterns, etc) that adheres to the [RealWorld](https://github.com/gothinkster/realworld-example-apps) spec and API.
 
-### [Demo](https://jacekschae.github.io/conduit-re-frame-demo/) &nbsp;&nbsp;&nbsp;&nbsp; [Demo with re-frame-10x](https://jacekschae.github.io/conduit-re-frame-10x-demo/) &nbsp;&nbsp;&nbsp;&nbsp; [RealWorld](https://github.com/gothinkster/realworld)
+### [Demo](https://conduit-re-frame-demo-10x.netlify.com) &nbsp;&nbsp;&nbsp;&nbsp; [Demo with re-frame-10x](https://jacekschae.github.io/conduit-re-frame-10x-demo/) &nbsp;&nbsp;&nbsp;&nbsp; [RealWorld](https://github.com/gothinkster/realworld)
 
 This codebase was created to demonstrate a fully fledged fullstack application built with
 [ClojureScript](https://clojurescript.org/) and [re-frame](https://github.com/Day8/re-frame) including CRUD operations,
