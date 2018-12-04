@@ -183,7 +183,7 @@
                                              (endpoint "articles" (:slug params))   ;; endpoint - one with :slug to update
                                              (endpoint "articles"))                 ;; and another to insert
                           :headers         (auth-header db)                         ;; get and pass user token obtained during login
-                          :params          (:article params)
+                          :params          {:article (:article params)}
                           :format          (json-request-format)                    ;; make sure we are doing request format wiht json
                           :response-format (json-response-format {:keywords? true}) ;; json response and all keys to keywords
                           :on-success      [:upsert-article-success]                ;; trigger upsert-article-success event
@@ -302,7 +302,7 @@
              :http-xhrio {:method          :post
                           :uri             (endpoint "articles" (:active-article db) "comments") ;; evaluates to "api/articles/:slug/comments"
                           :headers         (auth-header db)                                      ;; get and pass user token obtained during login
-                          :params          body
+                          :params          {:comment body}
                           :format          (json-request-format)                                 ;; make sure we are doing request format wiht json
                           :response-format (json-response-format {:keywords? true})              ;; json response and all keys to keywords
                           :on-success      [:post-comment-success]                               ;; trigger get-articles-success

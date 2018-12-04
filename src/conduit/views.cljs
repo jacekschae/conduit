@@ -2,7 +2,7 @@
   (:require [reagent.core  :as reagent]
             [conduit.router :refer [url-for set-token!]]
             [re-frame.core :refer [subscribe dispatch]]
-            [clojure.string :as str :refer [trim split]]))
+            [clojure.string :as str :refer [trim split join]]))
 
 ;; -- Helpers -----------------------------------------------------------------
 ;;
@@ -387,6 +387,7 @@
 (defn editor
   []
   (let [{:keys [title description body tagList slug] :as active-article} @(subscribe [:active-article])
+        tagList (join " " tagList)
         default {:title title :description description :body body :tagList tagList}
         content (reagent/atom default)]
     (fn []
