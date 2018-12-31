@@ -46,7 +46,7 @@
   ;; deal with #. By using pushy we can have '/about' instead of '/#/about'.
   ;; pushy takes three arguments:
   ;; dispatch-fn - which dispatches when a match is found
-  ;; match-fn - which cheks to see if a route exist
+  ;; match-fn - which checks if a route exist
   ;; identity-fn (optional) - extract the route from value returned by match-fn
   (pushy/start! (pushy/pushy dispatch-route parse-url)))
 
