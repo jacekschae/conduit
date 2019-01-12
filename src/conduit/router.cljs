@@ -7,7 +7,7 @@
 ;; source: https://pupeno.com/2015/08/26/no-hashes-bidirectional-routing-in-re-frame-with-bidi-and-pushy/
 
 ;; -- Routes ------------------------------------------------------------------
-;; Define routes so that wehen we enter specific path the router knows what to
+;; Define routes so that when we enter specific path the router knows what to
 ;; show us. A route is simply a data structure - Vector - with a pattern and 
 ;; a result.
 (def routes
