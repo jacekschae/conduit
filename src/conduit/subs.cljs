@@ -7,7 +7,7 @@
   (compare b a))
 
 (reg-sub
- :active-page           ;; usage: (subscribe [:showing])
+ :active-page           ;; usage: (subscribe [:active-page])
  (fn [db _]             ;; db is the (map) value stored in the app-db atom
    (:active-page db)))  ;; extract a value from the application state
 
@@ -20,7 +20,7 @@
           (sort-by :epoch reverse-cmp)))))  ;; sort-by epoch in reverse order
 
 (reg-sub
- :articles-count  ;; usage: (subscribe [:articles])
+ :articles-count  ;; usage: (subscribe [:articles-count])
  (fn [db _]
    (:articles-count db)))
 
