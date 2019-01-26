@@ -6,7 +6,6 @@
                 [reagent "0.8.1"]
                 [re-frame "0.10.6"]
                 [day8.re-frame/http-fx "0.1.6"]
-                [secretary "1.2.3"]
                 [com.andrewmcveigh/cljs-time "0.5.2"]
                 [proto-repl "0.3.1"]
                 [binaryage/devtools "0.9.10"]
