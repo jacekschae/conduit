@@ -13,7 +13,7 @@
 ;;
 (defn ^:export main
   []
-  ;; Routre config can be fount within `./router.cljs`. Here we are just hooking
+  ;; Router config can be found within `./router.cljs`. Here we are just hooking
   ;; up the router on start
   (router/start!)
 
