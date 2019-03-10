@@ -465,12 +465,12 @@
               [:form.card.comment-form
                [:div.card-block
                 [:textarea.form-control {:placeholder "Write a comment..."
-                                         :rows "3"
-                                         :value (:body @comment)
-                                         :on-change #(swap! comment assoc :body (-> % .-target .-value))}]]
+                                         :rows        "3"
+                                         :value       (:body @comment)
+                                         :on-change   #(swap! comment assoc :body (-> % .-target .-value))}]]
                [:div.card-footer
                 [:img.comment-author-img {:src (:image user)}]
-                [:button.btn.btn-sm.btn-primary {:class (when (:comments loading) "disabled")
+                [:button.btn.btn-sm.btn-primary {:class    (when (:comments loading) "disabled")
                                                  :on-click #(post-comment % comment default)} "Post Comment"]]]
               [:p
                [:a {:href (url-for :register)} "Sign up"]

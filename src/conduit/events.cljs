@@ -44,10 +44,8 @@
 
 (defn auth-header [db]
   "Get user token and format for API authorization"
-  (let [token (get-in db [:user :token])]
-    (if token
-      [:Authorization (str "Token " token)]
-      nil)))
+  (when-let [token (get-in db [:user :token])]
+    [:Authorization (str "Token " token)]))
 
 (defn add-epoch [date coll]
   "Takes date identifier and adds :epoch (cljs-time.coerce/to-long) timestamp to coll"
@@ -80,12 +78,12 @@
             (let [set-page (assoc db :active-page page)]
               (case page
                 ;; -- URL @ "/" --------------------------------------------------------
-                :home {:db set-page
-                       :dispatch-n  (list (if (empty? (:user db))             ;; dispatch more than one event. When a user
-                                            [:get-articles {:limit 10}]       ;; is NOT logged in we display all articles
-                                            [:get-feed-articles {:limit 10}]) ;; otherwiser we get her/his feed articles
-                                          [:get-tags])}                       ;; we also can't forget to get tags
-            
+                :home {:db         set-page
+                       :dispatch-n (list (if (empty? (:user db))             ;; dispatch more than one event. When a user
+                                           [:get-articles {:limit 10}]       ;; is NOT logged in we display all articles
+                                           [:get-feed-articles {:limit 10}]) ;; otherwiser we get her/his feed articles
+                                         [:get-tags])}                       ;; we also can't forget to get tags
+
                 ;; -- URL @ "/login" | "/register" | "/settings" -----------------------
                 (:login :register :settings) {:db set-page} ;; when using case with multiple test constants that
                                                                                     ;; do the same thing we can group them together
@@ -98,12 +96,12 @@
                          :dispatch (if slug                     ;; When we click article to edit we need
                                      [:set-active-article slug] ;; to set it active or if we want to write
                                      [:reset-active-article])}  ;; a new article we reset
-            
+
                 ;; -- URL @ "/article/:slug" -------------------------------------------
                 :article {:db         (assoc set-page :active-article slug)
                           :dispatch-n (list [:get-article-comments {:slug slug}]
                                             [:get-user-profile {:profile (get-in db [:articles slug :author :username])}])}
-            
+
                 ;; -- URL @ "/profile/:slug" -------------------------------------------
                 :profile {:db         (assoc set-page :active-article slug)
                           :dispatch-n (list [:get-user-profile {:profile profile}] ;; again for dispatching multiple
