@@ -11,7 +11,7 @@
 ;; window.onload = function() { conduit.core.main() } this is the entry 
 ;; function that kicks off the app once the HTML is loaded.
 ;;
-(defn ^:export main
+(defn ^:export init
   []
   ;; Router config can be found within `./router.cljs`. Here we are just hooking
   ;; up the router on start

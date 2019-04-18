@@ -1,6 +1,6 @@
 {:source-paths ["src"]
 
- :dependencies [[bidi "2.1.4"]
+ :dependencies [[bidi "2.1.5"]
                 [kibu/pushy "0.3.8"]
                 [cljs-ajax "0.7.3"]
                 [reagent "0.8.1"]
@@ -9,9 +9,8 @@
                 [com.andrewmcveigh/cljs-time "0.5.2"]
                 [proto-repl "0.3.1"]
                 [binaryage/devtools "0.9.10"]
-                [day8.re-frame/re-frame-10x "0.3.3-react16"]
-                [day8.re-frame/tracing "0.5.1"]
-                [day8.re-frame/tracing-stubs "0.5.1"]]
+                [day8.re-frame/re-frame-10x "0.4.0"]
+                [day8.re-frame/tracing "0.5.1"]]
 
  :nrepl        {:port 3333}
 
@@ -19,15 +18,11 @@
                       :output-dir "public/js"
                       :asset-path "/js"
 
-                      :modules
-                      {:main
-                       {:entries [conduit.core]}}
+                      :modules {:main {:init-fn conduit.core/init}}
 
-                      :compiler-options {:closure-warnings {:global-this :off}
-                                         :closure-defines {"re_frame.trace.trace_enabled_QMARK_" true
-                                                           "day8.re_frame.tracing.trace_enabled_QMARK_"  true}}
+                      :dev {:compiler-options {:closure-defines {re-frame.trace/trace-enabled? true
+                                                                 day8.re-frame.tracing/trace-enabled? true}}}
 
-                      :devtools
-                      {:http-root "public"
-                       :http-port 3000
-                       :preloads [day8.re-frame-10x.preload]}}}}
+                      :devtools {:http-root   "public"
+                                 :http-port   3000
+                                 :preloads    [day8.re-frame-10x.preload]}}}}
