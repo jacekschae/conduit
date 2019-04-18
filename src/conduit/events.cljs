@@ -79,10 +79,10 @@
               (case page
                 ;; -- URL @ "/" --------------------------------------------------------
                 :home {:db         set-page
-                       :dispatch-n (list (if (empty? (:user db))             ;; dispatch more than one event. When a user
-                                           [:get-articles {:limit 10}]       ;; is NOT logged in we display all articles
-                                           [:get-feed-articles {:limit 10}]) ;; otherwiser we get her/his feed articles
-                                         [:get-tags])}                       ;; we also can't forget to get tags
+                       :dispatch-n [(if (empty? (:user db))             ;; dispatch more than one event. When a user
+                                      [:get-articles {:limit 10}]       ;; is NOT logged in we display all articles
+                                      [:get-feed-articles {:limit 10}]) ;; otherwiser we get her/his feed articles
+                                    [:get-tags]]}                       ;; we also can't forget to get tags
 
                 ;; -- URL @ "/login" | "/register" | "/settings" -----------------------
                 (:login :register :settings) {:db set-page} ;; when using case with multiple test constants that
@@ -99,14 +99,14 @@
 
                 ;; -- URL @ "/article/:slug" -------------------------------------------
                 :article {:db         (assoc set-page :active-article slug)
-                          :dispatch-n (list [:get-articles {:limit 10}]
-                                            [:get-article-comments {:slug slug}]
-                                            [:get-user-profile {:profile (get-in db [:articles slug :author :username])}])}
+                          :dispatch-n [[:get-articles {:limit 10}]
+                                       [:get-article-comments {:slug slug}]
+                                       [:get-user-profile {:profile (get-in db [:articles slug :author :username])}]]}
 
                 ;; -- URL @ "/profile/:slug" -------------------------------------------
                 :profile {:db         (assoc set-page :active-article slug)
-                          :dispatch-n (list [:get-user-profile {:profile profile}] ;; again for dispatching multiple
-                                            [:get-articles {:author profile}])}    ;; events we can use :dispatch-n
+                          :dispatch-n [[:get-user-profile {:profile profile}] ;; again for dispatching multiple
+                                       [:get-articles {:author profile}]]}    ;; events we can use :dispatch-n
                 ;; -- URL @ "/profile/:slug/favorites" ---------------------------------
                 :favorited {:db       (assoc db :active-page :profile)           ;; even though we are at :favorited we still
                             :dispatch [:get-articles {:favorited favorited}]}))))  ;; display :profile with :favorited articles
@@ -116,12 +116,12 @@
  (fn-traced [db _]                        ;; 1st paramter in -db events is db, 2nd paramter not important therefore _
             (dissoc db :active-article))) ;; compute and return the new state
 
-(reg-event-fx                                                       ;; usage: (dispatch [:set-active-article slug])
+(reg-event-fx                                                  ;; usage: (dispatch [:set-active-article slug])
  :set-active-article
- (fn-traced [{:keys [db]} [_ slug]]                                 ;; 1st parameter in -fx events is no longer just db. It is a map which contains a :db key.
-            {:db         (assoc db :active-article slug)            ;; The handler is returning a map which describes two side-effects:
-             :dispatch-n (list [:get-article-comments {:slug slug}] ;; changne to app-state :db and future event in this case :dispatch-n
-                               [:get-user-profile {:profile (get-in db [:articles slug :author :username])}])}))
+ (fn-traced [{:keys [db]} [_ slug]]                            ;; 1st parameter in -fx events is no longer just db. It is a map which contains a :db key.
+            {:db         (assoc db :active-article slug)       ;; The handler is returning a map which describes two side-effects:
+             :dispatch-n [[:get-article-comments {:slug slug}] ;; changne to app-state :db and future event in this case :dispatch-n
+                          [:get-user-profile {:profile (get-in db [:articles slug :author :username])}]]}))
 
 ;; -- GET Articles @ /api/articles --------------------------------------------
 ;;
@@ -193,13 +193,12 @@
  (fn-traced [{:keys [db]} [_ {article :article}]]
             {:db         (-> db
                              (assoc-in [:loading :article] false)
-                             (dissoc :comments)                                ;; clean up any comments that we might have in db
-                             (dissoc :errors)                                  ;; clean up any erros that we might have in db
+                             (dissoc :comments) ;; clean up any comments that we might have in db
+                             (dissoc :errors)   ;; clean up any erros that we might have in db
                              (assoc :active-page :article
                                     :active-article (:slug article)))
-             :dispatch-n (list [:get-article {:slug (:slug article)}]          ;; when the users clicks save we fetch the new version
-                               [:get-article-comments {:slug (:slug article)}]) ;; of the article and comments from the server
-                              ;  [:set-active-page {:page :article :slug (:slug article)}])
+             :dispatch-n [[:get-article {:slug (:slug article)}]           ;; when the users clicks save we fetch the new version
+                          [:get-article-comments {:slug (:slug article)}]] ;; of the article and comments from the server
              :set-url    {:url (str "/article/" (:slug article))}}))
 
 ;; -- DELETE Article @ /api/articles/:slug ------------------------------------
@@ -390,9 +389,9 @@
  ;; So, a path interceptor makes the event handler act more like clojure's `update-in`
  (fn-traced [{user :db} [{props :user}]]
             {:db (merge user props)
-             :dispatch-n (list [:complete-request :login]
-                               [:get-feed-articles {:tag nil :author nil :offset 0 :limit 10}]
-                               [:set-active-page {:page :home}])}))
+             :dispatch-n [[:complete-request :login]
+                          [:get-feed-articles {:tag nil :author nil :offset 0 :limit 10}]
+                          [:set-active-page {:page :home}]]}))
 
 ;; -- POST Registration @ /api/users ------------------------------------------
 ;;
@@ -424,8 +423,8 @@
  ;; So, a path interceptor makes the event handler act more like clojure's `update-in`
  (fn-traced [{user :db} [{props :user}]]
             {:db (merge user props)
-             :dispatch-n (list [:complete-request :register-user]
-                               [:set-active-page {:page :home}])}))
+             :dispatch-n [[:complete-request :register-user]
+                          [:set-active-page {:page :home}]]}))
 
 ;; -- PUT Update User @ /api/user ---------------------------------------------
 ;;
