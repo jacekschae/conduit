@@ -21,22 +21,25 @@
         "profile/" {[:user-id] {""           :profile
                                 "/favorites" :favorited}}}])
 
+;; -- history -----------------------------------------------------------------
+;; we need to know the history of our routes so that we can navigate back and 
+;; forward. For that we'll use pushy/pushy to which we need to provide dispatch
+;; function: what happens on dispatch and match: what routes should we match
+(def history
+  (let [dispatch #(dispatch 
+                   [:set-active-page {:page      (:handler %)
+                                      :slug      (get-in % [:route-params :slug])
+                                      :profile   (get-in % [:route-params :user-id])
+                                      :favorited (get-in % [:route-params :user-id])}])
+        match #(bidi/match-route routes %)]
+    (pushy/pushy dispatch match)))
+
 ;; -- parse-url ---------------------------------------------------------------
 ;; By using bidi/match-route we convert URL into a data structure and check if 
 ;; a route exists in our routes.
 (defn- parse-url
   [url]
   (bidi/match-route routes url))
-
-;; -- dispatch-route ----------------------------------------------------------
-;; When we find a match, with parse-url, we will use the output to
-;; dispatch route and redirect a user
-(defn- dispatch-route
-  [matched-route]
-  (dispatch [:set-active-page {:page      (:handler matched-route)
-                               :slug      (get-in matched-route [:route-params :slug])
-                               :profile   (get-in matched-route [:route-params :user-id])
-                               :favorited (get-in matched-route [:route-params :user-id])}]))
 
 ;; -- Router Start ------------------------------------------------------------
 ;;
@@ -48,17 +51,13 @@
   ;; dispatch-fn - which dispatches when a match is found
   ;; match-fn - which checks if a route exist
   ;; identity-fn (optional) - extract the route from value returned by match-fn
-  (pushy/start! (pushy/pushy dispatch-route parse-url)))
+  (pushy/start! history))
 
 ;; -- url-for -----------------------------------------------------------------
 ;; To dispatch routes in our UI (view) we will use url-for and then pass a
 ;; keyword to which route we want to direct the user.
 ;; usage: (url-for :home)
 (def url-for (partial bidi/path-for routes))
-
-;; -- history -----------------------------------------------------------------
-;; we need to hook up history to our set-token so that we can go back
-(def history (pushy/pushy dispatch-route (partial bidi/match-route routes)))
 
 ;; -- set-token! --------------------------------------------------------------
 ;; To change route after some actions we will need to set url and for that we
