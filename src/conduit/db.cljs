@@ -19,14 +19,12 @@
 (def conduit-user-key "conduit-user")  ;; localstore key
 
 (defn set-user-ls
-  "Puts user into localStorage"
   [user]
   (.setItem js/localStorage conduit-user-key (str user)))  ;; sorted-map written as an EDN map
 
 ;; Removes user information from localStorge when a user logs out.
 ;;
 (defn remove-user-ls
-  "Removes user from localStorage"
   []
   (.removeItem js/localStorage conduit-user-key))
 
