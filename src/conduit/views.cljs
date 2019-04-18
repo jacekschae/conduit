@@ -140,22 +140,20 @@
 
 ;; -- Home --------------------------------------------------------------------
 ;;
-(defn get-articles [event params]
-  (.preventDefault event)
-  (dispatch [:get-articles params]))
-
-(defn get-feed-articles [event params]
-  (.preventDefault event)
-  (dispatch [:get-feed-articles params]))
-
 (defn home
   []
-  (let [filter         @(subscribe [:filter])
-        tags           @(subscribe [:tags])
-        loading        @(subscribe [:loading])
-        articles       @(subscribe [:articles])
-        articles-count @(subscribe [:articles-count])
-        user           @(subscribe [:user])]
+  (let [filter            @(subscribe [:filter])
+        tags              @(subscribe [:tags])
+        loading           @(subscribe [:loading])
+        articles          @(subscribe [:articles])
+        articles-count    @(subscribe [:articles-count])
+        user              @(subscribe [:user])
+        get-articles      (fn [event params]
+                            (.preventDefault event)
+                            (dispatch [:get-articles params]))
+        get-feed-articles (fn [event params]
+                            (.preventDefault event)
+                            (dispatch [:get-feed-articles params]))]
     [:div.home-page
      (when (empty? user)
        [:div.banner
@@ -169,13 +167,15 @@
          [:ul.nav.nav-pills.outline-active
           (when-not (empty? user)
             [:li.nav-item
-             [:a.nav-link {:href (url-for :home)
-                           :class (when (:feed filter) "active")
-                           :on-click #(get-feed-articles % {:offset 0 :limit 10})} "Your Feed"]])
+             [:a.nav-link {:href     (url-for :home)
+                           :class    (when (:feed filter) "active")
+                           :on-click #(get-feed-articles % {:offset 0
+                                                            :limit  10})} "Your Feed"]])
           [:li.nav-item
-           [:a.nav-link {:href (url-for :home)
-                         :class (when-not (or (:tag filter) (:feed filter)) "active")
-                         :on-click #(get-articles % {:offset 0 :limit 10})} "Global Feed"]] ;; first argument: % is browser event, second: map of filter params
+           [:a.nav-link {:href     (url-for :home)
+                         :class    (when-not (or (:tag filter) (:feed filter)) "active")
+                         :on-click #(get-articles % {:offset 0
+                                                     :limit  10})} "Global Feed"]] ;; first argument: % is browser event, second: map of filter params
           (when (:tag filter)
             [:li.nav-item
              [:a.nav-link.active
@@ -184,10 +184,13 @@
         (when-not (or (:articles loading) (< articles-count 10))
           [:ul.pagination
            (for [offset (range (/ articles-count 10))]
-             ^{:key offset} [:li.page-item {:class (when (= (* offset 10) (:offset filter)) "active")
+             ^{:key offset} [:li.page-item {:class    (when (= (* offset 10) (:offset filter)) "active")
                                             :on-click #(get-articles % (if (:tag filter)
-                                                                         {:offset (* offset 10) :tag (:tag filter) :limit 10}
-                                                                         {:offset (* offset 10) :limit 10}))}
+                                                                         {:offset (* offset 10)
+                                                                          :tag    (:tag filter)
+                                                                          :limit  10}
+                                                                         {:offset (* offset 10)
+                                                                          :limit  10}))}
                              [:a.page-link {:href (url-for :home)} (+ 1 offset)]])])]
        [:div.col-md-3
         [:div.sidebar
@@ -196,23 +199,24 @@
            [:p "Loading tags ..."]
            [:div.tag-list
             (for [tag tags]
-              ^{:key tag} [:a.tag-pill.tag-default {:href (url-for :home)
-                                                    :on-click #(get-articles % {:tag tag :limit 10 :offset 0})} tag])])]]]]]))
+              ^{:key tag} [:a.tag-pill.tag-default {:href     (url-for :home)
+                                                    :on-click #(get-articles % {:tag    tag
+                                                                                :limit  10
+                                                                                :offset 0})} tag])])]]]]]))
 
 ;; -- Login -------------------------------------------------------------------
 ;;
-(defn login-user [event credentials]
-  (.preventDefault event)
-  (dispatch [:login credentials]))
-
 (defn login
   []
   (let [default {:email "" :password ""}
         credentials (reagent/atom default)]
     (fn []
       (let [{:keys [email password]} @credentials
-            loading  @(subscribe [:loading])
-            errors   @(subscribe [:errors])]
+            loading                  @(subscribe [:loading])
+            errors                   @(subscribe [:errors])
+            login-user               (fn [event credentials]
+                                       (.preventDefault event)
+                                       (dispatch [:login credentials]))]
         [:div.auth-page
          [:div.container.page
           [:div.row
@@ -224,34 +228,33 @@
               [errors-list (:login errors)])
             [:form {:on-submit #(login-user % @credentials)}
              [:fieldset.form-group
-              [:input.form-control.form-control-lg {:type "text"
+              [:input.form-control.form-control-lg {:type        "text"
                                                     :placeholder "Email"
-                                                    :value email
-                                                    :on-change #(swap! credentials assoc :email (-> % .-target .-value))
-                                                    :disabled (when (:login loading))}]]
+                                                    :value       email
+                                                    :on-change   #(swap! credentials assoc :email (-> % .-target .-value))
+                                                    :disabled    (when (:login loading))}]]
 
              [:fieldset.form-group
-              [:input.form-control.form-control-lg {:type "password"
+              [:input.form-control.form-control-lg {:type        "password"
                                                     :placeholder "Password"
-                                                    :value password
-                                                    :on-change #(swap! credentials assoc :password (-> % .-target .-value))
-                                                    :disabled (when (:login loading))}]]
+                                                    :value       password
+                                                    :on-change   #(swap! credentials assoc :password (-> % .-target .-value))
+                                                    :disabled    (when (:login loading))}]]
              [:button.btn.btn-lg.btn-primary.pull-xs-right {:class (when (:login loading) "disabled")} "Sign in"]]]]]]))))
 
 ;; -- Register ----------------------------------------------------------------
 ;;
-(defn register-user [event registration]
-  (.preventDefault event)
-  (dispatch [:register-user registration]))
-
 (defn register
   []
   (let [default {:username "" :email "" :password ""}
         registration (reagent/atom default)]
     (fn []
       (let [{:keys [username email password]} @registration
-            loading  @(subscribe [:loading])
-            errors   @(subscribe [:errors])]
+            loading                           @(subscribe [:loading])
+            errors                            @(subscribe [:errors])
+            register-user                     (fn [event registration]
+                                                (.preventDefault event)
+                                                (dispatch [:register-user registration]))]
         [:div.auth-page
          [:div.container.page
           [:div.row
@@ -263,23 +266,23 @@
               [errors-list (:register-user errors)])
             [:form {:on-submit #(register-user % @registration)}
              [:fieldset.form-group
-              [:input.form-control.form-control-lg {:type "text"
+              [:input.form-control.form-control-lg {:type        "text"
                                                     :placeholder "Your Name"
-                                                    :value username
-                                                    :on-change #(swap! registration assoc :username (-> % .-target .-value))
-                                                    :disabled (when (:register-user loading))}]]
+                                                    :value       username
+                                                    :on-change   #(swap! registration assoc :username (-> % .-target .-value))
+                                                    :disabled    (when (:register-user loading))}]]
              [:fieldset.form-group
-              [:input.form-control.form-control-lg {:type "text"
+              [:input.form-control.form-control-lg {:type        "text"
                                                     :placeholder "Email"
-                                                    :value email
-                                                    :on-change #(swap! registration assoc :email (-> % .-target .-value))
-                                                    :disabled (when (:register-user loading))}]]
+                                                    :value       email
+                                                    :on-change   #(swap! registration assoc :email (-> % .-target .-value))
+                                                    :disabled    (when (:register-user loading))}]]
              [:fieldset.form-group
-              [:input.form-control.form-control-lg {:type "password"
+              [:input.form-control.form-control-lg {:type        "password"
                                                     :placeholder "Password"
-                                                    :value password
-                                                    :on-change #(swap! registration assoc :password (-> % .-target .-value))
-                                                    :disabled (when (:register-user loading))}]]
+                                                    :value       password
+                                                    :on-change   #(swap! registration assoc :password (-> % .-target .-value))
+                                                    :disabled    (when (:register-user loading))}]]
              [:button.btn.btn-lg.btn-primary.pull-xs-right {:class (when (:register-user loading) "disabled")} "Sign up"]]]]]]))))
 
 ;; -- Profile -----------------------------------------------------------------
@@ -319,20 +322,18 @@
 
 ;; -- Settings ----------------------------------------------------------------
 ;;
-(defn logout-user [event]
-  (.preventDefault event)
-  (dispatch [:logout]))
-
-(defn update-user [event update]
-  (.preventDefault event)
-  (dispatch [:update-user update]))
-
 (defn settings
   []
   (let [{:keys [bio email image username] :as user} @(subscribe [:user])
         default     {:bio bio :email email :image image :username username}
         loading     @(subscribe [:loading])
-        user-update (reagent/atom default)]
+        user-update (reagent/atom default)
+        logout-user (fn [event]
+                      (.preventDefault event)
+                      (dispatch [:logout]))
+        update-user (fn [event update]
+                      (.preventDefault event)
+                      (dispatch [:update-user update]))]
     [:div.settings-page
      [:div.container.page
       [:div.row
@@ -376,20 +377,19 @@
 
 ;; -- Editor ------------------------------------------------------------------
 ;;
-(defn upsert-article [event content slug]
-  (.preventDefault event)
-  (dispatch [:upsert-article {:slug slug 
-                              :article {:title (trim (or (:title content) ""))
-                                                          :description (trim (or  (:description content) ""))
-                                                          :body (trim (or (:body content) ""))
-                                                          :tagList (split (:tagList content) #" ")}}]))
-
 (defn editor
   []
   (let [{:keys [title description body tagList slug] :as active-article} @(subscribe [:active-article])
         tagList (join " " tagList)
         default {:title title :description description :body body :tagList tagList}
-        content (reagent/atom default)]
+        content (reagent/atom default)
+        upsert-article (fn [event content slug]
+                        (.preventDefault event)
+                        (dispatch [:upsert-article {:slug slug
+                                                    :article {:title (trim (or (:title content) ""))
+                                                              :description (trim (or  (:description content) ""))
+                                                              :body (trim (or (:body content) ""))
+                                                              :tagList (split (:tagList content) #" ")}}]))]
     (fn []
       (let [errors @(subscribe [:errors])]
         [:div.editor-page
@@ -428,16 +428,14 @@
 
 ;; -- Article -----------------------------------------------------------------
 ;;
-(defn post-comment [event comment default]
-  (.preventDefault event)
-  (let [body (get @comment :body)]
-    (dispatch [:post-comment {:body body}])
-    (reset! comment default)))
-
 (defn article
   []
   (let [default {:body ""}
-        comment (reagent/atom default)]
+        comment (reagent/atom default)
+        post-comment (fn [event comment default]
+                      (.preventDefault event)
+                      (dispatch [:post-comment {:body (get @comment :body)}])
+                      (reset! comment default))]
     (fn []
       (let [active-article @(subscribe [:active-article])
             user           @(subscribe [:user])
