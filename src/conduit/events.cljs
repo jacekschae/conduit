@@ -99,7 +99,8 @@
 
                 ;; -- URL @ "/article/:slug" -------------------------------------------
                 :article {:db         (assoc set-page :active-article slug)
-                          :dispatch-n (list [:get-article-comments {:slug slug}]
+                          :dispatch-n (list [:get-articles {:limit 10}]
+                                            [:get-article-comments {:slug slug}]
                                             [:get-user-profile {:profile (get-in db [:articles slug :author :username])}])}
 
                 ;; -- URL @ "/profile/:slug" -------------------------------------------
