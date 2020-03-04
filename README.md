@@ -11,7 +11,10 @@ authentication, routing, pagination, and more.
 For more information on how this works with other frontends/backends, head over to the
 [RealWorld](https://github.com/gothinkster/realworld) repo.
 
-> ### Application structure/style heavily inspired by [todomvc](https://github.com/Day8/re-frame/tree/master/examples/todomvc)
+> #### Application structure/style heavily inspired by [todomvc](https://github.com/Day8/re-frame/tree/master/examples/todomvc)
+
+## Learn how to build similar project with High Quality Video Tutorial [Learn re-frame](https://www.learnreframe.com/)
+
 
 ## Setup And Run
 
