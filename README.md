@@ -13,7 +13,7 @@ For more information on how this works with other frontends/backends, head over 
 
 > #### Application structure/style heavily inspired by [todomvc](https://github.com/Day8/re-frame/tree/master/examples/todomvc)
 
-## Learn how to build similar project with High Quality Video Tutorial [Learn re-frame](https://www.learnreframe.com/)
+# Learn how to build similar project with [Learn re-frame](https://www.learnreframe.com/)
 
 
 ## Setup And Run
