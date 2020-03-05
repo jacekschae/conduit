@@ -61,7 +61,7 @@
            [:div.article-preview
             [:div.article-meta
              [:a {:href (url-for :profile :user-id username)}
-              [:img {:src (:image author) :alt (:username user)}]]
+              [:img {:alt (:username user) :src (:image author)}]]
              [:div.info
               [:a.author {:href (url-for :profile :user-id username)} username]
               [:span.date (format-date createdAt)]]
