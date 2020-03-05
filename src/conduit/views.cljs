@@ -61,7 +61,7 @@
     [:div.article-preview
      [:div.article-meta
       [:a {:href (url-for :profile :user-id username)}
-       [:img {:alt (:username user) :src (:image author)}]]
+       [:img {:alt (:username user) :src "user image"}]]
       [:div.info
        [:a.author {:href (url-for :profile :user-id username)} username]
        [:span.date (format-date createdAt)]]
@@ -124,7 +124,7 @@
            [:i.ion-gear-a "Settings"]]]
          [:li.nav-item
           [:a.nav-link {:href (url-for :profile :user-id (:username user)) :class (when (= active-page :profile) "active")} (:username user)
-           [:img.user-pic {:src (:image user) :alt (:username user)}]]]])]]))
+           [:img.user-pic {:src (:image user) :alt "user image"}]]]])]]))
 
 ;; -- Footer ------------------------------------------------------------------
 ;;
@@ -299,7 +299,7 @@
       [:div.container
        [:div.row
         [:div.col-xs-12.col-md-10.offset-md-1
-         [:img.user-img {:src image :alt username}]
+         [:img.user-img {:src image :alt "user image"}]
          [:h4 username]
          [:p bio]
          (if (= (:username user) username)
@@ -467,7 +467,7 @@
                                          :value       (:body @comment)
                                          :on-change   #(swap! comment assoc :body (-> % .-target .-value))}]]
                [:div.card-footer
-                [:img.comment-author-img {:src (:image user) :alt (:username user)}]
+                [:img.comment-author-img {:src (:image user) :alt "user image"}]
                 [:button.btn.btn-sm.btn-primary {:class    (when (:comments loading) "disabled")
                                                  :on-click #(post-comment % comment default)} "Post Comment"]]]
               [:p
