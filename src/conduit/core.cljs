@@ -1,5 +1,5 @@
 (ns conduit.core
-  (:require [re-frame.core :refer [dispatch dispatch-sync clear-subscription-cache!]]
+  (:require [re-frame.core :refer [dispatch-sync]]
             [reagent.core :as reagent]
             [conduit.router :as router]
             [conduit.events]  ;; These three are only
