@@ -391,8 +391,7 @@
   ;; So, a path interceptor makes the event handler act more like clojure's `update-in`
  (fn [{user :db} [{props :user}]]
    {:db         (merge user props)
-    :dispatch-n [[:complete-request :login]
-                 [:get-feed-articles {:tag nil :author nil :offset 0 :limit 10}]
+    :dispatch-n [[:get-feed-articles {:tag nil :author nil :offset 0 :limit 10}]
                  [:set-active-page {:page :home}]]}))
 
 ;; -- POST Registration @ /api/users ------------------------------------------
@@ -424,9 +423,8 @@
   ;; put into `:user` path, and not the entire `db`.
   ;; So, a path interceptor makes the event handler act more like clojure's `update-in`
  (fn [{user :db} [{props :user}]]
-   {:db         (merge user props)
-    :dispatch-n [[:complete-request :register-user]
-                 [:set-active-page {:page :home}]]}))
+   {:db       (merge user props)
+    :dispatch [:set-active-page {:page :home}]}))
 
 ;; -- PUT Update User @ /api/user ---------------------------------------------
 ;;
@@ -458,8 +456,7 @@
   ;; put into `:user` path, and not the entire `db`.
   ;; So, a path interceptor makes the event handler act more like clojure's `update-in`
  (fn [{user :db} [{props :user}]]
-   {:db       (merge user props)
-    :dispatch [:complete-request :update-user]}))
+   {:db (merge user props)}))
 
 ;; -- Toggle follow user @ /api/profiles/:username/follow ---------------------
 ;;
@@ -524,10 +521,6 @@
 
 ;; -- Request Handlers -----------------------------------------------------------
 ;;
-(reg-event-db
- :complete-request         ;; when we complete a request we need to clean up
- (fn [db [_ request-type]] ;; few things so that our ui is nice and tidy
-     (assoc-in db [:loading request-type] false)))
 
 (reg-event-db
  :api-request-error                 ; triggered when we get request-error from the server
