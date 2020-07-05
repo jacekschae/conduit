@@ -525,8 +525,13 @@
 ;; -- Request Handlers -----------------------------------------------------------
 ;;
 (reg-event-db
- :api-request-error                                        ;; triggered when we get request-error from the server
- (fn [db [_ request-type response]]                        ;; destructure to obtain request-type and response
-   (-> db                                                ;; when we complete a request we need to clean so that our ui is nice and tidy
+ :complete-request         ;; when we complete a request we need to clean up
+ (fn [db [_ request-type]] ;; few things so that our ui is nice and tidy
+     (assoc-in db [:loading request-type] false)))
+
+(reg-event-db
+ :api-request-error                 ; triggered when we get request-error from the server
+ (fn [db [_ request-type response]] ;; destructure to obtain request-type and response
+   (-> db                           ;; when we complete a request we need to clean so that our ui is nice and tidy
        (assoc-in [:errors request-type] (get-in response [:response :errors]))
        (assoc-in [:loading request-type] false))))
