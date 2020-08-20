@@ -322,9 +322,9 @@
 (reg-event-fx                                               ;; usage (dispatch [:delete-comment comment-id])
  :delete-comment                                           ;; triggered when a user deletes an article
  (fn [{:keys [db]} [_ comment-id]]                         ;; comment-id = 1234
-   {:db         (do
-                  (assoc-in db [:loading :comments] true)
-                  (assoc db :active-comment comment-id))
+   {:db         (-> db
+                  (assoc-in [:loading :comments] true)
+                  (assoc :active-comment comment-id))
     :http-xhrio {:method          :delete
                  :uri             (endpoint "articles" (:active-article db) "comments" comment-id) ;; evaluates to "api/articles/:slug/comments/:comment-id"
                  :headers         (auth-header db)       ;; get and pass user token obtained during login

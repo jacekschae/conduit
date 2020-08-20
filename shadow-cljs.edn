@@ -8,6 +8,8 @@
                 [kibu/pushy "0.3.8"]
                 [binaryage/devtools "0.9.10"]]
 
+ :fs-watch {:hawk false}
+ 
  :nrepl        {:port 3333}
 
  :builds       {:app {:target :browser
