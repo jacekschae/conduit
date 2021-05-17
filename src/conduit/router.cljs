@@ -8,7 +8,7 @@
 
 ;; -- Routes ------------------------------------------------------------------
 ;; Define routes so that when we enter specific path the router knows what to
-;; show us. A route is simply a data structure - Vector - with a pattern and 
+;; show us. A route is simply a data structure--a vector--with a pattern and 
 ;; a result.
 (def routes
   ["/" {""         :home
@@ -21,10 +21,10 @@
         "profile/" {[:user-id] {""           :profile
                                 "/favorites" :favorited}}}])
 
-;; -- history -----------------------------------------------------------------
+;; -- History -----------------------------------------------------------------
 ;; we need to know the history of our routes so that we can navigate back and 
-;; forward. For that we'll use pushy/pushy to which we need to provide dispatch
-;; function: what happens on dispatch and match: what routes should we match
+;; forward. For that we'll use `pushy/pushy`, to which we need to provide a dispatch
+;; function (what happens on dispatch) and match (what routes should we match).
 (def history
   (let [dispatch #(dispatch [:set-active-page {:page      (:handler %)
                                                :slug      (get-in % [:route-params :slug])
@@ -37,12 +37,12 @@
 ;;
 (defn start!
   []
-      ;; pushy is here to take care of nice looking urls. Normally we would have to
-      ;; deal with #. By using pushy we can have '/about' instead of '/#/about'.
-      ;; pushy takes three arguments:
-      ;; dispatch-fn - which dispatches when a match is found
-      ;; match-fn - which checks if a route exist
-      ;; identity-fn (optional) - extract the route from value returned by match-fn
+  ;; pushy is here to take care of nice looking urls. Normally we would have to
+  ;; deal with #. By using pushy we can have '/about' instead of '/#/about'.
+  ;; pushy takes three arguments:
+  ;; dispatch-fn - which dispatches when a match is found
+  ;; match-fn - which checks if a route exist
+  ;; identity-fn (optional) - extract the route from value returned by match-fn
   (pushy/start! history))
 
 ;; -- url-for -----------------------------------------------------------------
@@ -53,7 +53,7 @@
 
 ;; -- set-token! --------------------------------------------------------------
 ;; To change route after some actions we will need to set url and for that we
-;; will use set-token! that needs history and the token
+;; will use set-token!, taking the history and a token.
 (defn set-token!
   [token]
   (pushy/set-token! history token))
