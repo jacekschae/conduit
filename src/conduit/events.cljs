@@ -48,22 +48,16 @@
     [:Authorization (str "Token " token)]))
 
 (defn add-epoch
-  "Adds :epoch timestamp to coll"
-  [coll]
-  (let [epoch (.getTime (js/Date.))]
-    (map (fn [item]
-           (assoc item :epoch epoch))
-         coll)))
+  "Add :epoch timestamp based on :createdAt field."
+  [item]
+  (assoc item :epoch (.getTime (:createdAt item))))
 
 (defn index-by
-  "Transforms coll of items to map of shape {(f item) item ...}.
-  f can be any function, but usually just a keyword (which is a function
-  that looks itself up) with a unique mapped value like :id or :slug."
+  "Index collection by function f (usually a keyword) as a map"
   [f coll]
   (into {}
-        (map (juxt f identity))
-        ;; FIXME before this passed :createdAt to add-epoch--what was intended?
-        (add-epoch coll)))
+        (map (juxt f add-epoch))
+        coll))
 
 (reg-fx
  :set-url
