@@ -5,7 +5,8 @@
    [conduit.router :as router]
    [day8.re-frame.http-fx] ;; registers the :http-xhrio effect handler with re-frame
    [ajax.core :refer [json-request-format json-response-format]]
-   [clojure.string :as str]))
+   [clojure.string :as str]
+   [cljs.reader :as rdr]))
 
 ;; -- Interceptors --------------------------------------------------------------
 ;; Every event handler can be "wrapped" in a chain of interceptors. Each of these
@@ -50,7 +51,7 @@
 (defn add-epoch
   "Add :epoch timestamp based on :createdAt field."
   [item]
-  (assoc item :epoch (.getTime (:createdAt item))))
+  (assoc item :epoch (-> item :createdAt rdr/parse-timestamp .getTime)))
 
 (defn index-by
   "Index collection by function f (usually a keyword) as a map"
