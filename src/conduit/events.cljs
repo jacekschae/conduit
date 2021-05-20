@@ -56,7 +56,9 @@
   "Index collection by function f (usually a keyword) as a map"
   [f coll]
   (into {}
-        (map (juxt f add-epoch))
+        (map (fn [item]
+               (let [item (add-epoch item)]
+                 [(f item) item])))
         coll))
 
 (reg-fx
