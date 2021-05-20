@@ -38,7 +38,7 @@
                                            :on-click #(dispatch [:delete-article slug])}
          [:i.ion-trash-a]
          [:span " Delete Article "]]]
-       (when-not (empty? user)
+       (when (seq user)
          [:span
           [:button.btn.btn-sm.action-btn.btn-outline-secondary {:on-click #(dispatch [:toggle-follow-user username])
                                                                 :class    (when (:toggle-follow-user loading) "disabled")}
@@ -65,7 +65,7 @@
       [:div.info
        [:a.author {:href (url-for :profile :user-id username)} username]
        [:span.date (format-date createdAt)]]
-      (when-not (empty? user)
+      (when (seq user)
         [:button.btn.btn-primary.btn-sm.pull-xs-right {:on-click #(dispatch [:toggle-favorite-article slug])
                                                        :class    (cond
                                                                    (not favorited) "btn-outline-primary"
@@ -93,8 +93,8 @@
 (defn errors-list
   [errors]
   [:ul.error-messages
-   (for [[key [val]] errors]
-     ^{:key key} [:li (str (name key) " " val)])])
+   (for [[k [v]] errors]
+     ^{:key k} [:li (str (name k) " " v)])])
 
 ;; -- Header ------------------------------------------------------------------
 ;;
@@ -165,7 +165,7 @@
        [:div.col-md-9
         [:div.feed-toggle
          [:ul.nav.nav-pills.outline-active
-          (when-not (empty? user)
+          (when (seq user)
             [:li.nav-item
              [:a.nav-link {:href     (url-for :home)
                            :class    (when (:feed filter) "active")
@@ -191,7 +191,7 @@
                                                                           :limit  10}
                                                                          {:offset (* offset 10)
                                                                           :limit  10}))}
-                             [:a.page-link {:href (url-for :home)} (+ 1 offset)]])])]
+                             [:a.page-link {:href (url-for :home)} (inc offset)]])])]
        [:div.col-md-3
         [:div.sidebar
          [:p "Popular Tags"]
@@ -202,7 +202,8 @@
               ^{:key tag} [:a.tag-pill.tag-default {:href     (url-for :home)
                                                     :on-click #(get-articles % {:tag    tag
                                                                                 :limit  10
-                                                                                :offset 0})} tag])])]]]]]))
+                                                                                :offset 0})}
+                           tag])])]]]]]))
 
 ;; -- Login -------------------------------------------------------------------
 ;;
@@ -232,14 +233,14 @@
                                                     :placeholder "Email"
                                                     :value       email
                                                     :on-change   #(swap! credentials assoc :email (-> % .-target .-value))
-                                                    :disabled    (when (:login loading))}]]
+                                                    :disabled    (:login loading)}]]
 
              [:fieldset.form-group
               [:input.form-control.form-control-lg {:type        "password"
                                                     :placeholder "Password"
                                                     :value       password
                                                     :on-change   #(swap! credentials assoc :password (-> % .-target .-value))
-                                                    :disabled    (when (:login loading))}]]
+                                                    :disabled    (:login loading)}]]
              [:button.btn.btn-lg.btn-primary.pull-xs-right {:class (when (:login loading) "disabled")} "Sign in"]]]]]]))))
 
 ;; -- Register ----------------------------------------------------------------
@@ -270,19 +271,19 @@
                                                     :placeholder "Your Name"
                                                     :value       username
                                                     :on-change   #(swap! registration assoc :username (-> % .-target .-value))
-                                                    :disabled    (when (:register-user loading))}]]
+                                                    :disabled    (:register-user loading)}]]
              [:fieldset.form-group
               [:input.form-control.form-control-lg {:type        "text"
                                                     :placeholder "Email"
                                                     :value       email
                                                     :on-change   #(swap! registration assoc :email (-> % .-target .-value))
-                                                    :disabled    (when (:register-user loading))}]]
+                                                    :disabled    (:register-user loading)}]]
              [:fieldset.form-group
               [:input.form-control.form-control-lg {:type        "password"
                                                     :placeholder "Password"
                                                     :value       password
                                                     :on-change   #(swap! registration assoc :password (-> % .-target .-value))
-                                                    :disabled    (when (:register-user loading))}]]
+                                                    :disabled    (:register-user loading)}]]
              [:button.btn.btn-lg.btn-primary.pull-xs-right {:class (when (:register-user loading) "disabled")} "Sign up"]]]]]]))))
 
 ;; -- Profile -----------------------------------------------------------------
@@ -331,9 +332,9 @@
         logout-user (fn [event]
                       (.preventDefault event)
                       (dispatch [:logout]))
-        update-user (fn [event update]
+        update-user (fn [event updated-user]
                       (.preventDefault event)
-                      (dispatch [:update-user update]))]
+                      (dispatch [:update-user updated-user]))]
     [:div.settings-page
      [:div.container.page
       [:div.row
@@ -351,25 +352,25 @@
                                                  :placeholder   "Your Name"
                                                  :default-value (:username user)
                                                  :on-change     #(swap! user-update assoc :username (-> % .-target .-value))
-                                                 :disabled      (when (:update-user loading))}]]
+                                                 :disabled      (:update-user loading)}]]
           [:fieldset.form-group
            [:textarea.form-control.form-control-lg {:rows          "8"
                                                     :placeholder   "Short bio about you"
                                                     :default-value (:bio user)
                                                     :on-change     #(swap! user-update assoc :bio (-> % .-target .-value))
-                                                    :disabled      (when (:update-user loading))}]]
+                                                    :disabled      (:update-user loading)}]]
           [:fieldset.form-group
            [:input.form-control.form-control-lg {:type          "text"
                                                  :placeholder   "Email"
                                                  :default-value (:email user)
                                                  :on-change     #(swap! user-update assoc :email (-> % .-target .-value))
-                                                 :disabled      (when (:update-user loading))}]]
+                                                 :disabled      (:update-user loading)}]]
           [:fieldset.form-group
            [:input.form-control.form-control-lg {:type          "password"
                                                  :placeholder   "Password"
                                                  :default-value ""
                                                  :on-change     #(swap! user-update assoc :password (-> % .-target .-value))
-                                                 :disabled      (when (:update-user loading))}]]
+                                                 :disabled      (:update-user loading)}]]
           [:button.btn.btn-lg.btn-primary.pull-xs-right {:on-click #(update-user % @user-update)
                                                          :class    (when (:update-user loading) "disabled")} "Update Settings"]]]
         [:hr]
@@ -432,7 +433,7 @@
   []
   (let [default {:body ""}
         comment (reagent/atom default)
-        post-comment (fn [event comment default]
+        post-comment (fn [event default]
                        (.preventDefault event)
                        (dispatch [:post-comment {:body (get @comment :body)}])
                        (reset! comment default))]
@@ -469,7 +470,7 @@
                [:div.card-footer
                 [:img.comment-author-img {:src (:image user) :alt "user image"}]
                 [:button.btn.btn-sm.btn-primary {:class    (when (:comments loading) "disabled")
-                                                 :on-click #(post-comment % comment default)} "Post Comment"]]]
+                                                 :on-click #(post-comment % default)} "Post Comment"]]]
               [:p
                [:a {:href (url-for :register)} "Sign up"]
                " or "
@@ -494,7 +495,8 @@
                                  [:span.mod-options {:on-click #(dispatch [:delete-comment id])}
                                   [:i.ion-trash-a]])]])))]]]]))))
 
-(defn pages [page-name]
+(defn pages
+  [page-name]
   (case page-name
     :home [home]
     :login [login]

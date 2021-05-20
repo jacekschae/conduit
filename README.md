@@ -5,7 +5,7 @@
 ### [Demo](https://conduit-re-frame-demo.netlify.com/) &nbsp;&nbsp;&nbsp;&nbsp; [Demo with re-frame-10x](https://jacekschae.github.io/conduit-re-frame-10x-demo/) &nbsp;&nbsp;&nbsp;&nbsp; [Demo with re-frisk](https://flexsurfer.github.io/conduit-re-frisk-demo/) &nbsp;&nbsp;&nbsp;&nbsp; [RealWorld](https://github.com/gothinkster/realworld)
 
 This codebase was created to demonstrate a fully fledged fullstack application built with
-[ClojureScript](https://clojurescript.org/) and [re-frame](https://github.com/Day8/re-frame) including CRUD operations,
+[ClojureScript](https://clojurescript.org/) and [re-frame](https://github.com/Day8/re-frame), including CRUD operations,
 authentication, routing, pagination, and more.
 
 For more information on how this works with other frontends/backends, head over to the
