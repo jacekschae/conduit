@@ -14,8 +14,8 @@
 (reg-sub
  :articles                              ;; usage: (subscribe [:articles])
  (fn [db _]                             ;; db is the (map) value stored in the app-db atom
-   (->> (:articles db)                  ;; ->> is a thread last macro - pass atricles as last arg of:
-        (vals)                          ;; vals, just as we would write (vals articles), then pass the result to:
+   (->> (:articles db)                  ;; ->> is a thread-last macro - pass articles as last arg of
+        (vals)                          ;; vals, just as we would write (vals articles), then pass the result to
         (sort-by :epoch reverse-cmp)))) ;; sort-by epoch in reverse order
 
 (reg-sub
