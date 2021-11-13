@@ -13,3 +13,7 @@ out
 /.shadow-cljs
 yarn.lock
 /.idea
+/.lsp
+/.clj-kondo
+package-lock-json
+/.idea

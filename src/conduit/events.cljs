@@ -35,7 +35,7 @@
 
 ;; -- Helpers -----------------------------------------------------------------
 ;;
-(def api-url "https://conduit.productionready.io/api")
+(def api-url "https://api.realworld.io/api")
 
 (defn endpoint
   "Concat any params to api-url separated by /"
