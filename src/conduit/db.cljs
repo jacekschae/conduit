@@ -22,7 +22,7 @@
   [user]
   (.setItem js/localStorage conduit-user-key (str user)))  ;; sorted-map written as an EDN map
 
-;; Removes user information from localStorge when a user logs out.
+;; Removes user information from localStorage when a user logs out.
 ;;
 (defn remove-user-ls
   []
