@@ -382,7 +382,7 @@
 ;; -- POST Login @ /api/users/login -------------------------------------------
 ;;
 (reg-event-fx                                        ;; usage (dispatch [:login user])
- :login                                              ;; triggered when a users submits login form
+ :login                                              ;; triggered when a user submits login form
  (fn [{:keys [db]} [_ credentials]]                  ;; credentials = {:email ... :password ...}
    {:db         (assoc-in db [:loading :login] true)
     :http-xhrio {:method          :post
@@ -416,7 +416,7 @@
 ;; -- POST Registration @ /api/users ------------------------------------------
 ;;
 (reg-event-fx                                              ;; usage (dispatch [:register-user registration])
- :register-user                                            ;; triggered when a users submits registration form
+ :register-user                                            ;; triggered when a user submits registration form
  (fn [{:keys [db]} [_ registration]]                       ;; registration = {:username ... :email ... :password ...}
    {:db         (assoc-in db [:loading :register-user] true)
     :http-xhrio {:method          :post
@@ -449,7 +449,7 @@
 ;; -- PUT Update User @ /api/user ---------------------------------------------
 ;;
 (reg-event-fx                                              ;; usage (dispatch [:update-user user])
- :update-user                                              ;; triggered when a users updates settgins
+ :update-user                                              ;; triggered when a user updates settings
  (fn [{:keys [db]} [_ user]]                               ;; user = {:img ... :username ... :bio ... :email ... :password ...}
    {:db         (assoc-in db [:loading :update-user] true)
     :http-xhrio {:method          :put
