@@ -1,10 +1,20 @@
 (ns conduit.core
-  (:require [re-frame.core :refer [dispatch-sync]]
+  (:require [re-frame.core :as re-frame :refer [dispatch-sync]]
             [reagent.core :as reagent]
             [conduit.router :as router]
             [conduit.events]  ;; These three are only
             [conduit.subs]    ;; required to make the compiler
             [conduit.views])) ;; load them
+
+;; ^:dev/after-load instructs shadow-cljs to re-run this function on each compilation,
+;; achieving hot-reloading. See https://code.thheller.com/blog/shadow-cljs/2019/08/25/hot-reload-in-clojurescript.html
+(defn ^:dev/after-load start []
+  (re-frame/clear-subscription-cache!)
+  ;; Render the UI into the HTML's <div id="app" /> element
+  ;; The view function `conduit.views/conduit-app` is the
+  ;; root view for the entire UI.
+  (reagent/render [conduit.views/conduit-app]
+    (.getElementById js/document "app")))
 
 ;; -- Entry Point -------------------------------------------------------------
 ;; Within ../../resources/public/index.html you'll see this code:
@@ -23,8 +33,4 @@
   ;; place before we go onto the next step.
   (dispatch-sync [:initialise-db])
 
-  ;; Render the UI into the HTML's <div id="app" /> element
-  ;; The view function `conduit.views/conduit-app` is the
-  ;; root view for the entire UI.
-  (reagent/render [conduit.views/conduit-app]
-    (.getElementById js/document "app")))
+  (start))
